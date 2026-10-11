@@ -1,0 +1,243 @@
+{
+  "issue1_old_skill_degradation": {
+    "fwd_right_turn": {
+      "model_0": {
+        "mean_vy_settled": 0.1951,
+        "std_vy_settled": 0.0123,
+        "rms_vy_err_settled": 0.0132,
+        "mean_wz_settled": -0.3007,
+        "rms_wz_err_settled": 0.0631,
+        "min_vy_settled": 0.1611,
+        "max_vy_settled": 0.2521
+      },
+      "model_150": {
+        "mean_vy_settled": 0.1914,
+        "std_vy_settled": 0.0117,
+        "rms_vy_err_settled": 0.0146,
+        "mean_wz_settled": -0.2959,
+        "rms_wz_err_settled": 0.0659,
+        "min_vy_settled": 0.1535,
+        "max_vy_settled": 0.2598
+      }
+    },
+    "bwd_right_turn": {
+      "model_0": {
+        "mean_vy_settled": -0.1806,
+        "std_vy_settled": 0.0089,
+        "rms_vy_err_settled": 0.0213,
+        "mean_wz_settled": -0.3037,
+        "rms_wz_err_settled": 0.064,
+        "min_vy_settled": -0.2168,
+        "max_vy_settled": -0.1506
+      },
+      "model_150": {
+        "mean_vy_settled": -0.1776,
+        "std_vy_settled": 0.079,
+        "rms_vy_err_settled": 0.0821,
+        "mean_wz_settled": -0.2879,
+        "rms_wz_err_settled": 0.0796,
+        "min_vy_settled": -0.5815,
+        "max_vy_settled": 0.5679
+      }
+    }
+  },
+  "issue2_wheel_torque_saturation": {
+    "bwd_0.10_squat": {
+      "total_env_steps": 6000,
+      "sat_events_count": 1,
+      "sat_pct": 0.017,
+      "sat_L_pct": 0.0,
+      "sat_R_pct": 0.017,
+      "max_consecutive_steps": 1,
+      "max_consecutive_duration_s": 0.02,
+      "sample_events": [
+        {
+          "step": 4,
+          "time_s": 0.08,
+          "env_id": 19,
+          "tau_L": 6.9120001792907715,
+          "tau_R": 7.0,
+          "vy": 0.23199999332427979,
+          "stage_h": 0.39774
+        }
+      ]
+    },
+    "bwd_0.10_raise": {
+      "total_env_steps": 6000,
+      "sat_events_count": 1,
+      "sat_pct": 0.017,
+      "sat_L_pct": 0.017,
+      "sat_R_pct": 0.0,
+      "max_consecutive_steps": 1,
+      "max_consecutive_duration_s": 0.02,
+      "sample_events": [
+        {
+          "step": 4,
+          "time_s": 0.08,
+          "env_id": 19,
+          "tau_L": 7.0,
+          "tau_R": 6.863999843597412,
+          "vy": 0.23399999737739563,
+          "stage_h": 0.39774
+        }
+      ]
+    },
+    "bwd_0.20_raise": {
+      "total_env_steps": 6000,
+      "sat_events_count": 13,
+      "sat_pct": 0.217,
+      "sat_L_pct": 0.05,
+      "sat_R_pct": 0.167,
+      "max_consecutive_steps": 3,
+      "max_consecutive_duration_s": 0.06,
+      "sample_events": [
+        {
+          "step": 4,
+          "time_s": 0.08,
+          "env_id": 19,
+          "tau_L": 7.0,
+          "tau_R": 6.834000110626221,
+          "vy": 0.22699999809265137,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 5,
+          "time_s": 0.1,
+          "env_id": 19,
+          "tau_L": 6.814000129699707,
+          "tau_R": 7.0,
+          "vy": 0.16599999368190765,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 7,
+          "time_s": 0.14,
+          "env_id": 14,
+          "tau_L": 7.0,
+          "tau_R": 6.855000019073486,
+          "vy": 0.16599999368190765,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 8,
+          "time_s": 0.16,
+          "env_id": 1,
+          "tau_L": 6.5229997634887695,
+          "tau_R": 7.0,
+          "vy": 0.20900000631809235,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 102,
+          "time_s": 2.04,
+          "env_id": 2,
+          "tau_L": 6.289999961853027,
+          "tau_R": 7.0,
+          "vy": 0.2409999966621399,
+          "stage_h": 0.45
+        },
+        {
+          "step": 102,
+          "time_s": 2.04,
+          "env_id": 8,
+          "tau_L": 5.9710001945495605,
+          "tau_R": 7.0,
+          "vy": 0.27300000190734863,
+          "stage_h": 0.45
+        },
+        {
+          "step": 103,
+          "time_s": 2.06,
+          "env_id": 2,
+          "tau_L": 5.381999969482422,
+          "tau_R": 7.0,
+          "vy": 0.20000000298023224,
+          "stage_h": 0.45
+        },
+        {
+          "step": 103,
+          "time_s": 2.06,
+          "env_id": 8,
+          "tau_L": 6.770999908447266,
+          "tau_R": 7.0,
+          "vy": 0.23100000619888306,
+          "stage_h": 0.45
+        },
+        {
+          "step": 103,
+          "time_s": 2.06,
+          "env_id": 17,
+          "tau_L": 6.434999942779541,
+          "tau_R": 7.0,
+          "vy": 0.2720000147819519,
+          "stage_h": 0.45
+        },
+        {
+          "step": 104,
+          "time_s": 2.08,
+          "env_id": 2,
+          "tau_L": 5.763999938964844,
+          "tau_R": 7.0,
+          "vy": 0.16500000655651093,
+          "stage_h": 0.45
+        }
+      ]
+    },
+    "fwd_0.10_squat": {
+      "total_env_steps": 6000,
+      "sat_events_count": 5,
+      "sat_pct": 0.083,
+      "sat_L_pct": 0.0,
+      "sat_R_pct": 0.083,
+      "max_consecutive_steps": 1,
+      "max_consecutive_duration_s": 0.02,
+      "sample_events": [
+        {
+          "step": 5,
+          "time_s": 0.1,
+          "env_id": 16,
+          "tau_L": 5.6020002365112305,
+          "tau_R": 7.0,
+          "vy": -0.09099999815225601,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 6,
+          "time_s": 0.12,
+          "env_id": 15,
+          "tau_L": 5.666999816894531,
+          "tau_R": 7.0,
+          "vy": -0.23899999260902405,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 6,
+          "time_s": 0.12,
+          "env_id": 18,
+          "tau_L": 5.729000091552734,
+          "tau_R": 7.0,
+          "vy": -0.2800000011920929,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 7,
+          "time_s": 0.14,
+          "env_id": 11,
+          "tau_L": 5.775000095367432,
+          "tau_R": 7.0,
+          "vy": -0.2669999897480011,
+          "stage_h": 0.39774
+        },
+        {
+          "step": 8,
+          "time_s": 0.16,
+          "env_id": 0,
+          "tau_L": 5.76200008392334,
+          "tau_R": 7.0,
+          "vy": -0.3440000116825104,
+          "stage_h": 0.39774
+        }
+      ]
+    }
+  }
+}

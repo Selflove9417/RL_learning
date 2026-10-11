@@ -42,21 +42,31 @@ from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
 
 import os
 
+# 全局任务注册表实例
 from legged_gym.utils.task_registry import task_registry
 
+# 注册 ANYmal C 崎岖地形任务
 task_registry.register( "anymal_c_rough", Anymal, AnymalCRoughCfg(), AnymalCRoughCfgPPO() )
+# 注册 ANYmal C 平坦地形任务
 task_registry.register( "anymal_c_flat", Anymal, AnymalCFlatCfg(), AnymalCFlatCfgPPO() )
+# 注册 ANYmal B 任务
 task_registry.register( "anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPPO() )
+# 注册 Unitree A1 四足机器人任务
 task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
+# 注册 Cassie 双足机器人任务
 task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO() )
 
+# 导入 PyApple 环境与配置
 from legged_gym.envs.pyapple.pyapple_env import PyApple
 from legged_gym.envs.pyapple.pyapple_config import PyAppleCfg, PyAppleCfgPPO
 
+# 注册 PyApple 机器人任务
 task_registry.register("pyapple", PyApple, PyAppleCfg(), PyAppleCfgPPO())
 
+# 导入自定义机器人 MyRobot 环境与配置
 from legged_gym.envs.myrobot.myrobot_env import MyRobot
 from legged_gym.envs.myrobot.myrobot_config import MyRobotCfg, MyRobotCfgPPO
 
+# 注册自定义机器人 MyRobot 任务
 task_registry.register("myrobot", MyRobot, MyRobotCfg(), MyRobotCfgPPO())
 

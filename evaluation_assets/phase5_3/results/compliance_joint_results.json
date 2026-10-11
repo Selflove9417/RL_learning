@@ -1,0 +1,581 @@
+{
+  "stage1_model25": {
+    "suite1_stage1_indist": {
+      "s1_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 98.9,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s1_fwd_right_squat": {
+        "sample_pass_rate_h": 41.8,
+        "sample_pass_rate_vy": 99.9,
+        "sample_pass_rate_wz": 98.8,
+        "sample_pass_rate_joint": 41.3,
+        "env_joint_pass_rate": 43.8,
+        "failed_envs": 18,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.48,
+        "settle_time_p95_s": 1.87
+      },
+      "s1_fwd_straight_squat": {
+        "sample_pass_rate_h": 26.3,
+        "sample_pass_rate_vy": 93.7,
+        "sample_pass_rate_wz": 100.0,
+        "sample_pass_rate_joint": 20.6,
+        "env_joint_pass_rate": 28.1,
+        "failed_envs": 23,
+        "early_dones": 0,
+        "settle_time_p50_s": 1.14,
+        "settle_time_p95_s": 2.65
+      },
+      "s1_bwd_left_squat": {
+        "sample_pass_rate_h": 10.5,
+        "sample_pass_rate_vy": 99.9,
+        "sample_pass_rate_wz": 80.1,
+        "sample_pass_rate_joint": 7.9,
+        "env_joint_pass_rate": 6.2,
+        "failed_envs": 30,
+        "early_dones": 0,
+        "settle_time_p50_s": 1.77,
+        "settle_time_p95_s": 2.82
+      },
+      "s1_bwd_right_squat": {
+        "sample_pass_rate_h": 99.8,
+        "sample_pass_rate_vy": 96.5,
+        "sample_pass_rate_wz": 77.0,
+        "sample_pass_rate_joint": 74.1,
+        "env_joint_pass_rate": 53.1,
+        "failed_envs": 15,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.54,
+        "settle_time_p95_s": 1.76
+      },
+      "s1_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 99.0,
+        "sample_pass_rate_wz": 88.2,
+        "sample_pass_rate_joint": 87.2,
+        "env_joint_pass_rate": 75.0,
+        "failed_envs": 8,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.3,
+        "settle_time_p95_s": 1.74
+      },
+      "s1_fwd_right_rise": {
+        "sample_pass_rate_h": 66.2,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 96.6,
+        "sample_pass_rate_joint": 63.3,
+        "env_joint_pass_rate": 59.4,
+        "failed_envs": 13,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.4,
+        "settle_time_p95_s": 1.77
+      },
+      "s1_bwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 58.3,
+        "sample_pass_rate_wz": 96.9,
+        "sample_pass_rate_joint": 56.7,
+        "env_joint_pass_rate": 75.0,
+        "failed_envs": 8,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.23,
+        "settle_time_p95_s": 2.03
+      },
+      "s1_bwd_right_rise": {
+        "sample_pass_rate_h": 38.6,
+        "sample_pass_rate_vy": 17.3,
+        "sample_pass_rate_wz": 36.9,
+        "sample_pass_rate_joint": 7.9,
+        "env_joint_pass_rate": 3.1,
+        "failed_envs": 31,
+        "early_dones": 0,
+        "settle_time_p50_s": 3.2,
+        "settle_time_p95_s": 3.2
+      }
+    },
+    "suite2_stage2_expanded": {
+      "s2_exp_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 97.7,
+        "sample_pass_rate_wz": 62.7,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_fwd_right_squat": {
+        "sample_pass_rate_h": 30.9,
+        "sample_pass_rate_vy": 95.9,
+        "sample_pass_rate_wz": 90.4,
+        "sample_pass_rate_joint": 25.1,
+        "env_joint_pass_rate": 25.0,
+        "failed_envs": 24,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.81,
+        "settle_time_p95_s": 2.48
+      },
+      "s2_exp_bwd_left_squat": {
+        "sample_pass_rate_h": 6.1,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 30.9,
+        "sample_pass_rate_joint": 0.6,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_bwd_right_squat": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 67.7,
+        "sample_pass_rate_wz": 71.2,
+        "sample_pass_rate_joint": 52.5,
+        "env_joint_pass_rate": 46.9,
+        "failed_envs": 17,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.56,
+        "settle_time_p95_s": 2.93
+      },
+      "s2_exp_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 87.0,
+        "sample_pass_rate_joint": 87.0,
+        "env_joint_pass_rate": 81.2,
+        "failed_envs": 6,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.3,
+        "settle_time_p95_s": 2.36
+      },
+      "s2_exp_fwd_right_rise": {
+        "sample_pass_rate_h": 83.4,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 86.3,
+        "sample_pass_rate_joint": 70.6,
+        "env_joint_pass_rate": 65.6,
+        "failed_envs": 11,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.38,
+        "settle_time_p95_s": 2.78
+      },
+      "s2_exp_bwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 82.1,
+        "sample_pass_rate_wz": 56.2,
+        "sample_pass_rate_joint": 47.4,
+        "env_joint_pass_rate": 56.2,
+        "failed_envs": 14,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.28,
+        "settle_time_p95_s": 2.77
+      },
+      "s2_exp_bwd_right_rise": {
+        "sample_pass_rate_h": 40.6,
+        "sample_pass_rate_vy": 2.1,
+        "sample_pass_rate_wz": 37.9,
+        "sample_pass_rate_joint": 0.7,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      }
+    }
+  },
+  "stage2_model10": {
+    "suite1_stage1_indist": {
+      "s1_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 99.2,
+        "sample_pass_rate_wz": 99.0,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s1_fwd_right_squat": {
+        "sample_pass_rate_h": 42.7,
+        "sample_pass_rate_vy": 93.1,
+        "sample_pass_rate_wz": 97.3,
+        "sample_pass_rate_joint": 35.0,
+        "env_joint_pass_rate": 40.6,
+        "failed_envs": 19,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.8,
+        "settle_time_p95_s": 2.43
+      },
+      "s1_fwd_straight_squat": {
+        "sample_pass_rate_h": 31.1,
+        "sample_pass_rate_vy": 67.6,
+        "sample_pass_rate_wz": 100.0,
+        "sample_pass_rate_joint": 6.0,
+        "env_joint_pass_rate": 12.5,
+        "failed_envs": 28,
+        "early_dones": 0,
+        "settle_time_p50_s": 2.29,
+        "settle_time_p95_s": 3.14
+      },
+      "s1_bwd_left_squat": {
+        "sample_pass_rate_h": 23.0,
+        "sample_pass_rate_vy": 96.5,
+        "sample_pass_rate_wz": 69.9,
+        "sample_pass_rate_joint": 15.7,
+        "env_joint_pass_rate": 9.4,
+        "failed_envs": 29,
+        "early_dones": 0,
+        "settle_time_p50_s": 2.06,
+        "settle_time_p95_s": 2.24
+      },
+      "s1_bwd_right_squat": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 85.3,
+        "sample_pass_rate_wz": 93.1,
+        "sample_pass_rate_joint": 79.9,
+        "env_joint_pass_rate": 78.1,
+        "failed_envs": 7,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.66,
+        "settle_time_p95_s": 2.3
+      },
+      "s1_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 99.7,
+        "sample_pass_rate_wz": 93.2,
+        "sample_pass_rate_joint": 92.8,
+        "env_joint_pass_rate": 81.2,
+        "failed_envs": 6,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.34,
+        "settle_time_p95_s": 1.47
+      },
+      "s1_fwd_right_rise": {
+        "sample_pass_rate_h": 70.5,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 98.4,
+        "sample_pass_rate_joint": 69.2,
+        "env_joint_pass_rate": 65.6,
+        "failed_envs": 11,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.32,
+        "settle_time_p95_s": 0.92
+      },
+      "s1_bwd_left_rise": {
+        "sample_pass_rate_h": 96.6,
+        "sample_pass_rate_vy": 53.4,
+        "sample_pass_rate_wz": 88.1,
+        "sample_pass_rate_joint": 47.1,
+        "env_joint_pass_rate": 59.4,
+        "failed_envs": 13,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.28,
+        "settle_time_p95_s": 3.18
+      },
+      "s1_bwd_right_rise": {
+        "sample_pass_rate_h": 25.8,
+        "sample_pass_rate_vy": 10.2,
+        "sample_pass_rate_wz": 63.6,
+        "sample_pass_rate_joint": 5.1,
+        "env_joint_pass_rate": 3.1,
+        "failed_envs": 31,
+        "early_dones": 0,
+        "settle_time_p50_s": 3.16,
+        "settle_time_p95_s": 3.16
+      }
+    },
+    "suite2_stage2_expanded": {
+      "s2_exp_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 99.8,
+        "sample_pass_rate_wz": 62.5,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_fwd_right_squat": {
+        "sample_pass_rate_h": 27.6,
+        "sample_pass_rate_vy": 83.7,
+        "sample_pass_rate_wz": 86.5,
+        "sample_pass_rate_joint": 12.8,
+        "env_joint_pass_rate": 12.5,
+        "failed_envs": 28,
+        "early_dones": 0,
+        "settle_time_p50_s": 2.34,
+        "settle_time_p95_s": 3.07
+      },
+      "s2_exp_bwd_left_squat": {
+        "sample_pass_rate_h": 23.7,
+        "sample_pass_rate_vy": 94.5,
+        "sample_pass_rate_wz": 19.2,
+        "sample_pass_rate_joint": 1.3,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_bwd_right_squat": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 41.1,
+        "sample_pass_rate_wz": 86.0,
+        "sample_pass_rate_joint": 36.8,
+        "env_joint_pass_rate": 40.6,
+        "failed_envs": 19,
+        "early_dones": 0,
+        "settle_time_p50_s": 1.06,
+        "settle_time_p95_s": 2.83
+      },
+      "s2_exp_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 99.6,
+        "sample_pass_rate_wz": 80.8,
+        "sample_pass_rate_joint": 80.4,
+        "env_joint_pass_rate": 62.5,
+        "failed_envs": 12,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.22,
+        "settle_time_p95_s": 1.47
+      },
+      "s2_exp_fwd_right_rise": {
+        "sample_pass_rate_h": 97.4,
+        "sample_pass_rate_vy": 100.0,
+        "sample_pass_rate_wz": 91.6,
+        "sample_pass_rate_joint": 89.0,
+        "env_joint_pass_rate": 87.5,
+        "failed_envs": 4,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.47,
+        "settle_time_p95_s": 2.33
+      },
+      "s2_exp_bwd_left_rise": {
+        "sample_pass_rate_h": 98.5,
+        "sample_pass_rate_vy": 52.8,
+        "sample_pass_rate_wz": 36.4,
+        "sample_pass_rate_joint": 13.4,
+        "env_joint_pass_rate": 15.6,
+        "failed_envs": 27,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.54,
+        "settle_time_p95_s": 2.75
+      },
+      "s2_exp_bwd_right_rise": {
+        "sample_pass_rate_h": 19.1,
+        "sample_pass_rate_vy": 0.0,
+        "sample_pass_rate_wz": 57.2,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      }
+    }
+  },
+  "stage2_model25": {
+    "suite1_stage1_indist": {
+      "s1_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 99.8,
+        "sample_pass_rate_wz": 96.4,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s1_fwd_right_squat": {
+        "sample_pass_rate_h": 39.0,
+        "sample_pass_rate_vy": 44.1,
+        "sample_pass_rate_wz": 35.9,
+        "sample_pass_rate_joint": 0.4,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s1_fwd_straight_squat": {
+        "sample_pass_rate_h": 28.7,
+        "sample_pass_rate_vy": 62.1,
+        "sample_pass_rate_wz": 100.0,
+        "sample_pass_rate_joint": 4.2,
+        "env_joint_pass_rate": 9.4,
+        "failed_envs": 29,
+        "early_dones": 0,
+        "settle_time_p50_s": 2.74,
+        "settle_time_p95_s": 3.3
+      },
+      "s1_bwd_left_squat": {
+        "sample_pass_rate_h": 17.4,
+        "sample_pass_rate_vy": 93.8,
+        "sample_pass_rate_wz": 93.9,
+        "sample_pass_rate_joint": 13.3,
+        "env_joint_pass_rate": 18.8,
+        "failed_envs": 26,
+        "early_dones": 0,
+        "settle_time_p50_s": 1.13,
+        "settle_time_p95_s": 2.66
+      },
+      "s1_bwd_right_squat": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 61.4,
+        "sample_pass_rate_wz": 96.1,
+        "sample_pass_rate_joint": 57.8,
+        "env_joint_pass_rate": 71.9,
+        "failed_envs": 9,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.8,
+        "settle_time_p95_s": 2.22
+      },
+      "s1_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 65.9,
+        "sample_pass_rate_wz": 68.8,
+        "sample_pass_rate_joint": 44.3,
+        "env_joint_pass_rate": 34.4,
+        "failed_envs": 21,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.46,
+        "settle_time_p95_s": 2.5
+      },
+      "s1_fwd_right_rise": {
+        "sample_pass_rate_h": 67.4,
+        "sample_pass_rate_vy": 79.4,
+        "sample_pass_rate_wz": 69.2,
+        "sample_pass_rate_joint": 45.3,
+        "env_joint_pass_rate": 31.2,
+        "failed_envs": 22,
+        "early_dones": 1,
+        "settle_time_p50_s": 0.42,
+        "settle_time_p95_s": 2.21
+      },
+      "s1_bwd_left_rise": {
+        "sample_pass_rate_h": 99.1,
+        "sample_pass_rate_vy": 75.7,
+        "sample_pass_rate_wz": 92.5,
+        "sample_pass_rate_joint": 70.0,
+        "env_joint_pass_rate": 68.8,
+        "failed_envs": 10,
+        "early_dones": 1,
+        "settle_time_p50_s": 0.34,
+        "settle_time_p95_s": 1.96
+      },
+      "s1_bwd_right_rise": {
+        "sample_pass_rate_h": 17.9,
+        "sample_pass_rate_vy": 0.9,
+        "sample_pass_rate_wz": 96.2,
+        "sample_pass_rate_joint": 0.6,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      }
+    },
+    "suite2_stage2_expanded": {
+      "s2_exp_fwd_left_squat": {
+        "sample_pass_rate_h": 0.0,
+        "sample_pass_rate_vy": 97.8,
+        "sample_pass_rate_wz": 74.2,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_fwd_right_squat": {
+        "sample_pass_rate_h": 21.2,
+        "sample_pass_rate_vy": 7.3,
+        "sample_pass_rate_wz": 31.1,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_bwd_left_squat": {
+        "sample_pass_rate_h": 19.2,
+        "sample_pass_rate_vy": 67.7,
+        "sample_pass_rate_wz": 46.0,
+        "sample_pass_rate_joint": 0.7,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      },
+      "s2_exp_bwd_right_squat": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 19.8,
+        "sample_pass_rate_wz": 67.8,
+        "sample_pass_rate_joint": 14.8,
+        "env_joint_pass_rate": 15.6,
+        "failed_envs": 27,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.8,
+        "settle_time_p95_s": 2.68
+      },
+      "s2_exp_fwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 76.2,
+        "sample_pass_rate_wz": 88.1,
+        "sample_pass_rate_joint": 65.7,
+        "env_joint_pass_rate": 62.5,
+        "failed_envs": 12,
+        "early_dones": 0,
+        "settle_time_p50_s": 0.36,
+        "settle_time_p95_s": 2.49
+      },
+      "s2_exp_fwd_right_rise": {
+        "sample_pass_rate_h": 92.6,
+        "sample_pass_rate_vy": 50.5,
+        "sample_pass_rate_wz": 57.7,
+        "sample_pass_rate_joint": 28.0,
+        "env_joint_pass_rate": 28.1,
+        "failed_envs": 23,
+        "early_dones": 1,
+        "settle_time_p50_s": 0.24,
+        "settle_time_p95_s": 0.7
+      },
+      "s2_exp_bwd_left_rise": {
+        "sample_pass_rate_h": 100.0,
+        "sample_pass_rate_vy": 48.3,
+        "sample_pass_rate_wz": 70.2,
+        "sample_pass_rate_joint": 32.4,
+        "env_joint_pass_rate": 40.6,
+        "failed_envs": 19,
+        "early_dones": 1,
+        "settle_time_p50_s": 0.28,
+        "settle_time_p95_s": 1.54
+      },
+      "s2_exp_bwd_right_rise": {
+        "sample_pass_rate_h": 10.5,
+        "sample_pass_rate_vy": 0.0,
+        "sample_pass_rate_wz": 77.2,
+        "sample_pass_rate_joint": 0.0,
+        "env_joint_pass_rate": 0.0,
+        "failed_envs": 32,
+        "early_dones": 0,
+        "settle_time_p50_s": -1.0,
+        "settle_time_p95_s": -1.0
+      }
+    }
+  }
+}

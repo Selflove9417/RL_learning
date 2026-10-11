@@ -34,20 +34,20 @@ class MyRobotCfg(LeggedRobotCfg):
     class env(LeggedRobotCfg.env):
         num_envs = 2048
         num_actions = 6
-        num_observations = 30
+        num_observations = 31
         num_privileged_obs = None
 
     class commands(LeggedRobotCfg.commands):
         curriculum = False
         max_curriculum = 1.0
         num_commands = 4
-        resampling_time = 10.0
+        resampling_time = 4.0
         heading_command = False
         class ranges:
             lin_vel_x = [0.0, 0.0]
-            lin_vel_y = [-0.8, 1.0]
-            ang_vel_yaw = [-1.0, 1.0]
-            heading = [-3.14, 3.14]
+            lin_vel_y = [-0.3, 0.3]
+            ang_vel_yaw = [-0.5, 0.5]
+            heading = [0.0, 0.0]
 
     class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 0.40]
@@ -170,6 +170,7 @@ class MyRobotCfg(LeggedRobotCfg):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.40
         only_positive_rewards = True
+        height_deadzone = 0.015  # 维持 Stage 1 标称死区 0.015m
         tracking_sigma = 0.18    # 强化速度跟踪刚度 (杜绝妥协性失速下滑)
 
         # 阶段 23 课程已完成，阶段 24/25 冻结在 3.0
@@ -236,7 +237,7 @@ class MyRobotCfg(LeggedRobotCfg):
 class MyRobotCfgPPO(LeggedRobotCfgPPO):
     class algorithm(LeggedRobotCfgPPO.algorithm):
         entropy_coef = 0.01
-        learning_rate = 1.e-3     # 从头训练使用标准学习率
+        learning_rate = 2.5e-4     # 恢复 Stage 1 标称学习率 2.5e-4
         num_learning_epochs = 5
         num_mini_batches = 4
 
@@ -244,7 +245,11 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24
-        max_iterations = 3000
-        save_interval = 25
+        max_iterations = 15
+        save_interval = 5
         run_name = ''
         experiment_name = 'myrobot'
+        resume = False
+        warm_start = True
+        load_run = 'Oct10_15-48-32_turning_height_stage5_3_formal'
+        checkpoint = 25

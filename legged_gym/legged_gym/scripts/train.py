@@ -44,7 +44,7 @@ import torch
 
 
 def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
-    """Persist enough context to reproduce a run without relying on notes."""
+    """保存本次运行的完整上下文信息（配置、代码与版本状态），以便后续精准复现。"""
     if log_dir is None:
         return
     os.makedirs(log_dir, exist_ok=True)
@@ -57,6 +57,7 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
     with open(os.path.join(log_dir, "training_snapshot.json"), "w", encoding="utf-8") as handle:
         json.dump(snapshot, handle, indent=2, ensure_ascii=False, default=str)
 
+    # 记录当前的 git 状态和 git diff 差异
     for filename, command in (
         ("git_status.txt", ["git", "status", "--short"]),
         ("git_diff.patch", ["git", "diff", "--no-ext-diff"]),
@@ -71,8 +72,8 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
         with open(os.path.join(log_dir, filename), "w", encoding="utf-8") as handle:
             handle.write(result.stdout)
 
-    # The robot implementation is currently outside the repository index, so a
-    # normal git diff cannot preserve it.  Copy the exact training sources too.
+    # 自定义机器人的实现文件若未被 Git 追踪，普通 git diff 无法保留；
+    # 因此将训练时的关键源代码直接复制一份留存快照。
     source_dir = os.path.join(log_dir, "source_snapshot")
     os.makedirs(source_dir, exist_ok=True)
     for relative_path in (
@@ -91,9 +92,13 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
         shutil.copy2(runner_source, os.path.join(source_dir, "on_policy_runner.py"))
 
 def train(args):
+    # 根据任务名称和命令行参数创建强化学习环境及对应配置
     env, env_cfg = task_registry.make_env(name=args.task, args=args)
+    # 创建训练算法运行器 (OnPolicyRunner/PPO) 及算法配置
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args)
+    # 保存本次实验运行的代码与配置快照
     save_run_snapshot(ppo_runner.log_dir, env_cfg, train_cfg, args)
+    # 启动 PPO 策略训练迭代
     ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
 
 if __name__ == '__main__':

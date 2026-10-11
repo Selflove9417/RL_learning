@@ -1,0 +1,6 @@
+ M legged_gym/envs/__init__.py
+ M legged_gym/envs/myrobot/myrobot_config.py
+ M legged_gym/envs/myrobot/myrobot_env.py
+ M legged_gym/scripts/train.py
+ M legged_gym/utils/task_registry.py
+ M ../rsl_rl/rsl_rl/runners/on_policy_runner.py

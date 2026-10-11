@@ -1,0 +1,224 @@
+{
+  "step": {
+    "total_samples": 8000,
+    "both_contact_count": 7991,
+    "pct_both": 99.89,
+    "pct_left": 99.91,
+    "pct_right": 99.91,
+    "num_lost_events": 9,
+    "max_consecutive_steps_lost": 2,
+    "max_consecutive_duration_s": 0.04,
+    "lost_events_sample": [
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 1,
+        "stage": "nominal",
+        "fL": 37.016998291015625,
+        "fR": 0.0,
+        "pitch_deg": -0.800000011920929,
+        "pitch_rate_degps": 39.209999084472656,
+        "wheel_tau_Nm": 0.10999999940395355
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 2,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.8700000047683716,
+        "pitch_rate_degps": -26.520000457763672,
+        "wheel_tau_Nm": 0.09000000357627869
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 5,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": -0.5400000214576721,
+        "pitch_rate_degps": 17.780000686645508,
+        "wheel_tau_Nm": 0.2199999988079071
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 9,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.36000001430511475,
+        "pitch_rate_degps": -44.709999084472656,
+        "wheel_tau_Nm": 0.2199999988079071
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 10,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.3100000023841858,
+        "pitch_rate_degps": -12.720000267028809,
+        "wheel_tau_Nm": 0.2199999988079071
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 14,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": -0.9700000286102295,
+        "pitch_rate_degps": 20.469999313354492,
+        "wheel_tau_Nm": 0.2199999988079071
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 2,
+        "stage": "nominal",
+        "fL": 294.9949951171875,
+        "fR": 0.0,
+        "pitch_deg": 1.1399999856948853,
+        "pitch_rate_degps": -7.510000228881836,
+        "wheel_tau_Nm": 0.009999999776482582
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 10,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 402.35400390625,
+        "pitch_deg": 0.10999999940395355,
+        "pitch_rate_degps": 16.15999984741211,
+        "wheel_tau_Nm": 0.009999999776482582
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 14,
+        "stage": "nominal",
+        "fL": 0.0,
+        "fR": 122.59100341796875,
+        "pitch_deg": -1.4700000286102295,
+        "pitch_rate_degps": 19.84000015258789,
+        "wheel_tau_Nm": 0.03999999910593033
+      }
+    ]
+  },
+  "ramp": {
+    "total_samples": 8000,
+    "both_contact_count": 7991,
+    "pct_both": 99.89,
+    "pct_left": 99.91,
+    "pct_right": 99.91,
+    "num_lost_events": 9,
+    "max_consecutive_steps_lost": 2,
+    "max_consecutive_duration_s": 0.04,
+    "lost_events_sample": [
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 1,
+        "stage": "ramp_down",
+        "fL": 20.326000213623047,
+        "fR": 0.0,
+        "pitch_deg": -0.7900000214576721,
+        "pitch_rate_degps": 39.220001220703125,
+        "wheel_tau_Nm": 0.41999998688697815
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 2,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.8999999761581421,
+        "pitch_rate_degps": -27.40999984741211,
+        "wheel_tau_Nm": 0.36000001430511475
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 5,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": -0.6100000143051147,
+        "pitch_rate_degps": 20.489999771118164,
+        "wheel_tau_Nm": 1.25
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 9,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.28999999165534973,
+        "pitch_rate_degps": -41.720001220703125,
+        "wheel_tau_Nm": 1.25
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 10,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": 0.25,
+        "pitch_rate_degps": -9.979999542236328,
+        "wheel_tau_Nm": 1.25
+      },
+      {
+        "step": 0,
+        "time_s": 0.0,
+        "env_id": 14,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 0.0,
+        "pitch_deg": -1.0,
+        "pitch_rate_degps": 21.81999969482422,
+        "wheel_tau_Nm": 1.0399999618530273
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 2,
+        "stage": "ramp_down",
+        "fL": 276.2309875488281,
+        "fR": 0.0,
+        "pitch_deg": 1.309999942779541,
+        "pitch_rate_degps": -15.90999984741211,
+        "wheel_tau_Nm": 0.05000000074505806
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 10,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 171.843994140625,
+        "pitch_deg": -0.12999999523162842,
+        "pitch_rate_degps": 23.649999618530273,
+        "wheel_tau_Nm": 0.05999999865889549
+      },
+      {
+        "step": 1,
+        "time_s": 0.02,
+        "env_id": 14,
+        "stage": "ramp_down",
+        "fL": 0.0,
+        "fR": 63.13199996948242,
+        "pitch_deg": -1.5199999809265137,
+        "pitch_rate_degps": 19.299999237060547,
+        "wheel_tau_Nm": 0.2199999988079071
+      }
+    ]
+  }
+}

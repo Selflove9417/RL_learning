@@ -1,0 +1,37 @@
+[
+  {
+    "model": "stage1_model25",
+    "case": "s4_nominal_cruise_fwd",
+    "step": 8,
+    "env_id": 20,
+    "reason": "timeout_or_other"
+  },
+  {
+    "model": "stage2_model10",
+    "case": "s4_nominal_cruise_fwd",
+    "step": 8,
+    "env_id": 20,
+    "reason": "timeout_or_other"
+  },
+  {
+    "model": "stage2_model25",
+    "case": "s1_fwd_left_squat",
+    "step": 8,
+    "env_id": 20,
+    "reason": "timeout_or_other"
+  },
+  {
+    "model": "stage2_model25",
+    "case": "s4_nominal_stand",
+    "step": 8,
+    "env_id": 20,
+    "reason": "timeout_or_other"
+  },
+  {
+    "model": "stage2_model25",
+    "case": "s4_nominal_cruise_fwd",
+    "step": 8,
+    "env_id": 20,
+    "reason": "timeout_or_other"
+  }
+]

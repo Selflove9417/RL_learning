@@ -1,0 +1,916 @@
+diff --git a/legged_gym/legged_gym/envs/__init__.py b/legged_gym/legged_gym/envs/__init__.py
+index 3157581..60462c1 100644
+--- a/legged_gym/legged_gym/envs/__init__.py
++++ b/legged_gym/legged_gym/envs/__init__.py
+@@ -42,21 +42,31 @@ from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
+ 
+ import os
+ 
++# 全局任务注册表实例
+ from legged_gym.utils.task_registry import task_registry
+ 
++# 注册 ANYmal C 崎岖地形任务
+ task_registry.register( "anymal_c_rough", Anymal, AnymalCRoughCfg(), AnymalCRoughCfgPPO() )
++# 注册 ANYmal C 平坦地形任务
+ task_registry.register( "anymal_c_flat", Anymal, AnymalCFlatCfg(), AnymalCFlatCfgPPO() )
++# 注册 ANYmal B 任务
+ task_registry.register( "anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPPO() )
++# 注册 Unitree A1 四足机器人任务
+ task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
++# 注册 Cassie 双足机器人任务
+ task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO() )
+ 
++# 导入 PyApple 环境与配置
+ from legged_gym.envs.pyapple.pyapple_env import PyApple
+ from legged_gym.envs.pyapple.pyapple_config import PyAppleCfg, PyAppleCfgPPO
+ 
++# 注册 PyApple 机器人任务
+ task_registry.register("pyapple", PyApple, PyAppleCfg(), PyAppleCfgPPO())
+ 
++# 导入自定义机器人 MyRobot 环境与配置
+ from legged_gym.envs.myrobot.myrobot_env import MyRobot
+ from legged_gym.envs.myrobot.myrobot_config import MyRobotCfg, MyRobotCfgPPO
+ 
++# 注册自定义机器人 MyRobot 任务
+ task_registry.register("myrobot", MyRobot, MyRobotCfg(), MyRobotCfgPPO())
+ 
+diff --git a/legged_gym/legged_gym/envs/myrobot/myrobot_config.py b/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
+index 41b0ede..5458f67 100644
+--- a/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
++++ b/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
+@@ -34,20 +34,20 @@ class MyRobotCfg(LeggedRobotCfg):
+     class env(LeggedRobotCfg.env):
+         num_envs = 2048
+         num_actions = 6
+-        num_observations = 30
++        num_observations = 31
+         num_privileged_obs = None
+ 
+     class commands(LeggedRobotCfg.commands):
+         curriculum = False
+         max_curriculum = 1.0
+         num_commands = 4
+-        resampling_time = 10.0
++        resampling_time = 4.0
+         heading_command = False
+         class ranges:
+             lin_vel_x = [0.0, 0.0]
+-            lin_vel_y = [-0.8, 1.0]
+-            ang_vel_yaw = [-1.0, 1.0]
+-            heading = [-3.14, 3.14]
++            lin_vel_y = [-0.3, 0.3]
++            ang_vel_yaw = [-0.5, 0.5]
++            heading = [0.0, 0.0]
+ 
+     class init_state(LeggedRobotCfg.init_state):
+         pos = [0.0, 0.0, 0.40]
+@@ -236,7 +236,7 @@ class MyRobotCfg(LeggedRobotCfg):
+ class MyRobotCfgPPO(LeggedRobotCfgPPO):
+     class algorithm(LeggedRobotCfgPPO.algorithm):
+         entropy_coef = 0.01
+-        learning_rate = 1.e-3     # 从头训练使用标准学习率
++        learning_rate = 2.5e-4     # 阶段 5.1 正式微调采用保守学习率，保护已有平衡策略
+         num_learning_epochs = 5
+         num_mini_batches = 4
+ 
+@@ -244,7 +244,11 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
+         policy_class_name = 'ActorCritic'
+         algorithm_class_name = 'PPO'
+         num_steps_per_env = 24
+-        max_iterations = 3000
+-        save_interval = 25
+-        run_name = ''
++        max_iterations = 50
++        save_interval = 5
++        run_name = 'turning_height_stage5_3_formal'
+         experiment_name = 'myrobot'
++        resume = False
++        warm_start = True
++        load_run = 'Oct10_11-37-33_cruising_height_stage5_2_formal'
++        checkpoint = 25
+diff --git a/legged_gym/legged_gym/envs/myrobot/myrobot_env.py b/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
+index 5e77be4..17023f4 100644
+--- a/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
++++ b/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
+@@ -28,7 +28,9 @@
+ #
+ # Copyright (c) 2021 ETH Zurich, Nikita Rudin
+ 
++import math
+ import torch
++from isaacgym import gymapi
+ from isaacgym.torch_utils import quat_rotate_inverse
+ from legged_gym.envs.base.legged_robot import LeggedRobot
+ 
+@@ -40,6 +42,17 @@ class MyRobot(LeggedRobot):
+     - 动作平滑在 step() 中一次性完成 (非 decimation 循环内)
+     """
+ 
++    def _process_dof_props(self, props, env_id):
++        props = super()._process_dof_props(props, env_id)
++        # 精准定位连续旋转轮关节：通过 self.dof_names 匹配，避免依赖尚未初始化的 self.left_wheel_idx
++        wheel_names = ["link_004_joint", "link_007_joint"]
++        for i, name in enumerate(self.dof_names):
++            if name in wheel_names:
++                props["driveMode"][i] = gymapi.DOF_MODE_EFFORT
++                props["stiffness"][i] = 0.0
++                props["damping"][i] = 0.0
++        return props
++
+     def _init_buffers(self):
+         # 关节索引必须在 super()._init_buffers() 之前初始化
+         # 因为 super 内部会调用 _get_noise_scale_vec 需要这些索引
+@@ -93,6 +106,11 @@ class MyRobot(LeggedRobot):
+         self.alpha_lpf_drop = getattr(self.cfg.control, 'alpha_lpf_drop', 0.35)
+         self.alpha_lpf_rise = getattr(self.cfg.control, 'alpha_lpf_rise', 0.15)
+         self.alpha_contact = torch.ones(self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False)
++        self._init_state_machine_buffers()
++
++        # 阶段 5.1: 动态高度指令缓冲区与标称高度初始化
++        self.nominal_height = 0.39774
++        self.height_cmd_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
+ 
+         # 轮速控制参数 (速度闭环迁移期、直接转矩控制与有界弱转速阻尼)
+         self.wheel_torque_scale = getattr(self.cfg.control, 'wheel_torque_scale', 7.0)
+@@ -177,10 +195,92 @@ class MyRobot(LeggedRobot):
+         else:
+             self.reward_scales['tracking_lin_vel'] = self.tracking_lin_vel_target
+ 
++    def _init_state_machine_buffers(self):
++        """
++        阶段 4.3 六模态动态指令马尔可夫状态机初始化
++        0: Stand (驻车自平衡)
++        1: Inplace_Turn (原地差动转向)
++        2: Fwd_Straight (前进直行巡航)
++        3: Bwd_Straight (后退直行巡航)
++        4: Fwd_Turn (前进复合转向)
++        5: Bwd_Turn (后退复合转向)
++        """
++        self.command_mode = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
++        self.task_type_buf = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
++        self.yaw_direction = torch.where(
++            torch.rand(self.num_envs, device=self.device) < 0.5,
++            torch.tensor(1.0, device=self.device),
++            torch.tensor(-1.0, device=self.device),
++        )
++        self._is_resetting = torch.ones(self.num_envs, dtype=torch.bool, device=self.device)
++
++        # 6x6 状态转移概率矩阵 P(S_{t+1} | S_t)
++        self.transition_matrix = torch.tensor([
++            [0.30, 0.15, 0.20, 0.15, 0.10, 0.10],  # 0: Stand
++            [0.20, 0.30, 0.10, 0.10, 0.15, 0.15],  # 1: Inplace_Turn
++            [0.10, 0.05, 0.30, 0.15, 0.35, 0.05],  # 2: Fwd_Straight
++            [0.10, 0.05, 0.15, 0.30, 0.05, 0.35],  # 3: Bwd_Straight
++            [0.20, 0.05, 0.25, 0.05, 0.30, 0.15],  # 4: Fwd_Turn
++            [0.20, 0.05, 0.05, 0.25, 0.15, 0.30],  # 5: Bwd_Turn
++        ], device=self.device, dtype=torch.float)
++
++        # 初始平稳分布 (用于环境重置采样)
++        self.init_mode_distribution = torch.tensor(
++            [0.183, 0.091, 0.182, 0.171, 0.189, 0.184],
++            device=self.device, dtype=torch.float
++        )
++
++    def compute_leg_ik(self, H_target):
++        """
++        阶段 5.1 单腿矢状面解析逆运动学 (闭式矢量几何解)
++        严格保证轮心前后位置 y_wheel 不动 (y_wheel = 0.11362779 m)。
++        输入: H_target (标量或 (num_envs,) Tensor)
++        输出: q1 (hip_joint), q2 (knee_joint) 弧度
++        """
++        dy1, dz1 = -0.29348091, -0.06220095
++        dy2, dz2 = 0.2821087, -0.19553796
++        y_hip, z_hip = 0.125, -0.070
++        R_wheel = 0.070
++        y_wheel_target = 0.11362779
++
++        L1 = 0.30000000
++        L2 = 0.34324976
++        delta_beta = 2.326640924565626
++
++        dY = y_wheel_target - y_hip
++        dZ = (R_wheel - H_target) - z_hip
++        D_sq = dY**2 + dZ**2
++
++        cos_phi = torch.clamp((D_sq - L1**2 - L2**2) / (2.0 * L1 * L2), -1.0, 1.0)
++        phi = torch.acos(cos_phi)
++
++        pi = math.pi
++        q2 = (phi - delta_beta + pi) % (2.0 * pi) - pi
++        wx = dy1 + torch.cos(q2) * dy2 - torch.sin(q2) * dz2
++        wz = dz1 + torch.sin(q2) * dy2 + torch.cos(q2) * dz2
++
++        theta_w = torch.atan2(wz, wx)
++        if isinstance(H_target, torch.Tensor):
++            theta_des = torch.atan2(dZ, torch.full_like(dZ, dY))
++        else:
++            theta_des = math.atan2(dZ, dY)
+ 
++        q1 = (theta_des - theta_w + pi) % (2.0 * pi) - pi
++        return q1, q2
+ 
+     def reset_idx(self, env_ids):
++        if len(env_ids) == 0:
++            return
++        if not hasattr(self, 'command_mode'):
++            self._init_state_machine_buffers()
++        if not hasattr(self, 'height_cmd_buf'):
++            self.nominal_height = 0.39774
++            self.height_cmd_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
++        if not isinstance(env_ids, torch.Tensor):
++            env_ids = torch.tensor(env_ids, device=self.device, dtype=torch.long)
++        self._is_resetting[env_ids] = True
+         super().reset_idx(env_ids)
++        self._is_resetting[env_ids] = False
+         self.filtered_actions[env_ids] = 0.0
+         self.requested_actions[env_ids] = 0.0
+         self.last_filtered_actions[env_ids] = 0.0
+@@ -265,7 +365,7 @@ class MyRobot(LeggedRobot):
+ 
+     def _get_noise_scale_vec(self, cfg):
+         """
+-        精确对齐 30 维观测向量的噪声分配
++        精确对齐 31 维观测向量的噪声分配
+         """
+         noise_vec = torch.zeros_like(self.obs_buf[0])
+         self.add_noise = self.cfg.noise.add_noise
+@@ -281,13 +381,18 @@ class MyRobot(LeggedRobot):
+         noise_vec[12 + self.right_wheel_idx] = 0.0
+         noise_vec[18:24] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+         noise_vec[24:30] = 0.0  # actions
++        noise_vec[30] = 0.0     # height command
+         return noise_vec
+ 
+     def compute_observations(self):
+-        """30 维观测: 车轮 dof_pos 置零，动作反馈使用 filtered_actions"""
++        """31 维观测: 车轮 dof_pos 置零，动作反馈使用 filtered_actions，追加归一化高度指令"""
+         obs_dof_pos = (self.dof_pos - self.default_dof_pos).clone()
+         obs_dof_pos[:, self.wheel_indices] = 0.0
+ 
++        # 阶段 5.1: 归一化高度指令 (dim 31)
++        # H_cmd 归一化: (H_cmd - 0.40) / 0.15
++        norm_h = ((self.height_cmd_buf - 0.40) / 0.15).unsqueeze(-1)
++
+         self.obs_buf = torch.cat((
+             self.base_lin_vel * self.obs_scales.lin_vel,
+             self.base_ang_vel * self.obs_scales.ang_vel,
+@@ -295,7 +400,8 @@ class MyRobot(LeggedRobot):
+             self.commands[:, :3] * self.commands_scale,
+             obs_dof_pos * self.obs_scales.dof_pos,
+             self.dof_vel * self.obs_scales.dof_vel,
+-            self.filtered_actions
++            self.filtered_actions,
++            norm_h,
+         ), dim=-1)
+ 
+         if self.add_noise:
+@@ -308,7 +414,7 @@ class MyRobot(LeggedRobot):
+         - 轮子速度闭环 (高响应大轮速覆盖)
+         """
+         actions_scaled = self.filtered_actions * self.cfg.control.action_scale
+-        # 髋关节与膝关节幅度减半 (0.5x)，平抑机身前后俯仰抖动与动态自主深蹲起伏
++        # 髋关节软化 (hip_scale_reduction = 0.7) 与膝关节缩放 (knee_scale_reduction = 0.5)，平抑机身前后俯仰抖动与动态自主深蹲起伏
+         actions_scaled[:, self.left_hip_idx] *= self.hip_scale_reduction
+         actions_scaled[:, self.right_hip_idx] *= self.hip_scale_reduction
+         actions_scaled[:, self.left_knee_idx] *= self.knee_scale_reduction
+@@ -316,11 +422,20 @@ class MyRobot(LeggedRobot):
+ 
+         torques = torch.zeros_like(actions)
+ 
++        # 阶段 5.1: 解析 IK 前馈 + PPO 残差控制
++        q1_ik, q2_ik = self.compute_leg_ik(self.height_cmd_buf)
++        ik_targets = {
++            self.left_hip_idx: q1_ik,
++            self.right_hip_idx: q1_ik,
++            self.left_knee_idx: q2_ik,
++            self.right_knee_idx: q2_ik,
++        }
++
+         # 腿部 PD 位置控制。策略可能输出超过关节可达范围的动作；将实际位置
+         # 目标裁剪在 URDF 硬限位以内，避免长期力矩饱和和撞击机械限位。
+         for idx in [self.left_hip_idx, self.left_knee_idx,
+                     self.right_hip_idx, self.right_knee_idx]:
+-            target = actions_scaled[:, idx] + self.default_dof_pos[:, idx]
++            target = actions_scaled[:, idx] + ik_targets[idx] + self.default_dof_pos[:, idx]
+             lower = self.dof_pos_limits[idx, 0] + self.leg_target_limit_margin
+             upper = self.dof_pos_limits[idx, 1] - self.leg_target_limit_margin
+             target = torch.clamp(target, min=lower, max=upper)
+@@ -472,61 +587,290 @@ class MyRobot(LeggedRobot):
+ 
+     def _resample_commands(self, env_ids):
+         """
+-        按实机部署工况重构的结构化四模态指令重采样 (阶段 21):
+-        - 25% 驻车站立: v_y = 0, yaw = 0 (强化原地自平衡，彻底消灭驻车对推)
+-        - 50% 纯直行/倒车: v_y in [-0.8, -0.2] U [0.2, 1.0], yaw = 0 (双轮同步控速)
+-        - 15% 原地纯转向: v_y = 0, yaw in [-1.0, -0.1] U [0.1, 1.0] (保留转向灵敏度)
+-        - 10% 混合运动: v_y in [-0.8, 1.0], yaw in [-1.0, 1.0] (复合机动)
++        阶段 4.3: 六模态动态指令马尔可夫状态机采样与偏航方向管理
++        0: Stand (驻车自平衡)
++        1: Inplace_Turn (原地偏航转向)
++        2: Fwd_Straight (前进直行巡航)
++        3: Bwd_Straight (后退直行巡航)
++        4: Fwd_Turn (前进复合转向)
++        5: Bwd_Turn (后退复合转向)
+         """
+         if len(env_ids) == 0:
+             return
+ 
+-        n = len(env_ids)
+-        r = torch.rand(n, device=self.device)
++        if not hasattr(self, 'command_mode'):
++            self._init_state_machine_buffers()
++
++        if not isinstance(env_ids, torch.Tensor):
++            env_ids = torch.tensor(env_ids, device=self.device, dtype=torch.long)
++
++        # 区分重置环境与运行中步进切换环境
++        reset_mask = self._is_resetting[env_ids]
++        curr_modes = self.command_mode[env_ids]
++        next_modes = torch.zeros_like(curr_modes)
++
++        # 1. 采样 next_mode
++        # 重置环境: 按平稳分布独立采样
++        if reset_mask.any():
++            reset_ids = env_ids[reset_mask]
++            n_rst = len(reset_ids)
++            rst_probs = self.init_mode_distribution.unsqueeze(0).expand(n_rst, -1)
++            next_modes[reset_mask] = torch.multinomial(rst_probs, num_samples=1).squeeze(1)
++            # 偏航方向随机初始化 50% 左转 / 50% 右转
++            self.yaw_direction[reset_ids] = torch.where(
++                torch.rand(n_rst, device=self.device) < 0.5,
++                torch.tensor(1.0, device=self.device),
++                torch.tensor(-1.0, device=self.device),
++            )
+ 
+-        # 预先将 lateral velocity (x) 与 heading 统一置零
++        # 运行中切换环境: 按转移矩阵行概率采样
++        step_mask = ~reset_mask
++        if step_mask.any():
++            step_ids = env_ids[step_mask]
++            n_stp = len(step_ids)
++            curr_step_modes = curr_modes[step_mask]
++            step_probs = self.transition_matrix[curr_step_modes]
++            step_next = torch.multinomial(step_probs, num_samples=1).squeeze(1)
++            next_modes[step_mask] = step_next
++
++            # 偏航方向动态反转与维护逻辑:
++            # (1) 原地转向自转移 (1 -> 1): 50% 强制偏航符号反转 (Task B 原地左<->右), 50% 保持稳态同向
++            mask_11 = (curr_step_modes == 1) & (step_next == 1)
++            if mask_11.any():
++                ids_11 = step_ids[mask_11]
++                flip_mask = torch.rand(len(ids_11), device=self.device) < 0.5
++                self.yaw_direction[ids_11[flip_mask]] *= -1.0
++
++            # (2) 前进复合转向自转移 (4 -> 4): 50% 偏航符号反转 (Task B 前进 S 弯), 50% 保持同向稳态
++            mask_44 = (curr_step_modes == 4) & (step_next == 4)
++            if mask_44.any():
++                ids_44 = step_ids[mask_44]
++                flip_mask = torch.rand(len(ids_44), device=self.device) < 0.5
++                self.yaw_direction[ids_44[flip_mask]] *= -1.0
++
++            # (3) 后退复合转向自转移 (5 -> 5): 50% 偏航符号反转 (Task B 倒车 S 弯), 50% 保持同向稳态
++            mask_55 = (curr_step_modes == 5) & (step_next == 5)
++            if mask_55.any():
++                ids_55 = step_ids[mask_55]
++                flip_mask = torch.rand(len(ids_55), device=self.device) < 0.5
++                self.yaw_direction[ids_55[flip_mask]] *= -1.0
++
++            # (4) 从非转向状态 (0, 2, 3) 进入转向状态 (1, 4, 5): 重新随机分配 50% 左转 / 50% 右转
++            mask_enter_turn = ((curr_step_modes == 0) | (curr_step_modes == 2) | (curr_step_modes == 3)) & \
++                              ((step_next == 1) | (step_next == 4) | (step_next == 5))
++            if mask_enter_turn.any():
++                ids_et = step_ids[mask_enter_turn]
++                self.yaw_direction[ids_et] = torch.where(
++                    torch.rand(len(ids_et), device=self.device) < 0.5,
++                    torch.tensor(1.0, device=self.device),
++                    torch.tensor(-1.0, device=self.device),
++                )
++
++            # (5) 前后转向互换 (4 -> 5 或 5 -> 4): 70% 维持原转向方向 (纯粹纵向换向), 30% 转向同时反向
++            mask_45 = ((curr_step_modes == 4) & (step_next == 5)) | ((curr_step_modes == 5) & (step_next == 4))
++            if mask_45.any():
++                ids_45 = step_ids[mask_45]
++                flip_mask = torch.rand(len(ids_45), device=self.device) < 0.3
++                self.yaw_direction[ids_45[flip_mask]] *= -1.0
++
++        # 更新状态机当前状态
++        self.command_mode[env_ids] = next_modes
++
++        # 2. 生成具体线速度与偏航角速度指令
++        # lateral velocity (x) 严格置零 (仅训练纵向与偏航差动)
+         self.commands[env_ids, 0] = 0.0
+         if self.commands.shape[1] > 3:
+             self.commands[env_ids, 3] = 0.0
+ 
+-        # 1. 25% 驻车: v_y = 0, yaw = 0
+-        mask_stand = (r < 0.25)
+-        if mask_stand.any():
+-            ids_stand = env_ids[mask_stand]
+-            self.commands[ids_stand, 1] = 0.0
+-            self.commands[ids_stand, 2] = 0.0
+-
+-        # 2. 50% 直行/倒车: v_y in [-0.8, -0.2] U [0.2, 1.0], yaw = 0
+-        mask_straight = (r >= 0.25) & (r < 0.75)
+-        if mask_straight.any():
+-            ids_str = env_ids[mask_straight]
+-            n_str = len(ids_str)
+-            u = torch.rand(n_str, device=self.device)
+-            # 分段映射避免落入 [-0.2, 0.2] 死区
+-            vy = torch.where(u < (0.6 / 1.4), -0.8 + u * 1.4, -0.8 + u * 1.4 + 0.4)
+-            self.commands[ids_str, 1] = vy
+-            self.commands[ids_str, 2] = 0.0
+-
+-        # 3. 15% 原地纯转向: v_y = 0, yaw in [-1.0, -0.1] U [0.1, 1.0]
+-        mask_turn = (r >= 0.75) & (r < 0.90)
+-        if mask_turn.any():
+-            ids_turn = env_ids[mask_turn]
+-            n_turn = len(ids_turn)
+-            s = torch.where(torch.rand(n_turn, device=self.device) < 0.5, -1.0, 1.0)
+-            m = 0.1 + 0.9 * torch.rand(n_turn, device=self.device)
+-            self.commands[ids_turn, 1] = 0.0
+-            self.commands[ids_turn, 2] = s * m
+-
+-        # 4. 10% 混合运动: 随机指令
+-        mask_mixed = (r >= 0.90)
+-        if mask_mixed.any():
+-            ids_mixed = env_ids[mask_mixed]
+-            n_mixed = len(ids_mixed)
+-            self.commands[ids_mixed, 1] = -0.8 + 1.8 * torch.rand(n_mixed, device=self.device)
+-            self.commands[ids_mixed, 2] = -1.0 + 2.0 * torch.rand(n_mixed, device=self.device)
+-            small_mask = torch.norm(self.commands[ids_mixed, :2], dim=1) < 0.2
+-            if small_mask.any():
+-                self.commands[ids_mixed[small_mask], 1] = 0.0
++        n = len(env_ids)
++        # 纵向速度幅值采样: [0.10, 0.30] m/s
++        v_rand = 0.10 + 0.20 * torch.rand(n, device=self.device)
++        # 偏航角速度幅值采样: [0.20, 0.50] rad/s (避开死区，覆盖 0.35 标称工作点)
++        w_rand = 0.20 + 0.30 * torch.rand(n, device=self.device)
++        yaw_dirs = self.yaw_direction[env_ids]
++
++        # 模式 0: Stand (v_y = 0.0, w_z = 0.0)
++        m0 = (next_modes == 0)
++        if m0.any():
++            ids0 = env_ids[m0]
++            self.commands[ids0, 1] = 0.0
++            self.commands[ids0, 2] = 0.0
++
++        # 模式 1: Inplace_Turn (v_y = 0.0, w_z = yaw_dir * w_rand)
++        m1 = (next_modes == 1)
++        if m1.any():
++            ids1 = env_ids[m1]
++            self.commands[ids1, 1] = 0.0
++            self.commands[ids1, 2] = (yaw_dirs * w_rand)[m1]
++
++        # 模式 2: Fwd_Straight (v_y = +v_rand, w_z = 0.0)
++        m2 = (next_modes == 2)
++        if m2.any():
++            ids2 = env_ids[m2]
++            self.commands[ids2, 1] = v_rand[m2]
++            self.commands[ids2, 2] = 0.0
++
++        # 模式 3: Bwd_Straight (v_y = -v_rand, w_z = 0.0)
++        m3 = (next_modes == 3)
++        if m3.any():
++            ids3 = env_ids[m3]
++            self.commands[ids3, 1] = -v_rand[m3]
++            self.commands[ids3, 2] = 0.0
++
++        # 模式 4: Fwd_Turn (v_y = +v_rand, w_z = yaw_dir * w_rand)
++        m4 = (next_modes == 4)
++        if m4.any():
++            ids4 = env_ids[m4]
++            self.commands[ids4, 1] = v_rand[m4]
++            self.commands[ids4, 2] = (yaw_dirs * w_rand)[m4]
++
++        # 模式 5: Bwd_Turn (v_y = -v_rand, w_z = yaw_dir * w_rand)
++        m5 = (next_modes == 5)
++        if m5.any():
++            ids5 = env_ids[m5]
++            self.commands[ids5, 1] = -v_rand[m5]
++            self.commands[ids5, 2] = (yaw_dirs * w_rand)[m5]
++
++        # 阶段 5.3: 混合课程采样 (35% 复合转向变高, 25% 直行变高, 15% 原地变高/偏航, 15% 标称旧运动, 10% 标称驻车)
++        r_task = torch.rand(n, device=self.device)
++        task_compound_turn_h = (r_task < 0.35)                               # 35% 复合转向中动态变高 (Stage 1)
++        task_cruise_h = (r_task >= 0.35) & (r_task < 0.60)                  # 25% 前后直行中动态变高
++        task_inplace_h = (r_task >= 0.60) & (r_task < 0.75)                 # 15% 原地转向或驻车中变高
++        task_old_motion = (r_task >= 0.75) & (r_task < 0.90)                # 15% 标称高度 Phase 4.3 旧运动
++        task_park = (r_task >= 0.90)                                        # 10% 标称高度静止驻车
++
++        h_nom = torch.tensor(self.nominal_height, device=self.device)
++
++        # 1. 任务 1 (35%): 复合转向中动态高度调节 (Stage 1 核心任务)
++        # |v_y| in [0.08, 0.12] m/s, |yaw| in [0.15, 0.25] rad/s, H in [0.36, 0.44] m
++        if task_compound_turn_h.any():
++            ids_ct = env_ids[task_compound_turn_h]
++            n_ct = len(ids_ct)
++            v_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
++            v_mag = 0.08 + 0.04 * torch.rand(n_ct, device=self.device)
++            w_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
++            w_mag = 0.15 + 0.10 * torch.rand(n_ct, device=self.device)
++
++            # 高度采样: 20% 标称, 40% 低蹲 [0.36, 0.38]m, 40% 升高 [0.42, 0.44]m
++            r_h_ct = torch.rand(n_ct, device=self.device)
++            h_low_ct = 0.36 + 0.02 * torch.rand(n_ct, device=self.device)
++            h_high_ct = 0.42 + 0.02 * torch.rand(n_ct, device=self.device)
++            sampled_h_ct = torch.where(
++                r_h_ct < 0.20,
++                h_nom,
++                torch.where(r_h_ct < 0.60, h_low_ct, h_high_ct)
++            )
++
++            self.commands[ids_ct, 1] = v_dir * v_mag
++            self.commands[ids_ct, 2] = w_dir * w_mag
++            self.height_cmd_buf[ids_ct] = sampled_h_ct
++            self.command_mode[ids_ct] = torch.where(v_dir > 0, 4, 5) # 4: Fwd_Turn, 5: Bwd_Turn
++            self.yaw_direction[ids_ct] = w_dir
++            self.task_type_buf[ids_ct] = 1 # 任务 1: 复合转向变高
++
++        # 2. 任务 2 (25%): 前后直行中动态高度调节 (Phase 5.2 任务保留)
++        # |v_y| in [0.08, 0.20] m/s, yaw = 0, H in [0.35, 0.45] m
++        if task_cruise_h.any():
++            ids_c = env_ids[task_cruise_h]
++            n_c = len(ids_c)
++            v_dir = torch.where(torch.rand(n_c, device=self.device) < 0.5, 1.0, -1.0)
++            v_mag = 0.08 + 0.12 * torch.rand(n_c, device=self.device)
++
++            r_h_c = torch.rand(n_c, device=self.device)
++            h_low_c = 0.35 + 0.03 * torch.rand(n_c, device=self.device)
++            h_high_c = 0.41 + 0.04 * torch.rand(n_c, device=self.device)
++            sampled_h_c = torch.where(
++                r_h_c < 0.20,
++                h_nom,
++                torch.where(r_h_c < 0.60, h_low_c, h_high_c)
++            )
++
++            self.commands[ids_c, 1] = v_dir * v_mag
++            self.commands[ids_c, 2] = 0.0
++            self.height_cmd_buf[ids_c] = sampled_h_c
++            self.command_mode[ids_c] = torch.where(v_dir > 0, 2, 3) # 2: Fwd_Straight, 3: Bwd_Straight
++            self.task_type_buf[ids_c] = 2 # 任务 2: 直行变高
++
++        # 3. 任务 3 (15%): 原地高度调节 (Phase 5.1 任务保留: 50% 驻车原地变高, 50% 原地转向变高)
++        # H in [0.35, 0.45] m
++        if task_inplace_h.any():
++            ids_i = env_ids[task_inplace_h]
++            n_i = len(ids_i)
++            is_turn_i = (torch.rand(n_i, device=self.device) < 0.5)
++            w_dir_i = torch.where(torch.rand(n_i, device=self.device) < 0.5, 1.0, -1.0)
++            w_mag_i = 0.20 + 0.15 * torch.rand(n_i, device=self.device)
++
++            r_h_i = torch.rand(n_i, device=self.device)
++            h_low_i = 0.35 + 0.03 * torch.rand(n_i, device=self.device)
++            h_high_i = 0.41 + 0.04 * torch.rand(n_i, device=self.device)
++            sampled_h_i = torch.where(
++                r_h_i < 0.20,
++                h_nom,
++                torch.where(r_h_i < 0.60, h_low_i, h_high_i)
++            )
++
++            self.commands[ids_i, 1] = 0.0
++            self.commands[ids_i, 2] = torch.where(is_turn_i, w_dir_i * w_mag_i, torch.zeros_like(w_mag_i))
++            self.height_cmd_buf[ids_i] = sampled_h_i
++            self.command_mode[ids_i] = torch.where(is_turn_i, 1, 0) # 1: Inplace_Turn, 0: Stand
++            self.yaw_direction[ids_i] = w_dir_i
++            self.task_type_buf[ids_i] = 3 # 任务 3: 原地变高
++
++        # 4. 任务 4 (15%): 标称高度 Phase 4.3 旧运动任务 (直行/原地偏航/复合转向)
++        # H = 0.39774 m, commands 保持六模态马尔可夫采样 (速度 [0.10, 0.25] m/s, 偏航 [0.20, 0.35] rad/s)
++        if task_old_motion.any():
++            ids_m = env_ids[task_old_motion]
++            n_m = len(ids_m)
++            self.height_cmd_buf[ids_m] = self.nominal_height
++            self.task_type_buf[ids_m] = 4 # 任务 4: 标称旧运动
++
++            # 如果碰巧被采样为 Stand(0)，重置为 1~5 运动模态以确保旧技能运动充分覆盖
++            m_curr = self.command_mode[ids_m]
++            m_zero = (m_curr == 0)
++            if m_zero.any():
++                ids_m0 = ids_m[m_zero]
++                self.command_mode[ids_m0] = torch.randint(1, 6, (len(ids_m0),), device=self.device)
++
++            v_r = 0.10 + 0.15 * torch.rand(n_m, device=self.device)
++            w_r = 0.20 + 0.15 * torch.rand(n_m, device=self.device)
++            y_d = self.yaw_direction[ids_m]
++            m_final = self.command_mode[ids_m]
++
++            # 模式 1: Inplace Turn
++            m1_mask = (m_final == 1)
++            if m1_mask.any():
++                self.commands[ids_m[m1_mask], 1] = 0.0
++                self.commands[ids_m[m1_mask], 2] = (y_d * w_r)[m1_mask]
++            # 模式 2: Fwd Straight
++            m2_mask = (m_final == 2)
++            if m2_mask.any():
++                self.commands[ids_m[m2_mask], 1] = v_r[m2_mask]
++                self.commands[ids_m[m2_mask], 2] = 0.0
++            # 模式 3: Bwd Straight
++            m3_mask = (m_final == 3)
++            if m3_mask.any():
++                self.commands[ids_m[m3_mask], 1] = -v_r[m3_mask]
++                self.commands[ids_m[m3_mask], 2] = 0.0
++            # 模式 4: Fwd Turn
++            m4_mask = (m_final == 4)
++            if m4_mask.any():
++                self.commands[ids_m[m4_mask], 1] = v_r[m4_mask]
++                self.commands[ids_m[m4_mask], 2] = (y_d * w_r)[m4_mask]
++            # 模式 5: Bwd Turn
++            m5_mask = (m_final == 5)
++            if m5_mask.any():
++                self.commands[ids_m[m5_mask], 1] = -v_r[m5_mask]
++                self.commands[ids_m[m5_mask], 2] = (y_d * w_r)[m5_mask]
++
++        # 5. 任务 5 (10%): 标称高度静止驻车
++        # v_y = 0, yaw = 0, H = 0.39774 m
++        if task_park.any():
++            ids_p = env_ids[task_park]
++            self.commands[ids_p, 1] = 0.0
++            self.commands[ids_p, 2] = 0.0
++            self.height_cmd_buf[ids_p] = self.nominal_height
++            self.command_mode[ids_p] = 0 # Stand
++            self.task_type_buf[ids_p] = 5 # 任务 5: 标称驻车
+ 
+     # ==================== 奖励函数 ====================
+ 
+@@ -573,8 +917,8 @@ class MyRobot(LeggedRobot):
+         return torch.abs(self.base_lin_vel[:, 1]) * zero_cmd
+ 
+     def _reward_stand_still_wheel(self):
+-        """静止时惩罚车轮旋转 (锁定驱动轮，彻底切断前后摇摆振荡)"""
+-        zero_cmd = (torch.norm(self.commands[:, :2], dim=1) < 0.1).float()
++        """静止时惩罚车轮旋转 (锁定驱动轮，彻底切断前后摇摆振荡；非零偏航时不触发)"""
++        zero_cmd = ((torch.norm(self.commands[:, :2], dim=1) < 0.1) & (torch.abs(self.commands[:, 2]) < 0.1)).float()
+         wheel_vel_sq = torch.square(self.dof_vel[:, self.left_wheel_idx]) + torch.square(self.dof_vel[:, self.right_wheel_idx])
+         return wheel_vel_sq * zero_cmd
+ 
+@@ -638,12 +982,13 @@ class MyRobot(LeggedRobot):
+ 
+     def _reward_base_height(self):
+         """
+-        惩罚机身高度偏离目标值 (带 1.5cm 几何前倾死区的 L1 锁高):
+-        在 [0.385, 0.415]m 之间允许前倾巡航的自然几何微沉降，不产生罚分；
+-        一旦突破 1.5cm 死区(如自主下蹲起伏)，施加严厉 L1 梯度强力拉回，彻底兼顾定高与巡航。
++        惩罚机身高度偏离动态目标值 (带 1.5cm 几何前倾死区的 L1 锁高):
++        阶段 5.1: 改为跟踪动态 height_cmd_buf。
++        在 [H_cmd - 0.015, H_cmd + 0.015]m 之间允许自然几何微沉降，不产生罚分；
++        一旦突破 1.5cm 死区，施加严厉 L1 梯度强力拉回。
+         """
+         base_height = self.root_states[:, 2]
+-        height_error = torch.clamp(torch.abs(base_height - self.cfg.rewards.base_height_target) - 0.015, min=0.0)
++        height_error = torch.clamp(torch.abs(base_height - self.height_cmd_buf) - 0.015, min=0.0)
+         return height_error
+ 
+     def _reward_wheel_throttle_margin(self):
+diff --git a/legged_gym/legged_gym/scripts/train.py b/legged_gym/legged_gym/scripts/train.py
+index 1925f05..9e1eb05 100644
+--- a/legged_gym/legged_gym/scripts/train.py
++++ b/legged_gym/legged_gym/scripts/train.py
+@@ -44,7 +44,7 @@ import torch
+ 
+ 
+ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
+-    """Persist enough context to reproduce a run without relying on notes."""
++    """保存本次运行的完整上下文信息（配置、代码与版本状态），以便后续精准复现。"""
+     if log_dir is None:
+         return
+     os.makedirs(log_dir, exist_ok=True)
+@@ -57,6 +57,7 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
+     with open(os.path.join(log_dir, "training_snapshot.json"), "w", encoding="utf-8") as handle:
+         json.dump(snapshot, handle, indent=2, ensure_ascii=False, default=str)
+ 
++    # 记录当前的 git 状态和 git diff 差异
+     for filename, command in (
+         ("git_status.txt", ["git", "status", "--short"]),
+         ("git_diff.patch", ["git", "diff", "--no-ext-diff"]),
+@@ -71,8 +72,8 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
+         with open(os.path.join(log_dir, filename), "w", encoding="utf-8") as handle:
+             handle.write(result.stdout)
+ 
+-    # The robot implementation is currently outside the repository index, so a
+-    # normal git diff cannot preserve it.  Copy the exact training sources too.
++    # 自定义机器人的实现文件若未被 Git 追踪，普通 git diff 无法保留；
++    # 因此将训练时的关键源代码直接复制一份留存快照。
+     source_dir = os.path.join(log_dir, "source_snapshot")
+     os.makedirs(source_dir, exist_ok=True)
+     for relative_path in (
+@@ -91,9 +92,13 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
+         shutil.copy2(runner_source, os.path.join(source_dir, "on_policy_runner.py"))
+ 
+ def train(args):
++    # 根据任务名称和命令行参数创建强化学习环境及对应配置
+     env, env_cfg = task_registry.make_env(name=args.task, args=args)
++    # 创建训练算法运行器 (OnPolicyRunner/PPO) 及算法配置
+     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args)
++    # 保存本次实验运行的代码与配置快照
+     save_run_snapshot(ppo_runner.log_dir, env_cfg, train_cfg, args)
++    # 启动 PPO 策略训练迭代
+     ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
+ 
+ if __name__ == '__main__':
+diff --git a/legged_gym/legged_gym/utils/task_registry.py b/legged_gym/legged_gym/utils/task_registry.py
+index 3a897af..57dcc8a 100644
+--- a/legged_gym/legged_gym/utils/task_registry.py
++++ b/legged_gym/legged_gym/utils/task_registry.py
+@@ -30,7 +30,7 @@
+ 
+ import os
+ from datetime import datetime
+-from typing import Tuple
++from typing import Tuple, Type
+ import torch
+ import numpy as np
+ 
+@@ -42,56 +42,67 @@ from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_pat
+ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
+ 
+ class TaskRegistry():
++    """任务注册表类，用于管理所有强化学习任务的环境类、环境配置和算法训练配置。"""
+     def __init__(self):
+-        self.task_classes = {}
+-        self.env_cfgs = {}
+-        self.train_cfgs = {}
++        self.task_classes = {}  # 存放任务环境类字典，如 {"anymal_c_rough": Anymal, ...}
++        self.env_cfgs = {}      # 存放环境配置字典
++        self.train_cfgs = {}    # 存放训练/算法配置字典
+     
+-    def register(self, name: str, task_class: VecEnv, env_cfg: LeggedRobotCfg, train_cfg: LeggedRobotCfgPPO):
++    def register(self, name: str, task_class: Type[VecEnv], env_cfg: LeggedRobotCfg, train_cfg: LeggedRobotCfgPPO):
++        """向注册表中注册一个新任务。
++
++        参数:
++            name (str): 任务名称（如 "a1", "myrobot"）
++            task_class (Type[VecEnv]): 任务对应的环境类（继承自 VecEnv）
++            env_cfg (LeggedRobotCfg): 环境配置对象
++            train_cfg (LeggedRobotCfgPPO): 算法训练配置对象
++        """
+         self.task_classes[name] = task_class
+         self.env_cfgs[name] = env_cfg
+         self.train_cfgs[name] = train_cfg
+     
+-    def get_task_class(self, name: str) -> VecEnv:
++    def get_task_class(self, name: str) -> Type[VecEnv]:
++        """根据任务名称获取对应的环境类。"""
+         return self.task_classes[name]
+     
+     def get_cfgs(self, name) -> Tuple[LeggedRobotCfg, LeggedRobotCfgPPO]:
++        """根据任务名称获取环境配置和训练配置，并同步随机种子。"""
+         train_cfg = self.train_cfgs[name]
+         env_cfg = self.env_cfgs[name]
+-        # copy seed
++        # 将训练配置中的随机种子同步复制到环境配置中
+         env_cfg.seed = train_cfg.seed
+         return env_cfg, train_cfg
+     
+     def make_env(self, name, args=None, env_cfg=None) -> Tuple[VecEnv, LeggedRobotCfg]:
+-        """ Creates an environment either from a registered namme or from the provided config file.
++        """根据已注册的任务名称或传入的配置对象创建仿真环境实例。
+ 
+-        Args:
+-            name (string): Name of a registered env.
+-            args (Args, optional): Isaac Gym comand line arguments. If None get_args() will be called. Defaults to None.
+-            env_cfg (Dict, optional): Environment config file used to override the registered config. Defaults to None.
++        参数:
++            name (string): 已注册的任务名称。
++            args (Args, 可选): Isaac Gym 命令行解析参数。若为 None 则自动调用 get_args()。默认为 None。
++            env_cfg (Dict/LeggedRobotCfg, 可选): 用于覆盖注册配置的环境配置对象。默认为 None。
+ 
+-        Raises:
+-            ValueError: Error if no registered env corresponds to 'name' 
++        异常:
++            ValueError: 如果未找到名称为 'name' 的已注册任务。
+ 
+-        Returns:
+-            isaacgym.VecTaskPython: The created environment
+-            Dict: the corresponding config file
++        返回:
++            VecEnv: 创建好的向量化仿真环境实例。
++            LeggedRobotCfg: 最终使用的环境配置对象。
+         """
+-        # if no args passed get command line arguments
++        # 若未传入 args，则从命令行获取参数
+         if args is None:
+             args = get_args()
+-        # check if there is a registered env with that name
++        # 检查是否注册了对应名称的任务环境
+         if name in self.task_classes:
+             task_class = self.get_task_class(name)
+         else:
+             raise ValueError(f"Task with name: {name} was not registered")
+         if env_cfg is None:
+-            # load config files
++            # 加载已注册的配置
+             env_cfg, _ = self.get_cfgs(name)
+-        # override cfg from args (if specified)
++        # 如果命令行指定了参数，用其覆盖环境配置中的对应项
+         env_cfg, _ = update_cfg_from_args(env_cfg, None, args)
+         set_seed(env_cfg.seed)
+-        # parse sim params (convert to dict first)
++        # 解析仿真参数（先转为字典）
+         sim_params = {"sim": class_to_dict(env_cfg.sim)}
+         sim_params = parse_sim_params(args, sim_params)
+         env = task_class(   cfg=env_cfg,
+@@ -102,39 +113,40 @@ class TaskRegistry():
+         return env, env_cfg
+ 
+     def make_alg_runner(self, env, name=None, args=None, train_cfg=None, log_root="default") -> Tuple[OnPolicyRunner, LeggedRobotCfgPPO]:
+-        """ Creates the training algorithm  either from a registered namme or from the provided config file.
++        """创建训练算法运行器 (Runner)，可基于注册名称或传入的配置对象。
+ 
+-        Args:
+-            env (isaacgym.VecTaskPython): The environment to train (TODO: remove from within the algorithm)
+-            name (string, optional): Name of a registered env. If None, the config file will be used instead. Defaults to None.
+-            args (Args, optional): Isaac Gym comand line arguments. If None get_args() will be called. Defaults to None.
+-            train_cfg (Dict, optional): Training config file. If None 'name' will be used to get the config file. Defaults to None.
+-            log_root (str, optional): Logging directory for Tensorboard. Set to 'None' to avoid logging (at test time for example). 
+-                                      Logs will be saved in <log_root>/<date_time>_<run_name>. Defaults to "default"=<path_to_LEGGED_GYM>/logs/<experiment_name>.
++        参数:
++            env (VecEnv): 用于训练的环境实例。
++            name (string, 可选): 已注册的任务名称。若为 None 则必须提供 train_cfg。默认为 None。
++            args (Args, 可选): Isaac Gym 命令行参数。若为 None 则自动调用 get_args()。默认为 None。
++            train_cfg (Dict/LeggedRobotCfgPPO, 可选): 训练算法配置。若为 None 则通过 'name' 读取对应配置。
++            log_root (str, 可选): TensorBoard 与模型保存的根目录。设为 None 时禁用日志记录（例如评估/测试阶段）。
++                                默认值 "default" 为 <LEGGED_GYM_ROOT_DIR>/logs/<experiment_name>。
+ 
+-        Raises:
+-            ValueError: Error if neither 'name' or 'train_cfg' are provided
+-            Warning: If both 'name' or 'train_cfg' are provided 'name' is ignored
++        异常:
++            ValueError: 当 'name' 和 'train_cfg' 均未提供时抛出异常。
++            Warning: 若同时提供了 'name' 和 'train_cfg'，将忽略 'name' 的配置。
+ 
+-        Returns:
+-            PPO: The created algorithm
+-            Dict: the corresponding config file
++        返回:
++            OnPolicyRunner: 创建完成的算法运行器。
++            LeggedRobotCfgPPO: 最终使用的训练算法配置。
+         """
+-        # if no args passed get command line arguments
++        # 若未传入 args，则从命令行获取参数
+         if args is None:
+             args = get_args()
+-        # if config files are passed use them, otherwise load from the name
++        # 若传入了自定义配置则优先使用，否则根据任务名称加载配置
+         if train_cfg is None:
+             if name is None:
+                 raise ValueError("Either 'name' or 'train_cfg' must be not None")
+-            # load config files
++            # 加载已注册的训练配置
+             _, train_cfg = self.get_cfgs(name)
+         else:
+             if name is not None:
+                 print(f"'train_cfg' provided -> Ignoring 'name={name}'")
+-        # override cfg from args (if specified)
++        # 用命令行参数覆盖算法配置（如果有指定）
+         _, train_cfg = update_cfg_from_args(None, train_cfg, args)
+ 
++        # 确定日志与模型保存目录路径
+         if log_root=="default":
+             log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
+             log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+@@ -145,14 +157,21 @@ class TaskRegistry():
+         
+         train_cfg_dict = class_to_dict(train_cfg)
+         runner = OnPolicyRunner(env, train_cfg_dict, log_dir, device=args.rl_device)
+-        #save resume path before creating a new log_dir
++        
++        # 检查是否需要恢复之前的训练检查点
+         resume = train_cfg.runner.resume
+         if resume:
+-            # load previously trained model
++            # 加载之前训练的模型检查点（包括优化器状态）
+             resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+             print(f"Loading model from: {resume_path}")
+             runner.load(resume_path)
++        elif getattr(train_cfg.runner, 'warm_start', False):
++            # 热启动（Warm start）：仅加载模型网络权重，不加载优化器，并将迭代步数重置为 0
++            warm_start_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
++            print(f"Warm starting model weights from: {warm_start_path}")
++            runner.load(warm_start_path, load_optimizer=False)
++            runner.current_learning_iteration = 0
+         return runner, train_cfg
+ 
+-# make global task registry
++# 创建全局单例任务注册表
+ task_registry = TaskRegistry()
+\ No newline at end of file
+diff --git a/rsl_rl/rsl_rl/runners/on_policy_runner.py b/rsl_rl/rsl_rl/runners/on_policy_runner.py
+index 0c5f556..34d404a 100644
+--- a/rsl_rl/rsl_rl/runners/on_policy_runner.py
++++ b/rsl_rl/rsl_rl/runners/on_policy_runner.py
+@@ -135,12 +135,12 @@ class OnPolicyRunner:
+             learn_time = stop - start
+             if self.log_dir is not None:
+                 self.log(locals())
+-            if it % self.save_interval == 0:
+-                self.save(os.path.join(self.log_dir, 'model_{}.pt'.format(it)), iteration=it)
++            if (it + 1) % self.save_interval == 0:
++                self.save(os.path.join(self.log_dir, 'model_{}.pt'.format(it + 1)), iteration=it + 1)
+             ep_infos.clear()
+         
+         self.current_learning_iteration += num_learning_iterations
+-        self.save(os.path.join(self.log_dir, 'model_{}.pt'.format(self.current_learning_iteration)))
++        self.save(os.path.join(self.log_dir, 'model_{}.pt'.format(self.current_learning_iteration)), iteration=self.current_learning_iteration)
+ 
+     def log(self, locs, width=80, pad=35):
+         self.tot_timesteps += self.num_steps_per_env * self.env.num_envs
