@@ -90,6 +90,11 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
     ))
     if os.path.isfile(runner_source):
         shutil.copy2(runner_source, os.path.join(source_dir, "on_policy_runner.py"))
+    ppo_source = os.path.abspath(os.path.join(
+        LEGGED_GYM_ROOT_DIR, "..", "rsl_rl", "rsl_rl", "algorithms", "ppo.py"
+    ))
+    if os.path.isfile(ppo_source):
+        shutil.copy2(ppo_source, os.path.join(source_dir, "ppo.py"))
 
 def train(args):
     # 根据任务名称和命令行参数创建强化学习环境及对应配置

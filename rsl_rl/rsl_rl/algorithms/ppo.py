@@ -28,6 +28,7 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -52,6 +53,8 @@ class PPO:
                  schedule="fixed",
                  desired_kl=0.01,
                  device='cpu',
+                 enable_early_stopping=False,
+                 early_stop_kl=None,
                  ):
 
         self.device = device
@@ -59,6 +62,14 @@ class PPO:
         self.desired_kl = desired_kl
         self.schedule = schedule
         self.learning_rate = learning_rate
+        self.enable_early_stopping = enable_early_stopping
+        if early_stop_kl is not None:
+            self.early_stop_kl = early_stop_kl
+        elif self.desired_kl is not None:
+            self.early_stop_kl = 2.0 * self.desired_kl
+        else:
+            self.early_stop_kl = 0.02
+        self.last_update_diagnostics = None
 
         # PPO components
         self.actor_critic = actor_critic
@@ -118,70 +129,155 @@ class PPO:
         self.storage.compute_returns(last_values, self.gamma, self.lam)
 
     def update(self):
-        mean_value_loss = 0
-        mean_surrogate_loss = 0
+        # Snapshot initial policy parameters to measure parameter change magnitude
+        with torch.no_grad():
+            initial_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()]).clone()
+
+        num_updates_planned = self.num_learning_epochs * self.num_mini_batches
+        num_updates_executed = 0
+        early_stop_triggered = False
+        early_stop_reason = None
+
+        kl_all = []
+        clip_fractions = []
+        grad_norms = []
+        entropy_list = []
+        surr_losses_list = []
+        val_losses_list = []
+
         if self.actor_critic.is_recurrent:
             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         else:
             generator = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
-        for obs_batch, critic_obs_batch, actions_batch, target_values_batch, advantages_batch, returns_batch, old_actions_log_prob_batch, \
-            old_mu_batch, old_sigma_batch, hid_states_batch, masks_batch in generator:
 
+        try:
+            for obs_batch, critic_obs_batch, actions_batch, target_values_batch, advantages_batch, returns_batch, old_actions_log_prob_batch, \
+                old_mu_batch, old_sigma_batch, hid_states_batch, masks_batch in generator:
 
-                self.actor_critic.act(obs_batch, masks=masks_batch, hidden_states=hid_states_batch[0])
-                actions_log_prob_batch = self.actor_critic.get_actions_log_prob(actions_batch)
-                value_batch = self.actor_critic.evaluate(critic_obs_batch, masks=masks_batch, hidden_states=hid_states_batch[1])
-                mu_batch = self.actor_critic.action_mean
-                sigma_batch = self.actor_critic.action_std
-                entropy_batch = self.actor_critic.entropy
+                    self.actor_critic.act(obs_batch, masks=masks_batch, hidden_states=hid_states_batch[0])
+                    actions_log_prob_batch = self.actor_critic.get_actions_log_prob(actions_batch)
+                    value_batch = self.actor_critic.evaluate(critic_obs_batch, masks=masks_batch, hidden_states=hid_states_batch[1])
+                    mu_batch = self.actor_critic.action_mean
+                    sigma_batch = self.actor_critic.action_std
+                    entropy_batch = self.actor_critic.entropy
 
-                # KL
-                if self.desired_kl != None and self.schedule == 'adaptive':
+                    # Numerical stability check for action distribution
+                    if torch.isnan(mu_batch).any() or torch.isinf(mu_batch).any() or \
+                       torch.isnan(sigma_batch).any() or torch.isinf(sigma_batch).any() or (sigma_batch <= 0).any():
+                        raise FloatingPointError("Numerical instability detected in action distribution (NaN/Inf or non-positive sigma).")
+
+                    # KL divergence computation
                     with torch.inference_mode():
                         kl = torch.sum(
                             torch.log(sigma_batch / old_sigma_batch + 1.e-5) + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch)) / (2.0 * torch.square(sigma_batch)) - 0.5, axis=-1)
                         kl_mean = torch.mean(kl)
+                        kl_all.append(kl.detach())
 
-                        if kl_mean > self.desired_kl * 2.0:
-                            self.learning_rate = max(1e-5, self.learning_rate / 1.5)
-                        elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
-                            self.learning_rate = min(1e-2, self.learning_rate * 1.5)
-                        
-                        for param_group in self.optimizer.param_groups:
-                            param_group['lr'] = self.learning_rate
+                        # Adaptive LR schedule
+                        if self.desired_kl is not None and self.schedule == 'adaptive':
+                            if kl_mean > self.desired_kl * 2.0:
+                                self.learning_rate = max(1e-5, self.learning_rate / 1.5)
+                            elif kl_mean < self.desired_kl / 2.0 and kl_mean > 0.0:
+                                self.learning_rate = min(1e-2, self.learning_rate * 1.5)
+                            
+                            for param_group in self.optimizer.param_groups:
+                                param_group['lr'] = self.learning_rate
 
+                        # KL Early Stopping
+                        if self.enable_early_stopping and kl_mean > self.early_stop_kl:
+                            early_stop_triggered = True
+                            early_stop_reason = f"KL mean ({kl_mean.item():.6f}) exceeded threshold ({self.early_stop_kl:.6f}) at update {num_updates_executed + 1}/{num_updates_planned}"
+                            break
 
-                # Surrogate loss
-                ratio = torch.exp(actions_log_prob_batch - torch.squeeze(old_actions_log_prob_batch))
-                surrogate = -torch.squeeze(advantages_batch) * ratio
-                surrogate_clipped = -torch.squeeze(advantages_batch) * torch.clamp(ratio, 1.0 - self.clip_param,
-                                                                                1.0 + self.clip_param)
-                surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
+                    # Surrogate loss
+                    ratio = torch.exp(actions_log_prob_batch - torch.squeeze(old_actions_log_prob_batch))
+                    surrogate = -torch.squeeze(advantages_batch) * ratio
+                    surrogate_clipped = -torch.squeeze(advantages_batch) * torch.clamp(ratio, 1.0 - self.clip_param,
+                                                                                    1.0 + self.clip_param)
+                    surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
 
-                # Value function loss
-                if self.use_clipped_value_loss:
-                    value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(-self.clip_param,
-                                                                                                    self.clip_param)
-                    value_losses = (value_batch - returns_batch).pow(2)
-                    value_losses_clipped = (value_clipped - returns_batch).pow(2)
-                    value_loss = torch.max(value_losses, value_losses_clipped).mean()
-                else:
-                    value_loss = (returns_batch - value_batch).pow(2).mean()
+                    # Clip fraction diagnostics
+                    with torch.no_grad():
+                        clip_fraction = torch.mean((torch.abs(ratio - 1.0) > self.clip_param).float()).item()
+                        clip_fractions.append(clip_fraction)
 
-                loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+                    # Value function loss
+                    if self.use_clipped_value_loss:
+                        value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(-self.clip_param,
+                                                                                                        self.clip_param)
+                        value_losses = (value_batch - returns_batch).pow(2)
+                        value_losses_clipped = (value_clipped - returns_batch).pow(2)
+                        value_loss = torch.max(value_losses, value_losses_clipped).mean()
+                    else:
+                        value_loss = (returns_batch - value_batch).pow(2).mean()
 
-                # Gradient step
-                self.optimizer.zero_grad()
-                loss.backward()
-                nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
-                self.optimizer.step()
+                    loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+                    if torch.isnan(loss) or torch.isinf(loss):
+                        raise FloatingPointError("Loss is NaN or Inf.")
 
-                mean_value_loss += value_loss.item()
-                mean_surrogate_loss += surrogate_loss.item()
+                    # Gradient step
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    grad_norm = nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
+                    if torch.isnan(grad_norm) or torch.isinf(grad_norm):
+                        raise FloatingPointError("Gradient norm is NaN or Inf.")
+                    self.optimizer.step()
 
-        num_updates = self.num_learning_epochs * self.num_mini_batches
-        mean_value_loss /= num_updates
-        mean_surrogate_loss /= num_updates
-        self.storage.clear()
+                    num_updates_executed += 1
+                    grad_norms.append(grad_norm.item())
+                    entropy_list.append(entropy_batch.mean().item())
+                    surr_losses_list.append(surrogate_loss.item())
+                    val_losses_list.append(value_loss.item())
+
+        finally:
+            self.storage.clear()
+
+        # Compute summary diagnostics
+        num_executed = max(1, num_updates_executed)
+        mean_value_loss = float(np.mean(val_losses_list)) if val_losses_list else 0.0
+        mean_surrogate_loss = float(np.mean(surr_losses_list)) if surr_losses_list else 0.0
+        mean_entropy = float(np.mean(entropy_list)) if entropy_list else 0.0
+        mean_clip_fraction = float(np.mean(clip_fractions)) if clip_fractions else 0.0
+        mean_grad_norm = float(np.mean(grad_norms)) if grad_norms else 0.0
+
+        with torch.no_grad():
+            current_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()])
+            actor_param_delta_l2 = torch.norm(current_actor_params - initial_actor_params, p=2).item()
+            initial_actor_norm = torch.norm(initial_actor_params, p=2).item()
+            actor_param_delta_rel = actor_param_delta_l2 / (initial_actor_norm + 1e-8)
+
+            action_std = self.actor_critic.std.detach()
+            action_std_mean = action_std.mean().item()
+            action_std_min = action_std.min().item()
+            action_std_max = action_std.max().item()
+
+            if kl_all:
+                kl_cat = torch.cat(kl_all)
+                kl_mean_final = kl_cat.mean().item()
+                kl_p95_final = torch.quantile(kl_cat.float(), 0.95).item()
+                kl_max_final = kl_cat.max().item()
+            else:
+                kl_mean_final, kl_p95_final, kl_max_final = 0.0, 0.0, 0.0
+
+        self.last_update_diagnostics = {
+            "kl_mean": kl_mean_final,
+            "kl_p95": kl_p95_final,
+            "kl_max": kl_max_final,
+            "clip_fraction": mean_clip_fraction,
+            "surrogate_loss": mean_surrogate_loss,
+            "value_loss": mean_value_loss,
+            "entropy": mean_entropy,
+            "action_std_mean": action_std_mean,
+            "action_std_min": action_std_min,
+            "action_std_max": action_std_max,
+            "learning_rate": self.learning_rate,
+            "grad_norm_mean": mean_grad_norm,
+            "updates_executed": num_updates_executed,
+            "updates_planned": num_updates_planned,
+            "early_stop_triggered": 1 if early_stop_triggered else 0,
+            "early_stop_reason": early_stop_reason,
+            "actor_param_delta_l2": actor_param_delta_l2,
+            "actor_param_delta_rel": actor_param_delta_rel,
+        }
 
         return mean_value_loss, mean_surrogate_loss

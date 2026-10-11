@@ -31,6 +31,7 @@
 import time
 import os
 import re
+import json
 from collections import deque
 import statistics
 
@@ -78,6 +79,7 @@ class OnPolicyRunner:
         self.tot_timesteps = 0
         self.tot_time = 0
         self.current_learning_iteration = 0
+        self.diagnostics_history = []
 
         _, _ = self.env.reset()
     
@@ -133,6 +135,15 @@ class OnPolicyRunner:
             mean_value_loss, mean_surrogate_loss = self.alg.update()
             stop = time.time()
             learn_time = stop - start
+            if hasattr(self.alg, 'last_update_diagnostics') and self.alg.last_update_diagnostics is not None:
+                diag_record = dict(self.alg.last_update_diagnostics)
+                diag_record['iteration'] = it + 1
+                diag_record['timesteps'] = self.tot_timesteps + self.num_steps_per_env * self.env.num_envs
+                self.diagnostics_history.append(diag_record)
+                if self.log_dir is not None:
+                    diag_path = os.path.join(self.log_dir, 'diagnostics.json')
+                    with open(diag_path, 'w', encoding='utf-8') as f:
+                        json.dump(self.diagnostics_history, f, indent=2, ensure_ascii=False)
             if self.log_dir is not None:
                 self.log(locals())
             if (it + 1) % self.save_interval == 0:
@@ -171,6 +182,21 @@ class OnPolicyRunner:
         self.writer.add_scalar('Perf/total_fps', fps, locs['it'])
         self.writer.add_scalar('Perf/collection time', locs['collection_time'], locs['it'])
         self.writer.add_scalar('Perf/learning_time', locs['learn_time'], locs['it'])
+        if hasattr(self.alg, 'last_update_diagnostics') and self.alg.last_update_diagnostics is not None:
+            diag = self.alg.last_update_diagnostics
+            self.writer.add_scalar('Policy/kl_mean', diag['kl_mean'], locs['it'])
+            self.writer.add_scalar('Policy/kl_p95', diag['kl_p95'], locs['it'])
+            self.writer.add_scalar('Policy/kl_max', diag['kl_max'], locs['it'])
+            self.writer.add_scalar('Loss/clip_fraction', diag['clip_fraction'], locs['it'])
+            self.writer.add_scalar('Loss/entropy', diag['entropy'], locs['it'])
+            self.writer.add_scalar('Loss/grad_norm', diag['grad_norm_mean'], locs['it'])
+            self.writer.add_scalar('Train/updates_executed', diag['updates_executed'], locs['it'])
+            self.writer.add_scalar('Train/updates_planned', diag['updates_planned'], locs['it'])
+            self.writer.add_scalar('Train/early_stop_triggered', diag['early_stop_triggered'], locs['it'])
+            self.writer.add_scalar('Policy/param_delta_l2', diag['actor_param_delta_l2'], locs['it'])
+            self.writer.add_scalar('Policy/param_delta_rel', diag['actor_param_delta_rel'], locs['it'])
+            self.writer.add_scalar('Policy/min_noise_std', diag['action_std_min'], locs['it'])
+            self.writer.add_scalar('Policy/max_noise_std', diag['action_std_max'], locs['it'])
         if len(locs['rewbuffer']) > 0:
             self.writer.add_scalar('Train/mean_reward', statistics.mean(locs['rewbuffer']), locs['it'])
             self.writer.add_scalar('Train/mean_episode_length', statistics.mean(locs['lenbuffer']), locs['it'])
@@ -178,6 +204,21 @@ class OnPolicyRunner:
             self.writer.add_scalar('Train/mean_episode_length/time', statistics.mean(locs['lenbuffer']), self.tot_time)
 
         str = f" \033[1m Learning iteration {locs['it']}/{self.current_learning_iteration + locs['num_learning_iterations']} \033[0m "
+
+        diag_str = ""
+        if hasattr(self.alg, 'last_update_diagnostics') and self.alg.last_update_diagnostics is not None:
+            diag = self.alg.last_update_diagnostics
+            stop_flag = " [EARLY STOPPED]" if diag['early_stop_triggered'] else ""
+            diag_str = (
+                f"""{'KL (mean / p95 / max):':>{pad}} {diag['kl_mean']:.5f} / {diag['kl_p95']:.5f} / {diag['kl_max']:.5f}\n"""
+                f"""{'PPO clip fraction:':>{pad}} {diag['clip_fraction']:.4f}\n"""
+                f"""{'Policy entropy:':>{pad}} {diag['entropy']:.4f}\n"""
+                f"""{'Mean grad norm:':>{pad}} {diag['grad_norm_mean']:.4f}\n"""
+                f"""{'Optimizer updates:':>{pad}} {diag['updates_executed']}/{diag['updates_planned']}{stop_flag}\n"""
+                f"""{'Policy delta L2 (rel):':>{pad}} {diag['actor_param_delta_l2']:.5f} ({diag['actor_param_delta_rel']:.3%})\n"""
+            )
+            if diag['early_stop_reason']:
+                diag_str += f"""{'Early stop reason:':>{pad}} {diag['early_stop_reason']}\n"""
 
         if len(locs['rewbuffer']) > 0:
             log_string = (f"""{'#' * width}\n"""
@@ -188,9 +229,8 @@ class OnPolicyRunner:
                           f"""{'Surrogate loss:':>{pad}} {locs['mean_surrogate_loss']:.4f}\n"""
                           f"""{'Mean action noise std:':>{pad}} {mean_std.item():.2f}\n"""
                           f"""{'Mean reward:':>{pad}} {statistics.mean(locs['rewbuffer']):.2f}\n"""
-                          f"""{'Mean episode length:':>{pad}} {statistics.mean(locs['lenbuffer']):.2f}\n""")
-                        #   f"""{'Mean reward/step:':>{pad}} {locs['mean_reward']:.2f}\n"""
-                        #   f"""{'Mean episode length/episode:':>{pad}} {locs['mean_trajectory_length']:.2f}\n""")
+                          f"""{'Mean episode length:':>{pad}} {statistics.mean(locs['lenbuffer']):.2f}\n"""
+                          f"""{diag_str}""")
         else:
             log_string = (f"""{'#' * width}\n"""
                           f"""{str.center(width, ' ')}\n\n"""
@@ -198,9 +238,8 @@ class OnPolicyRunner:
                             'collection_time']:.3f}s, learning {locs['learn_time']:.3f}s)\n"""
                           f"""{'Value function loss:':>{pad}} {locs['mean_value_loss']:.4f}\n"""
                           f"""{'Surrogate loss:':>{pad}} {locs['mean_surrogate_loss']:.4f}\n"""
-                          f"""{'Mean action noise std:':>{pad}} {mean_std.item():.2f}\n""")
-                        #   f"""{'Mean reward/step:':>{pad}} {locs['mean_reward']:.2f}\n"""
-                        #   f"""{'Mean episode length/episode:':>{pad}} {locs['mean_trajectory_length']:.2f}\n""")
+                          f"""{'Mean action noise std:':>{pad}} {mean_std.item():.2f}\n"""
+                          f"""{diag_str}""")
 
         log_string += ep_string
         log_string += (f"""{'-' * width}\n"""

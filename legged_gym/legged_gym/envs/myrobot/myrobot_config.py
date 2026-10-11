@@ -240,13 +240,15 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         learning_rate = 2.5e-4     # 恢复 Stage 1 标称学习率 2.5e-4
         num_learning_epochs = 5
         num_mini_batches = 4
+        enable_early_stopping = False
+        early_stop_kl = 0.02
 
     class runner(LeggedRobotCfgPPO.runner):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24
-        max_iterations = 15
-        save_interval = 5
+        max_iterations = 10
+        save_interval = 1
         run_name = ''
         experiment_name = 'myrobot'
         resume = False

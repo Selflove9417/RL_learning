@@ -146,6 +146,10 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.runner.load_run = args.load_run
         if args.checkpoint is not None:
             cfg_train.runner.checkpoint = args.checkpoint
+        if getattr(args, 'enable_early_stopping', False):
+            cfg_train.algorithm.enable_early_stopping = True
+        if getattr(args, 'early_stop_kl', None) is not None:
+            cfg_train.algorithm.early_stop_kl = args.early_stop_kl
 
     return env_cfg, cfg_train
 
@@ -157,6 +161,8 @@ def get_args():
         {"name": "--run_name", "type": str,  "help": "Name of the run. Overrides config file if provided."},
         {"name": "--load_run", "type": str,  "help": "Name of the run to load when resume=True. If -1: will load the last run. Overrides config file if provided."},
         {"name": "--checkpoint", "type": int,  "help": "Saved model checkpoint number. If -1: will load the last checkpoint. Overrides config file if provided."},
+        {"name": "--enable_early_stopping", "action": "store_true", "default": False, "help": "Enable KL early stopping in PPO"},
+        {"name": "--early_stop_kl", "type": float, "help": "KL divergence threshold for early stopping"},
         
         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
         {"name": "--horovod", "action": "store_true", "default": False, "help": "Use horovod for multi-gpu training"},
