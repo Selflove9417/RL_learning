@@ -237,21 +237,23 @@ class MyRobotCfg(LeggedRobotCfg):
 class MyRobotCfgPPO(LeggedRobotCfgPPO):
     class algorithm(LeggedRobotCfgPPO.algorithm):
         entropy_coef = 0.01
-        learning_rate = 2.5e-4     # 恢复 Stage 1 标称学习率 2.5e-4
+        learning_rate = 7.59375e-5 # Phase 6A-S: 严格取自 model_25.pt 收敛学习率
         num_learning_epochs = 5
         num_mini_batches = 4
-        enable_early_stopping = False
+        schedule = 'fixed'         # Phase 6A-S: 禁用自适应学习率调度，保持恒定步长
+        enable_early_stopping = False # 禁用 KL Early Stopping
         early_stop_kl = 0.02
 
     class runner(LeggedRobotCfgPPO.runner):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24
-        max_iterations = 10
-        save_interval = 1
+        max_iterations = 3         # Phase 6A-S: 严格限制为 3 迭代
+        save_interval = 1          # 每迭代保存 checkpoint
         run_name = ''
         experiment_name = 'myrobot'
         resume = False
         warm_start = True
+        warm_start_optimizer = False # 默认 False (Group A 为 False, Group B 为 True)
         load_run = 'Oct10_15-48-32_turning_height_stage5_3_formal'
         checkpoint = 25

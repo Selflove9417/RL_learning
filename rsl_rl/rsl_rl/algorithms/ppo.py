@@ -129,9 +129,17 @@ class PPO:
         self.storage.compute_returns(last_values, self.gamma, self.lam)
 
     def update(self):
-        # Snapshot initial policy parameters to measure parameter change magnitude
+        # Snapshot initial policy and value parameters to measure parameter change magnitude
         with torch.no_grad():
             initial_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()]).clone()
+            initial_critic_params = torch.cat([p.detach().flatten() for p in self.actor_critic.critic.parameters()]).clone()
+
+            # Record GAE advantage distribution
+            adv_flat = self.storage.advantages.detach().flatten()
+            adv_mean = adv_flat.mean().item()
+            adv_std = adv_flat.std().item()
+            adv_min = adv_flat.min().item()
+            adv_max = adv_flat.max().item()
 
         num_updates_planned = self.num_learning_epochs * self.num_mini_batches
         num_updates_executed = 0
@@ -141,6 +149,9 @@ class PPO:
         kl_all = []
         clip_fractions = []
         grad_norms = []
+        actor_grad_norms = []
+        critic_grad_norms = []
+        actual_lrs = []
         entropy_list = []
         surr_losses_list = []
         val_losses_list = []
@@ -216,8 +227,21 @@ class PPO:
                         raise FloatingPointError("Loss is NaN or Inf.")
 
                     # Gradient step
+                    actual_lr = self.optimizer.param_groups[0]['lr']
+                    actual_lrs.append(actual_lr)
+
                     self.optimizer.zero_grad()
                     loss.backward()
+
+                    # Measure separate unclipped actor and critic gradient norms
+                    with torch.no_grad():
+                        actor_params = [p for p in self.actor_critic.actor.parameters() if p.grad is not None]
+                        critic_params = [p for p in self.actor_critic.critic.parameters() if p.grad is not None]
+                        actor_gn = torch.norm(torch.stack([torch.norm(p.grad.detach(), 2) for p in actor_params]), 2).item() if actor_params else 0.0
+                        critic_gn = torch.norm(torch.stack([torch.norm(p.grad.detach(), 2) for p in critic_params]), 2).item() if critic_params else 0.0
+                        actor_grad_norms.append(actor_gn)
+                        critic_grad_norms.append(critic_gn)
+
                     grad_norm = nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
                     if torch.isnan(grad_norm) or torch.isinf(grad_norm):
                         raise FloatingPointError("Gradient norm is NaN or Inf.")
@@ -239,12 +263,20 @@ class PPO:
         mean_entropy = float(np.mean(entropy_list)) if entropy_list else 0.0
         mean_clip_fraction = float(np.mean(clip_fractions)) if clip_fractions else 0.0
         mean_grad_norm = float(np.mean(grad_norms)) if grad_norms else 0.0
+        mean_actor_grad_norm = float(np.mean(actor_grad_norms)) if actor_grad_norms else 0.0
+        mean_critic_grad_norm = float(np.mean(critic_grad_norms)) if critic_grad_norms else 0.0
+        mean_actual_lr = float(np.mean(actual_lrs)) if actual_lrs else self.learning_rate
 
         with torch.no_grad():
             current_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()])
             actor_param_delta_l2 = torch.norm(current_actor_params - initial_actor_params, p=2).item()
             initial_actor_norm = torch.norm(initial_actor_params, p=2).item()
             actor_param_delta_rel = actor_param_delta_l2 / (initial_actor_norm + 1e-8)
+
+            current_critic_params = torch.cat([p.detach().flatten() for p in self.actor_critic.critic.parameters()])
+            critic_param_delta_l2 = torch.norm(current_critic_params - initial_critic_params, p=2).item()
+            initial_critic_norm = torch.norm(initial_critic_params, p=2).item()
+            critic_param_delta_rel = critic_param_delta_l2 / (initial_critic_norm + 1e-8)
 
             action_std = self.actor_critic.std.detach()
             action_std_mean = action_std.mean().item()
@@ -254,13 +286,15 @@ class PPO:
             if kl_all:
                 kl_cat = torch.cat(kl_all)
                 kl_mean_final = kl_cat.mean().item()
+                kl_median_final = torch.median(kl_cat.float()).item()
                 kl_p95_final = torch.quantile(kl_cat.float(), 0.95).item()
                 kl_max_final = kl_cat.max().item()
             else:
-                kl_mean_final, kl_p95_final, kl_max_final = 0.0, 0.0, 0.0
+                kl_mean_final, kl_median_final, kl_p95_final, kl_max_final = 0.0, 0.0, 0.0, 0.0
 
         self.last_update_diagnostics = {
             "kl_mean": kl_mean_final,
+            "kl_median": kl_median_final,
             "kl_p95": kl_p95_final,
             "kl_max": kl_max_final,
             "clip_fraction": mean_clip_fraction,
@@ -271,13 +305,23 @@ class PPO:
             "action_std_min": action_std_min,
             "action_std_max": action_std_max,
             "learning_rate": self.learning_rate,
+            "actual_lr_before_step_mean": mean_actual_lr,
+            "actual_lr_step_list": actual_lrs,
             "grad_norm_mean": mean_grad_norm,
+            "actor_grad_norm_mean": mean_actor_grad_norm,
+            "critic_grad_norm_mean": mean_critic_grad_norm,
             "updates_executed": num_updates_executed,
             "updates_planned": num_updates_planned,
             "early_stop_triggered": 1 if early_stop_triggered else 0,
             "early_stop_reason": early_stop_reason,
             "actor_param_delta_l2": actor_param_delta_l2,
             "actor_param_delta_rel": actor_param_delta_rel,
+            "critic_param_delta_l2": critic_param_delta_l2,
+            "critic_param_delta_rel": critic_param_delta_rel,
+            "adv_mean": adv_mean,
+            "adv_std": adv_std,
+            "adv_min": adv_min,
+            "adv_max": adv_max,
         }
 
         return mean_value_loss, mean_surrogate_loss

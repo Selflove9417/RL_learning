@@ -166,11 +166,18 @@ class TaskRegistry():
             print(f"Loading model from: {resume_path}")
             runner.load(resume_path)
         elif getattr(train_cfg.runner, 'warm_start', False):
-            # 热启动（Warm start）：仅加载模型网络权重，不加载优化器，并将迭代步数重置为 0
+            # 热启动（Warm start）：加载模型网络权重，并可配置是否恢复优化器状态，迭代步数重置为 0
             warm_start_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
-            print(f"Warm starting model weights from: {warm_start_path}")
-            runner.load(warm_start_path, load_optimizer=False)
+            load_optimizer = getattr(train_cfg.runner, 'warm_start_optimizer', False)
+            print(f"Warm starting model weights from: {warm_start_path} (load_optimizer={load_optimizer})")
+            runner.load(warm_start_path, load_optimizer=load_optimizer)
             runner.current_learning_iteration = 0
+
+            # 严格对齐算法层与优化器 param_groups 学习率
+            target_lr = train_cfg_dict['algorithm']['learning_rate']
+            runner.alg.learning_rate = target_lr
+            for param_group in runner.alg.optimizer.param_groups:
+                param_group['lr'] = target_lr
         return runner, train_cfg
 
 # 创建全局单例任务注册表

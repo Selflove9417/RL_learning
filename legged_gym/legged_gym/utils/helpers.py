@@ -146,6 +146,12 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.runner.load_run = args.load_run
         if args.checkpoint is not None:
             cfg_train.runner.checkpoint = args.checkpoint
+        if getattr(args, 'warm_start', False):
+            cfg_train.runner.warm_start = True
+        if getattr(args, 'warm_start_optimizer', False):
+            cfg_train.runner.warm_start_optimizer = True
+        if getattr(args, 'learning_rate', None) is not None:
+            cfg_train.algorithm.learning_rate = args.learning_rate
         if getattr(args, 'enable_early_stopping', False):
             cfg_train.algorithm.enable_early_stopping = True
         if getattr(args, 'early_stop_kl', None) is not None:
@@ -157,6 +163,9 @@ def get_args():
     custom_parameters = [
         {"name": "--task", "type": str, "default": "anymal_c_flat", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
         {"name": "--resume", "action": "store_true", "default": False,  "help": "Resume training from a checkpoint"},
+        {"name": "--warm_start", "action": "store_true", "default": False, "help": "Warm start model weights from a checkpoint"},
+        {"name": "--warm_start_optimizer", "action": "store_true", "default": False, "help": "Restore Adam optimizer state when warm starting"},
+        {"name": "--learning_rate", "type": float, "help": "Override algorithm learning rate"},
         {"name": "--experiment_name", "type": str,  "help": "Name of the experiment to run or load. Overrides config file if provided."},
         {"name": "--run_name", "type": str,  "help": "Name of the run. Overrides config file if provided."},
         {"name": "--load_run", "type": str,  "help": "Name of the run to load when resume=True. If -1: will load the last run. Overrides config file if provided."},
