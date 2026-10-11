@@ -156,6 +156,12 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.algorithm.enable_early_stopping = True
         if getattr(args, 'early_stop_kl', None) is not None:
             cfg_train.algorithm.early_stop_kl = args.early_stop_kl
+        if getattr(args, 'enable_ref_kl', False):
+            cfg_train.algorithm.enable_ref_kl = True
+        if getattr(args, 'ref_kl_coef', None) is not None:
+            cfg_train.algorithm.ref_kl_coef = args.ref_kl_coef
+        if getattr(args, 'ref_policy_path', None) is not None:
+            cfg_train.algorithm.ref_policy_path = args.ref_policy_path
 
     return env_cfg, cfg_train
 
@@ -172,6 +178,9 @@ def get_args():
         {"name": "--checkpoint", "type": int,  "help": "Saved model checkpoint number. If -1: will load the last checkpoint. Overrides config file if provided."},
         {"name": "--enable_early_stopping", "action": "store_true", "default": False, "help": "Enable KL early stopping in PPO"},
         {"name": "--early_stop_kl", "type": float, "help": "KL divergence threshold for early stopping"},
+        {"name": "--enable_ref_kl", "action": "store_true", "default": False, "help": "Enable Reference-Policy KL regularization"},
+        {"name": "--ref_kl_coef", "type": float, "help": "Reference-Policy KL regularization coefficient (beta)"},
+        {"name": "--ref_policy_path", "type": str, "help": "Path to reference policy checkpoint"},
         
         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
         {"name": "--horovod", "action": "store_true", "default": False, "help": "Use horovod for multi-gpu training"},

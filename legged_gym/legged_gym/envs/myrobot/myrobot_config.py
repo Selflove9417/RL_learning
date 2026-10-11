@@ -243,6 +243,9 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         schedule = 'fixed'         # Phase 6A-S: 禁用自适应学习率调度，保持恒定步长
         enable_early_stopping = False # 禁用 KL Early Stopping
         early_stop_kl = 0.02
+        enable_ref_kl = False          # Phase 6B-Pilot: 可选 Reference-Policy KL 正则化 (默认关闭)
+        ref_kl_coef = 0.0              # 正则化惩罚系数 beta
+        ref_policy_path = 'legged_gym/logs/myrobot/Oct10_15-48-32_turning_height_stage5_3_formal/model_25.pt'
 
     class runner(LeggedRobotCfgPPO.runner):
         policy_class_name = 'ActorCritic'

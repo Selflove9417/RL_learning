@@ -228,6 +228,9 @@ class LeggedRobotCfgPPO(BaseConfig):
         max_grad_norm = 1.
         enable_early_stopping = False
         early_stop_kl = None
+        enable_ref_kl = False
+        ref_kl_coef = 0.0
+        ref_policy_path = None
 
     class runner:
         policy_class_name = 'ActorCritic'

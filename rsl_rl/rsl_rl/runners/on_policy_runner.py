@@ -197,6 +197,9 @@ class OnPolicyRunner:
             self.writer.add_scalar('Policy/param_delta_rel', diag['actor_param_delta_rel'], locs['it'])
             self.writer.add_scalar('Policy/min_noise_std', diag['action_std_min'], locs['it'])
             self.writer.add_scalar('Policy/max_noise_std', diag['action_std_max'], locs['it'])
+            if diag.get('enable_ref_kl', False):
+                self.writer.add_scalar('Policy/ref_kl_mean', diag['ref_kl_mean'], locs['it'])
+                self.writer.add_scalar('Loss/ref_kl_loss', diag['ref_kl_loss_mean'], locs['it'])
         if len(locs['rewbuffer']) > 0:
             self.writer.add_scalar('Train/mean_reward', statistics.mean(locs['rewbuffer']), locs['it'])
             self.writer.add_scalar('Train/mean_episode_length', statistics.mean(locs['lenbuffer']), locs['it'])
@@ -217,6 +220,8 @@ class OnPolicyRunner:
                 f"""{'Optimizer updates:':>{pad}} {diag['updates_executed']}/{diag['updates_planned']}{stop_flag}\n"""
                 f"""{'Policy delta L2 (rel):':>{pad}} {diag['actor_param_delta_l2']:.5f} ({diag['actor_param_delta_rel']:.3%})\n"""
             )
+            if diag.get('enable_ref_kl', False):
+                diag_str += f"""{'Ref KL (mean / coef / loss):':>{pad}} {diag['ref_kl_mean']:.5f} / {diag['ref_kl_coef']:.4f} / {diag['ref_kl_loss_mean']:.5f}\n"""
             if diag['early_stop_reason']:
                 diag_str += f"""{'Early stop reason:':>{pad}} {diag['early_stop_reason']}\n"""
 

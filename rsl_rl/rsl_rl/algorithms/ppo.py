@@ -28,10 +28,14 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
+import copy
+import hashlib
+import os
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.distributions import Normal, kl_divergence
 
 from rsl_rl.modules import ActorCritic
 from rsl_rl.storage import RolloutStorage
@@ -55,6 +59,9 @@ class PPO:
                  device='cpu',
                  enable_early_stopping=False,
                  early_stop_kl=None,
+                 enable_ref_kl=False,
+                 ref_kl_coef=0.0,
+                 ref_policy_path=None,
                  ):
 
         self.device = device
@@ -78,6 +85,17 @@ class PPO:
         self.optimizer = optim.Adam(self.actor_critic.parameters(), lr=learning_rate)
         self.transition = RolloutStorage.Transition()
 
+        # Reference-Policy KL Regularization (Phase 6B-Pilot)
+        self.enable_ref_kl = enable_ref_kl
+        self.ref_kl_coef = ref_kl_coef
+        self.ref_policy_path = ref_policy_path
+        self.ref_policy_sha256 = None
+        self.ref_actor = None
+        self.ref_std = None
+
+        if self.enable_ref_kl:
+            self._init_reference_policy()
+
         # PPO parameters
         self.clip_param = clip_param
         self.num_learning_epochs = num_learning_epochs
@@ -88,6 +106,46 @@ class PPO:
         self.lam = lam
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
+
+    def _init_reference_policy(self):
+        """Loads and freezes the reference actor and std from the reference policy checkpoint.
+        Ensures strict mathematical correctness, no gradient leakage, and zero RNG side effects."""
+        if not self.ref_policy_path:
+            raise ValueError("enable_ref_kl is True but ref_policy_path is not specified.")
+        resolved_path = self.ref_policy_path
+        if not os.path.isfile(resolved_path):
+            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+            candidate = os.path.join(repo_root, self.ref_policy_path)
+            if os.path.isfile(candidate):
+                resolved_path = candidate
+            else:
+                raise FileNotFoundError(f"Reference policy file not found at '{self.ref_policy_path}' or '{candidate}'.")
+        self.ref_policy_path = resolved_path
+
+        with open(self.ref_policy_path, "rb") as f:
+            self.ref_policy_sha256 = hashlib.sha256(f.read()).hexdigest()
+
+        # Load reference checkpoint without consuming RNG numbers
+        loaded_dict = torch.load(self.ref_policy_path, map_location=self.device)
+        model_state = loaded_dict.get('model_state_dict', loaded_dict)
+
+        # Clone actor structure directly without re-initialization (consumes 0 random numbers)
+        self.ref_actor = copy.deepcopy(self.actor_critic.actor)
+        ref_actor_sd = {k.replace('actor.', ''): v for k, v in model_state.items() if k.startswith('actor.')}
+        if not ref_actor_sd:
+            raise KeyError(f"No 'actor.' parameters found in reference model at '{self.ref_policy_path}'.")
+        self.ref_actor.load_state_dict(ref_actor_sd)
+        for param in self.ref_actor.parameters():
+            param.requires_grad = False
+        self.ref_actor.eval()
+        self.ref_actor.to(self.device)
+
+        # Reference noise std (frozen)
+        if 'std' in model_state:
+            self.ref_std = model_state['std'].clone().detach().to(self.device)
+        else:
+            self.ref_std = self.actor_critic.std.clone().detach().to(self.device)
+        self.ref_std.requires_grad = False
 
     def init_storage(self, num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape):
         self.storage = RolloutStorage(num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, self.device)
@@ -155,6 +213,8 @@ class PPO:
         entropy_list = []
         surr_losses_list = []
         val_losses_list = []
+        ref_kl_all = []
+        ref_kl_loss_all = []
 
         if self.actor_critic.is_recurrent:
             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
@@ -223,6 +283,19 @@ class PPO:
                         value_loss = (returns_batch - value_batch).pow(2).mean()
 
                     loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+
+                    # Reference-Policy KL regularization (Phase 6B-Pilot, beta > 0)
+                    if self.enable_ref_kl and self.ref_actor is not None:
+                        with torch.no_grad():
+                            mu_ref = self.ref_actor(obs_batch)
+                        ref_dist = Normal(mu_ref, self.ref_std)
+                        curr_dist = Normal(mu_batch, sigma_batch)
+                        ref_kl_batch = kl_divergence(ref_dist, curr_dist).sum(dim=-1).mean()
+                        ref_kl_loss = self.ref_kl_coef * ref_kl_batch
+                        loss = loss + ref_kl_loss
+                        ref_kl_all.append(ref_kl_batch.item())
+                        ref_kl_loss_all.append(ref_kl_loss.item())
+
                     if torch.isnan(loss) or torch.isinf(loss):
                         raise FloatingPointError("Loss is NaN or Inf.")
 
@@ -266,6 +339,8 @@ class PPO:
         mean_actor_grad_norm = float(np.mean(actor_grad_norms)) if actor_grad_norms else 0.0
         mean_critic_grad_norm = float(np.mean(critic_grad_norms)) if critic_grad_norms else 0.0
         mean_actual_lr = float(np.mean(actual_lrs)) if actual_lrs else self.learning_rate
+        mean_ref_kl = float(np.mean(ref_kl_all)) if ref_kl_all else 0.0
+        mean_ref_kl_loss = float(np.mean(ref_kl_loss_all)) if ref_kl_loss_all else 0.0
 
         with torch.no_grad():
             current_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()])
@@ -322,6 +397,12 @@ class PPO:
             "adv_std": adv_std,
             "adv_min": adv_min,
             "adv_max": adv_max,
+            "enable_ref_kl": self.enable_ref_kl,
+            "ref_kl_coef": self.ref_kl_coef,
+            "ref_kl_mean": mean_ref_kl,
+            "ref_kl_loss_mean": mean_ref_kl_loss,
+            "ref_policy_path": self.ref_policy_path,
+            "ref_policy_sha256": self.ref_policy_sha256,
         }
 
         return mean_value_loss, mean_surrogate_loss

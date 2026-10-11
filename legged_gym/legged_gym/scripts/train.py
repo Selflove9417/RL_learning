@@ -43,7 +43,7 @@ from legged_gym.utils import class_to_dict, get_args, task_registry
 import torch
 
 
-def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
+def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
     """保存本次运行的完整上下文信息（配置、代码与版本状态），以便后续精准复现。"""
     if log_dir is None:
         return
@@ -54,6 +54,12 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args):
         "train_cfg": class_to_dict(train_cfg),
         "arguments": vars(args),
     }
+    if ppo_runner is not None and hasattr(ppo_runner, 'alg') and getattr(ppo_runner.alg, 'enable_ref_kl', False):
+        snapshot["reference_policy"] = {
+            "path": ppo_runner.alg.ref_policy_path,
+            "sha256": ppo_runner.alg.ref_policy_sha256,
+            "coef": ppo_runner.alg.ref_kl_coef,
+        }
     with open(os.path.join(log_dir, "training_snapshot.json"), "w", encoding="utf-8") as handle:
         json.dump(snapshot, handle, indent=2, ensure_ascii=False, default=str)
 
@@ -102,7 +108,7 @@ def train(args):
     # 创建训练算法运行器 (OnPolicyRunner/PPO) 及算法配置
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args)
     # 保存本次实验运行的代码与配置快照
-    save_run_snapshot(ppo_runner.log_dir, env_cfg, train_cfg, args)
+    save_run_snapshot(ppo_runner.log_dir, env_cfg, train_cfg, args, ppo_runner=ppo_runner)
     # 启动 PPO 策略训练迭代
     ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
 
