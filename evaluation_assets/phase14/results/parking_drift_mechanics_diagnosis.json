@@ -1,0 +1,130 @@
+{
+  "H_0.30m (Extreme Squat)": {
+    "target_H_m": 0.3,
+    "h_ctrl_sent_m": 0.2922,
+    "mean_act_h_m": 0.3066824674606323,
+    "signed_h_err_cm": 0.6682467460632335,
+    "kinematics": {
+      "mean_lin_vel_y_mps": -0.04656018689274788,
+      "std_lin_vel_y_mps": 0.007628188002854586,
+      "net_displacement_5s_m": -0.2328009307384491,
+      "total_distance_5s_m": 0.2328009307384491,
+      "directivity_ratio": 1.0
+    },
+    "attitude": {
+      "mean_pitch_deg": -1.9568564891815186,
+      "std_pitch_deg": 0.35429924726486206,
+      "mean_proj_gravity_y": -0.03414630517363548
+    },
+    "dynamics": {
+      "mean_wheel_torque_nm": -0.00042934317025355995,
+      "mean_wheel_raw_action": 0.028536267578601837,
+      "mean_wheel_ang_vel_radps": 0.6673029661178589,
+      "mean_knee_torque_nm": -22.227121353149414,
+      "actual_hip_rad": -0.4069293737411499,
+      "ik_target_hip_rad": -0.33287882804870605,
+      "hip_angle_err_deg": -4.242783738817691,
+      "actual_knee_rad": 0.2831589877605438,
+      "ik_target_knee_rad": 0.3547806739807129,
+      "knee_angle_err_deg": -4.103620342025973,
+      "wheel_y_rel_base_m": 0.08665353804826736,
+      "sagittal_support_lever_cm": -2.697425195173264
+    }
+  },
+  "H_0.32m (Regular Squat)": {
+    "target_H_m": 0.32,
+    "h_ctrl_sent_m": 0.3138,
+    "mean_act_h_m": 0.3257603049278259,
+    "signed_h_err_cm": 0.5760304927825921,
+    "kinematics": {
+      "mean_lin_vel_y_mps": -0.016080627217888832,
+      "std_lin_vel_y_mps": 0.008652936667203903,
+      "net_displacement_5s_m": -0.08040314167737961,
+      "total_distance_5s_m": 0.08092251420021057,
+      "directivity_ratio": 0.9777539968490601
+    },
+    "attitude": {
+      "mean_pitch_deg": -0.8754234910011292,
+      "std_pitch_deg": 0.35571902990341187,
+      "mean_proj_gravity_y": -0.015278144739568233
+    },
+    "dynamics": {
+      "mean_wheel_torque_nm": -0.00042414694325998425,
+      "mean_wheel_raw_action": 0.009844405576586723,
+      "mean_wheel_ang_vel_radps": 0.23113784193992615,
+      "mean_knee_torque_nm": -22.58837127685547,
+      "actual_hip_rad": -0.3143728971481323,
+      "ik_target_hip_rad": -0.2501192092895508,
+      "hip_angle_err_deg": -3.681465132447703,
+      "actual_knee_rad": 0.2291719615459442,
+      "ik_target_knee_rad": 0.28293490409851074,
+      "knee_angle_err_deg": -3.080389702466363,
+      "wheel_y_rel_base_m": 0.09108757972717285,
+      "sagittal_support_lever_cm": -2.2540210272827155
+    }
+  },
+  "H_0.398m (Nominal Stand)": {
+    "target_H_m": 0.39774,
+    "h_ctrl_sent_m": 0.3977,
+    "mean_act_h_m": 0.39722803235054016,
+    "signed_h_err_cm": -0.05119676494598213,
+    "kinematics": {
+      "mean_lin_vel_y_mps": 0.015435757115483284,
+      "std_lin_vel_y_mps": 0.01046574767678976,
+      "net_displacement_5s_m": 0.07717879116535187,
+      "total_distance_5s_m": 0.07917335629463196,
+      "directivity_ratio": 0.925233006477356
+    },
+    "attitude": {
+      "mean_pitch_deg": 1.0944627523422241,
+      "std_pitch_deg": 0.36851397156715393,
+      "mean_proj_gravity_y": 0.019100409001111984
+    },
+    "dynamics": {
+      "mean_wheel_torque_nm": -0.0005055821966379881,
+      "mean_wheel_raw_action": -0.009497016668319702,
+      "mean_wheel_ang_vel_radps": -0.21991702914237976,
+      "mean_knee_torque_nm": -22.727277755737305,
+      "actual_hip_rad": -0.04861674830317497,
+      "ik_target_hip_rad": -0.00010132789611816406,
+      "hip_angle_err_deg": -2.7797288306272216,
+      "actual_knee_rad": 0.005445915274322033,
+      "ik_target_knee_rad": 0.00013375282287597656,
+      "knee_angle_err_deg": 0.3043644885557281,
+      "wheel_y_rel_base_m": 0.10221614688634872,
+      "sagittal_support_lever_cm": -1.1411643113651282
+    }
+  },
+  "H_0.48m (Regular Rise)": {
+    "target_H_m": 0.48,
+    "h_ctrl_sent_m": 0.4866,
+    "mean_act_h_m": 0.4744476079940796,
+    "signed_h_err_cm": -0.5552392005920392,
+    "kinematics": {
+      "mean_lin_vel_y_mps": -0.017137210816144943,
+      "std_lin_vel_y_mps": 0.008603502064943314,
+      "net_displacement_5s_m": -0.08568605780601501,
+      "total_distance_5s_m": 0.08608809858560562,
+      "directivity_ratio": 0.9869980812072754
+    },
+    "attitude": {
+      "mean_pitch_deg": 1.1353399753570557,
+      "std_pitch_deg": 0.38291817903518677,
+      "mean_proj_gravity_y": 0.019813667982816696
+    },
+    "dynamics": {
+      "mean_wheel_torque_nm": -0.0005285695660859346,
+      "mean_wheel_raw_action": 0.010396123863756657,
+      "mean_wheel_ang_vel_radps": 0.24442675709724426,
+      "mean_knee_torque_nm": -21.579015731811523,
+      "actual_hip_rad": 0.16191455721855164,
+      "ik_target_hip_rad": 0.21871066093444824,
+      "hip_angle_err_deg": -3.2541770357081674,
+      "actual_knee_rad": -0.26602113246917725,
+      "ik_target_knee_rad": -0.31671738624572754,
+      "knee_angle_err_deg": 2.904681378520493,
+      "wheel_y_rel_base_m": 0.10561221092939377,
+      "sagittal_support_lever_cm": -0.8015579070606238
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "model_name": "champion_v5_phase13_m100",
+  "source_checkpoint": "legged_gym/logs/myrobot/Oct13_09-50-52_phase13_exp7_speed050_sig002_beta002_resume15iter/model_100.pt",
+  "archived_path": "evaluation_assets/champion_v5/models/champion_v5_m100.pt",
+  "phase13_archived_path": "evaluation_assets/phase13/models/phase13_exp7_m100.pt",
+  "sha256": "5d006113b09c48e4171db9f9a7ed4f185256d73706544d291b42bd202f9e4499",
+  "promotion_date": "2026-10-13T09:56:00+08:00",
+  "training_run": "Oct13_09-50-52_phase13_exp7_speed050_sig002_beta002_resume15iter",
+  "cumulative_iterations": 100,
+  "teleop_launch_command": "python legged_gym/legged_gym/scripts/teleop.py --task myrobot --load_run Oct13_09-50-52_phase13_exp7_speed050_sig002_beta002_resume15iter --checkpoint 100",
+  "speed_capabilities": {
+    "+0.20_mps": {
+      "actual_vy_mps": 0.2018,
+      "mean_abs_err_mps": 0.0071,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.064
+    },
+    "+0.30_mps": {
+      "actual_vy_mps": 0.2991,
+      "mean_abs_err_mps": 0.0072,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.115
+    },
+    "+0.40_mps": {
+      "actual_vy_mps": 0.4079,
+      "mean_abs_err_mps": 0.0094,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.178
+    },
+    "+0.50_mps": {
+      "actual_vy_mps": 0.5210,
+      "mean_abs_err_mps": 0.0218,
+      "steady_pass_rate": 0.962,
+      "brake_dist_m": 0.259
+    },
+    "-0.20_mps": {
+      "actual_vy_mps": -0.1829,
+      "mean_abs_err_mps": 0.0172,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.056
+    },
+    "-0.30_mps": {
+      "actual_vy_mps": -0.2858,
+      "mean_abs_err_mps": 0.0145,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.106
+    }
+  },
+  "metrics": {
+    "total_joint_pass_rate": 0.8578,
+    "total_env_pass_rate": 0.7902,
+    "total_height_pass_rate": 0.9610,
+    "in_place_squat_joint_rate": 1.000,
+    "in_place_squat_env_rate": 1.000,
+    "sequential_compound_mean_joint_rate_3seeds": 0.9656,
+    "sequential_compound_mean_env_rate_3seeds": 0.9479,
+    "global_survival_rate": 1.0000,
+    "wheel_torque_saturation_rate": 0.0014
+  },
+  "comparison_with_champion_v4": {
+    "champion_v4_sha256": "b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9",
+    "speed_limit_increase": "From 0.20 m/s to 0.50 m/s cruise (2.5x speed increase)",
+    "21_scenario_joint_delta": "+19.26% (85.78% vs 66.52%)",
+    "21_scenario_env_delta": "+15.78% (79.02% vs 63.24%)",
+    "sequential_compound_joint_delta": "+20.30% (96.56% vs 76.26%)",
+    "sequential_compound_env_delta": "+26.43% (94.79% vs 68.36%)",
+    "in_place_squat_joint_delta": "+11.20% (100.0% vs 88.8%)"
+  }
+}

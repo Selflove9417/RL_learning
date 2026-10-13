@@ -1,0 +1,67 @@
+{
+  "model_path": "legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt",
+  "total_duration_s": 60.0,
+  "num_seeds": 5,
+  "avg_survival_rate": 100.0,
+  "avg_joint_pass_pct_internal_cmd": 89.50666666666667,
+  "avg_joint_pass_pct_user_target": 81.393125,
+  "avg_wheel_sat_rate": 0.011041666666666667,
+  "all_seeds_passed": true,
+  "seeds": [
+    {
+      "seed": 1,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 89.559375,
+      "joint_pass_pct_user_target": 81.365625,
+      "max_pitch_deg": 5.669972896575928,
+      "max_roll_deg": 3.2804083824157715,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.016666666666666666,
+      "passed": true
+    },
+    {
+      "seed": 2,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 89.45625,
+      "joint_pass_pct_user_target": 81.359375,
+      "max_pitch_deg": 4.812633991241455,
+      "max_roll_deg": 3.284332036972046,
+      "max_knee_tau_nm": 56.27986145019531,
+      "wheel_sat_rate": 0.0125,
+      "passed": true
+    },
+    {
+      "seed": 3,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 89.44791666666667,
+      "joint_pass_pct_user_target": 81.390625,
+      "max_pitch_deg": 4.443613529205322,
+      "max_roll_deg": 3.0186805725097656,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.008333333333333333,
+      "passed": true
+    },
+    {
+      "seed": 4,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 89.49166666666667,
+      "joint_pass_pct_user_target": 81.39166666666667,
+      "max_pitch_deg": 5.400464057922363,
+      "max_roll_deg": 3.620847702026367,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.011458333333333333,
+      "passed": true
+    },
+    {
+      "seed": 5,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 89.578125,
+      "joint_pass_pct_user_target": 81.45833333333333,
+      "max_pitch_deg": 4.879247188568115,
+      "max_roll_deg": 3.370896577835083,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.00625,
+      "passed": true
+    }
+  ]
+}

@@ -130,6 +130,14 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
         # num envs
         if args.num_envs is not None:
             env_cfg.env.num_envs = args.num_envs
+        if getattr(args, 'height_deadzone', None) is not None:
+            env_cfg.rewards.height_deadzone = args.height_deadzone
+        if getattr(args, 'tracking_sigma', None) is not None and hasattr(env_cfg, 'rewards'):
+            env_cfg.rewards.tracking_sigma = args.tracking_sigma
+        if getattr(args, 'fwd_speed_max', None) is not None and hasattr(env_cfg, 'commands'):
+            env_cfg.commands.fwd_speed_max = args.fwd_speed_max
+        if getattr(args, 'bwd_speed_max', None) is not None and hasattr(env_cfg, 'commands'):
+            env_cfg.commands.bwd_speed_max = args.bwd_speed_max
     if cfg_train is not None:
         if args.seed is not None:
             cfg_train.seed = args.seed
@@ -162,6 +170,16 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.algorithm.ref_kl_coef = args.ref_kl_coef
         if getattr(args, 'ref_policy_path', None) is not None:
             cfg_train.algorithm.ref_policy_path = args.ref_policy_path
+        if getattr(args, 'enable_sym_reg', False):
+            cfg_train.algorithm.enable_sym_reg = True
+        if getattr(args, 'sym_reg_coef', None) is not None:
+            cfg_train.algorithm.sym_reg_coef = args.sym_reg_coef
+        if getattr(args, 'enable_mirrored_augmentation', False):
+            cfg_train.runner.enable_mirrored_augmentation = True
+            cfg_train.algorithm.enable_mirrored_augmentation = True
+        if getattr(args, 'mirror_ratio', None) is not None:
+            cfg_train.runner.mirror_ratio = args.mirror_ratio
+            cfg_train.algorithm.mirror_ratio = args.mirror_ratio
 
     return env_cfg, cfg_train
 
@@ -181,6 +199,14 @@ def get_args():
         {"name": "--enable_ref_kl", "action": "store_true", "default": False, "help": "Enable Reference-Policy KL regularization"},
         {"name": "--ref_kl_coef", "type": float, "help": "Reference-Policy KL regularization coefficient (beta)"},
         {"name": "--ref_policy_path", "type": str, "help": "Path to reference policy checkpoint"},
+        {"name": "--height_deadzone", "type": float, "help": "Override reward height deadzone"},
+        {"name": "--enable_sym_reg", "action": "store_true", "default": False, "help": "Enable Actor Symmetry Regularization"},
+        {"name": "--sym_reg_coef", "type": float, "help": "Actor Symmetry Regularization coefficient (lambda_sym)"},
+        {"name": "--enable_mirrored_augmentation", "action": "store_true", "default": False, "help": "Enable On-policy Mirrored-View Augmentation (Phase 10)"},
+        {"name": "--mirror_ratio", "type": float, "default": 0.5, "help": "Ratio of environments to mirror in On-policy Mirrored-View Augmentation (default: 0.5)"},
+        {"name": "--fwd_speed_max", "type": float, "help": "Forward maximum speed for velocity domain expansion curriculum (Phase 13)"},
+        {"name": "--bwd_speed_max", "type": float, "help": "Backward maximum speed for velocity domain expansion curriculum (Phase 13)"},
+        {"name": "--tracking_sigma", "type": float, "help": "Override rewards.tracking_sigma"},
         
         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
         {"name": "--horovod", "action": "store_true", "default": False, "help": "Use horovod for multi-gpu training"},

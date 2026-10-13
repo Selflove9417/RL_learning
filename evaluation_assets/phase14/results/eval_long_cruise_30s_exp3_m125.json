@@ -1,0 +1,62 @@
+{
+  "model_path": "legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt",
+  "cruise_duration_s": 30.0,
+  "num_seeds": 5,
+  "avg_vy": 0.5009789586067199,
+  "avg_err_ms": 0.010763275995850563,
+  "avg_pass_rate": 100.0,
+  "avg_survival_rate": 100.0,
+  "all_seeds_passed": true,
+  "seeds": [
+    {
+      "seed": 1,
+      "mean_vy": 0.5007556080818176,
+      "mean_err_ms": 0.010714973323047161,
+      "pass_rate_005": 100.0,
+      "pitch_rms_deg": 1.026695728302002,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 2,
+      "mean_vy": 0.5008644461631775,
+      "mean_err_ms": 0.010771848261356354,
+      "pass_rate_005": 100.0,
+      "pitch_rms_deg": 1.028684139251709,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 3,
+      "mean_vy": 0.5009477138519287,
+      "mean_err_ms": 0.010752390138804913,
+      "pass_rate_005": 100.0,
+      "pitch_rms_deg": 1.0252087116241455,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 4,
+      "mean_vy": 0.5010887980461121,
+      "mean_err_ms": 0.01073248777538538,
+      "pass_rate_005": 100.0,
+      "pitch_rms_deg": 1.0243098735809326,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 5,
+      "mean_vy": 0.501238226890564,
+      "mean_err_ms": 0.010844680480659008,
+      "pass_rate_005": 100.0,
+      "pitch_rms_deg": 1.0172114372253418,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    }
+  ]
+}

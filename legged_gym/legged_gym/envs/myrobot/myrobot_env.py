@@ -108,9 +108,10 @@ class MyRobot(LeggedRobot):
         self.alpha_contact = torch.ones(self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False)
         self._init_state_machine_buffers()
 
-        # 阶段 5.1: 动态高度指令缓冲区与标称高度初始化
+        # 阶段 5.1 / 14: 动态高度指令与目标缓冲区初始化
         self.nominal_height = 0.39774
         self.height_cmd_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
+        self.target_height_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
 
         # 轮速控制参数 (速度闭环迁移期、直接转矩控制与有界弱转速阻尼)
         self.wheel_torque_scale = getattr(self.cfg.control, 'wheel_torque_scale', 7.0)
@@ -215,18 +216,19 @@ class MyRobot(LeggedRobot):
         self._is_resetting = torch.ones(self.num_envs, dtype=torch.bool, device=self.device)
 
         # 6x6 状态转移概率矩阵 P(S_{t+1} | S_t)
+        # Phase 14 Exp 3: 强化向模式 0 (Stand 驻车自平衡) 的转移概率，高频覆盖移动、转向后制动停车场景
         self.transition_matrix = torch.tensor([
-            [0.30, 0.15, 0.20, 0.15, 0.10, 0.10],  # 0: Stand
-            [0.20, 0.30, 0.10, 0.10, 0.15, 0.15],  # 1: Inplace_Turn
-            [0.10, 0.05, 0.30, 0.15, 0.35, 0.05],  # 2: Fwd_Straight
-            [0.10, 0.05, 0.15, 0.30, 0.05, 0.35],  # 3: Bwd_Straight
-            [0.20, 0.05, 0.25, 0.05, 0.30, 0.15],  # 4: Fwd_Turn
-            [0.20, 0.05, 0.05, 0.25, 0.15, 0.30],  # 5: Bwd_Turn
+            [0.35, 0.15, 0.15, 0.15, 0.10, 0.10],  # 0: Stand
+            [0.30, 0.25, 0.10, 0.10, 0.15, 0.10],  # 1: Inplace_Turn -> 30% to Stand
+            [0.30, 0.05, 0.25, 0.10, 0.25, 0.05],  # 2: Fwd_Straight -> 30% to Stand
+            [0.30, 0.05, 0.10, 0.25, 0.05, 0.25],  # 3: Bwd_Straight -> 30% to Stand
+            [0.30, 0.05, 0.20, 0.05, 0.25, 0.15],  # 4: Fwd_Turn -> 30% to Stand
+            [0.30, 0.05, 0.05, 0.20, 0.15, 0.25],  # 5: Bwd_Turn -> 30% to Stand
         ], device=self.device, dtype=torch.float)
 
-        # 初始平稳分布 (用于环境重置采样)
+        # 初始平稳分布 (用于环境重置采样，35% 初始驻车)
         self.init_mode_distribution = torch.tensor(
-            [0.183, 0.091, 0.182, 0.171, 0.189, 0.184],
+            [0.35, 0.10, 0.15, 0.15, 0.13, 0.12],
             device=self.device, dtype=torch.float
         )
 
@@ -276,6 +278,10 @@ class MyRobot(LeggedRobot):
         if not hasattr(self, 'height_cmd_buf'):
             self.nominal_height = 0.39774
             self.height_cmd_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
+        if not hasattr(self, 'target_height_buf'):
+            self.target_height_buf = torch.full((self.num_envs,), self.nominal_height, device=self.device, dtype=torch.float)
+        self.height_cmd_buf[env_ids] = self.nominal_height
+        self.target_height_buf[env_ids] = self.nominal_height
         if not isinstance(env_ids, torch.Tensor):
             env_ids = torch.tensor(env_ids, device=self.device, dtype=torch.long)
         self._is_resetting[env_ids] = True
@@ -360,6 +366,15 @@ class MyRobot(LeggedRobot):
             )
         else:
             self.current_wheel_diff_damping = self.wheel_diff_damping
+
+        # 阶段 14: 统一 4 cm/s (0.04 m/s) 机身高度平滑斜坡发生器
+        if hasattr(self, 'target_height_buf'):
+            elevation_speed = getattr(self.cfg.commands, 'elevation_speed', 0.04)
+            dh = elevation_speed * self.dt
+            diff_h = self.target_height_buf - self.height_cmd_buf
+            self.height_cmd_buf += torch.clamp(diff_h, min=-dh, max=dh)
+        else:
+            self.target_height_buf = self.height_cmd_buf.clone()
 
         return super().step(actions)
 
@@ -731,146 +746,204 @@ class MyRobot(LeggedRobot):
             self.commands[ids5, 1] = -v_rand[m5]
             self.commands[ids5, 2] = (yaw_dirs * w_rand)[m5]
 
-        # 阶段 5.3: 混合课程采样 (35% 复合转向变高, 25% 直行变高, 15% 原地变高/偏航, 15% 标称旧运动, 10% 标称驻车)
+        # Phase 14 Exp 3 针对性驻车微调样本分配:
+        # 30% 原有高速巡航与倒车 (保持 v5 0.50 m/s 巡航与 -0.30 m/s 倒车防退化)
+        # 35% 不同高度下零速驻车 (重点覆盖 0.30, 0.32, 0.48, 0.50 m)
+        # 20% 移动、转向后制动并保持高度
+        # 10% 原有移动变高
+        # 5%  高度边界保持
         r_task = torch.rand(n, device=self.device)
-        task_compound_turn_h = (r_task < 0.35)                               # 35% 复合转向中动态变高 (Stage 1)
-        task_cruise_h = (r_task >= 0.35) & (r_task < 0.60)                  # 25% 前后直行中动态变高
-        task_inplace_h = (r_task >= 0.60) & (r_task < 0.75)                 # 15% 原地转向或驻车中变高
-        task_old_motion = (r_task >= 0.75) & (r_task < 0.90)                # 15% 标称高度 Phase 4.3 旧运动
-        task_park = (r_task >= 0.90)                                        # 10% 标称高度静止驻车
+        task_cruise_v5 = (r_task < 0.30)
+        task_stand_h   = (r_task >= 0.30) & (r_task < 0.65)
+        task_brake_hold = (r_task >= 0.65) & (r_task < 0.85)
+        task_motion_h  = (r_task >= 0.85) & (r_task < 0.95)
+        task_boundary_hold = (r_task >= 0.95)
 
         h_nom = torch.tensor(self.nominal_height, device=self.device)
+        fwd_speed_max = getattr(self.cfg.commands, 'fwd_speed_max', 0.50)
+        bwd_speed_max = getattr(self.cfg.commands, 'bwd_speed_max', 0.35)
+        min_h = 0.30
+        max_h = 0.50
 
-        # 1. 任务 1 (35%): 复合转向中动态高度调节 (Stage 1 核心任务)
-        # |v_y| in [0.08, 0.12] m/s, |yaw| in [0.15, 0.25] rad/s, H in [0.36, 0.44] m
-        if task_compound_turn_h.any():
-            ids_ct = env_ids[task_compound_turn_h]
-            n_ct = len(ids_ct)
-            v_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
-            v_mag = 0.08 + 0.04 * torch.rand(n_ct, device=self.device)
-            w_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
-            w_mag = 0.15 + 0.10 * torch.rand(n_ct, device=self.device)
-
-            # 高度采样: 20% 标称, 40% 低蹲 [0.36, 0.38]m, 40% 升高 [0.42, 0.44]m
-            r_h_ct = torch.rand(n_ct, device=self.device)
-            h_low_ct = 0.36 + 0.02 * torch.rand(n_ct, device=self.device)
-            h_high_ct = 0.42 + 0.02 * torch.rand(n_ct, device=self.device)
-            sampled_h_ct = torch.where(
-                r_h_ct < 0.20,
-                h_nom,
-                torch.where(r_h_ct < 0.60, h_low_ct, h_high_ct)
-            )
-
-            self.commands[ids_ct, 1] = v_dir * v_mag
-            self.commands[ids_ct, 2] = w_dir * w_mag
-            self.height_cmd_buf[ids_ct] = sampled_h_ct
-            self.command_mode[ids_ct] = torch.where(v_dir > 0, 4, 5) # 4: Fwd_Turn, 5: Bwd_Turn
-            self.yaw_direction[ids_ct] = w_dir
-            self.task_type_buf[ids_ct] = 1 # 任务 1: 复合转向变高
-
-        # 2. 任务 2 (25%): 前后直行中动态高度调节 (Phase 5.2 任务保留)
-        # |v_y| in [0.08, 0.20] m/s, yaw = 0, H in [0.35, 0.45] m
-        if task_cruise_h.any():
-            ids_c = env_ids[task_cruise_h]
-            n_c = len(ids_c)
-            v_dir = torch.where(torch.rand(n_c, device=self.device) < 0.5, 1.0, -1.0)
-            v_mag = 0.08 + 0.12 * torch.rand(n_c, device=self.device)
-
-            r_h_c = torch.rand(n_c, device=self.device)
-            h_low_c = 0.35 + 0.03 * torch.rand(n_c, device=self.device)
-            h_high_c = 0.41 + 0.04 * torch.rand(n_c, device=self.device)
-            sampled_h_c = torch.where(
-                r_h_c < 0.20,
-                h_nom,
-                torch.where(r_h_c < 0.60, h_low_c, h_high_c)
-            )
-
-            self.commands[ids_c, 1] = v_dir * v_mag
-            self.commands[ids_c, 2] = 0.0
-            self.height_cmd_buf[ids_c] = sampled_h_c
-            self.command_mode[ids_c] = torch.where(v_dir > 0, 2, 3) # 2: Fwd_Straight, 3: Bwd_Straight
-            self.task_type_buf[ids_c] = 2 # 任务 2: 直行变高
-
-        # 3. 任务 3 (15%): 原地高度调节 (Phase 5.1 任务保留: 50% 驻车原地变高, 50% 原地转向变高)
-        # H in [0.35, 0.45] m
-        if task_inplace_h.any():
-            ids_i = env_ids[task_inplace_h]
-            n_i = len(ids_i)
-            is_turn_i = (torch.rand(n_i, device=self.device) < 0.5)
-            w_dir_i = torch.where(torch.rand(n_i, device=self.device) < 0.5, 1.0, -1.0)
-            w_mag_i = 0.20 + 0.15 * torch.rand(n_i, device=self.device)
-
-            r_h_i = torch.rand(n_i, device=self.device)
-            h_low_i = 0.35 + 0.03 * torch.rand(n_i, device=self.device)
-            h_high_i = 0.41 + 0.04 * torch.rand(n_i, device=self.device)
-            sampled_h_i = torch.where(
-                r_h_i < 0.20,
-                h_nom,
-                torch.where(r_h_i < 0.60, h_low_i, h_high_i)
-            )
-
-            self.commands[ids_i, 1] = 0.0
-            self.commands[ids_i, 2] = torch.where(is_turn_i, w_dir_i * w_mag_i, torch.zeros_like(w_mag_i))
-            self.height_cmd_buf[ids_i] = sampled_h_i
-            self.command_mode[ids_i] = torch.where(is_turn_i, 1, 0) # 1: Inplace_Turn, 0: Stand
-            self.yaw_direction[ids_i] = w_dir_i
-            self.task_type_buf[ids_i] = 3 # 任务 3: 原地变高
-
-        # 4. 任务 4 (15%): 标称高度 Phase 4.3 旧运动任务 (直行/原地偏航/复合转向)
-        # H = 0.39774 m, commands 保持六模态马尔可夫采样 (速度 [0.10, 0.25] m/s, 偏航 [0.20, 0.35] rad/s)
-        if task_old_motion.any():
-            ids_m = env_ids[task_old_motion]
+        # 1. 任务 1 (30%): 原有高速巡航与倒车 (保持 Champion v5 0.50 m/s 巡航与倒车)
+        if task_cruise_v5.any():
+            ids_m = env_ids[task_cruise_v5]
             n_m = len(ids_m)
-            self.height_cmd_buf[ids_m] = self.nominal_height
-            self.task_type_buf[ids_m] = 4 # 任务 4: 标称旧运动
+            self.target_height_buf[ids_m] = self.nominal_height
+            self.task_type_buf[ids_m] = 4
 
-            # 如果碰巧被采样为 Stand(0)，重置为 1~5 运动模态以确保旧技能运动充分覆盖
-            m_curr = self.command_mode[ids_m]
-            m_zero = (m_curr == 0)
-            if m_zero.any():
-                ids_m0 = ids_m[m_zero]
-                self.command_mode[ids_m0] = torch.randint(1, 6, (len(ids_m0),), device=self.device)
+            r_submode = torch.rand(n_m, device=self.device)
+            is_fwd_straight = (r_submode < 0.60)
+            is_bwd_straight = (r_submode >= 0.60) & (r_submode < 0.80)
+            is_turn_motion = (r_submode >= 0.80)
 
-            v_r = 0.10 + 0.15 * torch.rand(n_m, device=self.device)
-            w_r = 0.20 + 0.15 * torch.rand(n_m, device=self.device)
             y_d = self.yaw_direction[ids_m]
-            m_final = self.command_mode[ids_m]
 
-            # 模式 1: Inplace Turn
-            m1_mask = (m_final == 1)
-            if m1_mask.any():
-                self.commands[ids_m[m1_mask], 1] = 0.0
-                self.commands[ids_m[m1_mask], 2] = (y_d * w_r)[m1_mask]
-            # 模式 2: Fwd Straight
-            m2_mask = (m_final == 2)
-            if m2_mask.any():
-                self.commands[ids_m[m2_mask], 1] = v_r[m2_mask]
-                self.commands[ids_m[m2_mask], 2] = 0.0
-            # 模式 3: Bwd Straight
-            m3_mask = (m_final == 3)
-            if m3_mask.any():
-                self.commands[ids_m[m3_mask], 1] = -v_r[m3_mask]
-                self.commands[ids_m[m3_mask], 2] = 0.0
-            # 模式 4: Fwd Turn
-            m4_mask = (m_final == 4)
-            if m4_mask.any():
-                self.commands[ids_m[m4_mask], 1] = v_r[m4_mask]
-                self.commands[ids_m[m4_mask], 2] = (y_d * w_r)[m4_mask]
-            # 模式 5: Bwd Turn
-            m5_mask = (m_final == 5)
-            if m5_mask.any():
-                self.commands[ids_m[m5_mask], 1] = -v_r[m5_mask]
-                self.commands[ids_m[m5_mask], 2] = (y_d * w_r)[m5_mask]
+            # 前向直行高速巡航: 60% 定焦 [0.47, 0.50], 20% [0.35, 0.45], 20% [0.20, 0.35]
+            if is_fwd_straight.any():
+                ids_fwd = ids_m[is_fwd_straight]
+                n_fwd = len(ids_fwd)
+                r_fwd_split = torch.rand(n_fwd, device=self.device)
+                v_fwd_low = 0.20 + 0.15 * torch.rand(n_fwd, device=self.device)
+                v_fwd_mid = 0.35 + 0.10 * torch.rand(n_fwd, device=self.device)
+                v_fwd_target = 0.47 + 0.03 * torch.rand(n_fwd, device=self.device)
+                v_fwd = torch.where(
+                    r_fwd_split < 0.20,
+                    v_fwd_low,
+                    torch.where(r_fwd_split < 0.40, v_fwd_mid, v_fwd_target)
+                )
+                self.commands[ids_fwd, 1] = v_fwd
+                self.commands[ids_fwd, 2] = 0.0
+                self.command_mode[ids_fwd] = 2 # Fwd Straight
 
-        # 5. 任务 5 (10%): 标称高度静止驻车
-        # v_y = 0, yaw = 0, H = 0.39774 m
-        if task_park.any():
-            ids_p = env_ids[task_park]
-            self.commands[ids_p, 1] = 0.0
-            self.commands[ids_p, 2] = 0.0
-            self.height_cmd_buf[ids_p] = self.nominal_height
-            self.command_mode[ids_p] = 0 # Stand
-            self.task_type_buf[ids_p] = 5 # 任务 5: 标称驻车
+            # 后退直行巡航: 覆盖 [-bwd_speed_max, -0.15]
+            if is_bwd_straight.any():
+                ids_bwd = ids_m[is_bwd_straight]
+                n_bwd = len(ids_bwd)
+                v_bwd = -(0.15 + (bwd_speed_max - 0.15) * torch.rand(n_bwd, device=self.device))
+                self.commands[ids_bwd, 1] = v_bwd
+                self.commands[ids_bwd, 2] = 0.0
+                self.command_mode[ids_bwd] = 3 # Bwd Straight
+
+            # 转向与复合运动 (模式 1, 4, 5)
+            if is_turn_motion.any():
+                ids_trn = ids_m[is_turn_motion]
+                n_trn = len(ids_trn)
+                sub_modes = torch.randint(0, 3, (n_trn,), device=self.device)
+                w_t = 0.20 + 0.15 * torch.rand(n_trn, device=self.device)
+                v_t = 0.10 + 0.15 * torch.rand(n_trn, device=self.device)
+                y_t = y_d[is_turn_motion]
+
+                m_in = (sub_modes == 0)
+                if m_in.any():
+                    self.commands[ids_trn[m_in], 1] = 0.0
+                    self.commands[ids_trn[m_in], 2] = (y_t * w_t)[m_in]
+                    self.command_mode[ids_trn[m_in]] = 1
+
+                m_ft = (sub_modes == 1)
+                if m_ft.any():
+                    self.commands[ids_trn[m_ft], 1] = v_t[m_ft]
+                    self.commands[ids_trn[m_ft], 2] = (y_t * w_t)[m_ft]
+                    self.command_mode[ids_trn[m_ft]] = 4
+
+                m_bt = (sub_modes == 2)
+                if m_bt.any():
+                    self.commands[ids_trn[m_bt], 1] = -v_t[m_bt]
+                    self.commands[ids_trn[m_bt], 2] = (y_t * w_t)[m_bt]
+                    self.command_mode[ids_trn[m_bt]] = 5
+
+        # 2. 任务 2 (35%): 不同高度下零速驻车 (重点覆盖 0.30, 0.32, 0.48, 0.50 m)
+        if task_stand_h.any():
+            ids_sh = env_ids[task_stand_h]
+            n_sh = len(ids_sh)
+            r_sub_h = torch.rand(n_sh, device=self.device)
+
+            # 25% 0.30m, 25% 0.32m, 25% 0.48m, 25% 0.50m
+            h_030 = 0.300 + 0.005 * torch.rand(n_sh, device=self.device)
+            h_032 = 0.320 + 0.005 * torch.rand(n_sh, device=self.device)
+            h_048 = 0.480 - 0.005 * torch.rand(n_sh, device=self.device)
+            h_050 = 0.500 - 0.005 * torch.rand(n_sh, device=self.device)
+            h_sampled = torch.where(
+                r_sub_h < 0.25, h_030,
+                torch.where(r_sub_h < 0.50, h_032,
+                torch.where(r_sub_h < 0.75, h_048, h_050))
+            )
+
+            # 应用与遥控一致的补偿规则
+            delta_h = torch.clamp(0.08 * (h_sampled - 0.39774), min=-0.010, max=0.010)
+            self.target_height_buf[ids_sh] = h_sampled + delta_h
+
+            self.commands[ids_sh, 1] = 0.0
+            self.commands[ids_sh, 2] = 0.0
+            self.command_mode[ids_sh] = 0 # Stand (驻车自平衡)
+            self.task_type_buf[ids_sh] = 3
+
+        # 3. 任务 3 (20%): 移动、转向后制动并保持高度
+        if task_brake_hold.any():
+            ids_bh = env_ids[task_brake_hold]
+            n_bh = len(ids_bh)
+            r_sub_bh = torch.rand(n_bh, device=self.device)
+
+            # 高度分布: 20% 0.30m, 25% 0.32m, 10% 0.398m, 25% 0.48m, 20% 0.50m
+            h_030_b = 0.300 + 0.005 * torch.rand(n_bh, device=self.device)
+            h_032_b = 0.320 + 0.005 * torch.rand(n_bh, device=self.device)
+            h_nom_b = torch.full((n_bh,), self.nominal_height, device=self.device)
+            h_048_b = 0.480 - 0.005 * torch.rand(n_bh, device=self.device)
+            h_050_b = 0.500 - 0.005 * torch.rand(n_bh, device=self.device)
+            h_bh = torch.where(
+                r_sub_bh < 0.20, h_030_b,
+                torch.where(r_sub_bh < 0.45, h_032_b,
+                torch.where(r_sub_bh < 0.55, h_nom_b,
+                torch.where(r_sub_bh < 0.80, h_048_b, h_050_b)))
+            )
+
+            delta_h_b = torch.clamp(0.08 * (h_bh - 0.39774), min=-0.010, max=0.010)
+            self.target_height_buf[ids_bh] = h_bh + delta_h_b
+
+            # 制动归零指令
+            self.commands[ids_bh, 1] = 0.0
+            self.commands[ids_bh, 2] = 0.0
+            self.command_mode[ids_bh] = 0 # Stand (制动驻车)
+            self.task_type_buf[ids_bh] = 0
+
+        # 4. 任务 4 (10%): 原有移动变高 (直行变高 50% + 复合转向变高 50%)
+        if task_motion_h.any():
+            ids_mh = env_ids[task_motion_h]
+            n_mh = len(ids_mh)
+            is_turn_mh = (torch.rand(n_mh, device=self.device) < 0.50)
+
+            # 高度分布: 0.32m ~ 0.48m
+            h_low_mh = 0.320 + 0.020 * torch.rand(n_mh, device=self.device)
+            h_high_mh = 0.480 - 0.020 * torch.rand(n_mh, device=self.device)
+            h_mh = torch.where(torch.rand(n_mh, device=self.device) < 0.50, h_low_mh, h_high_mh)
+            delta_h_mh = torch.clamp(0.08 * (h_mh - 0.39774), min=-0.010, max=0.010)
+            self.target_height_buf[ids_mh] = h_mh + delta_h_mh
+
+            # 4.1 直行变高
+            is_straight_mh = ~is_turn_mh
+            if is_straight_mh.any():
+                ids_smh = ids_mh[is_straight_mh]
+                n_smh = len(ids_smh)
+                is_fwd_smh = (torch.rand(n_smh, device=self.device) < 0.50)
+                v_fwd_smh = 0.15 + 0.15 * torch.rand(n_smh, device=self.device)
+                v_bwd_smh = -(0.15 + 0.10 * torch.rand(n_smh, device=self.device))
+                self.commands[ids_smh, 1] = torch.where(is_fwd_smh, v_fwd_smh, v_bwd_smh)
+                self.commands[ids_smh, 2] = 0.0
+                self.command_mode[ids_smh] = torch.where(is_fwd_smh, 2, 3)
+
+            # 4.2 转向变高
+            if is_turn_mh.any():
+                ids_tmh = ids_mh[is_turn_mh]
+                n_tmh = len(ids_tmh)
+                v_tmh = 0.10 + 0.10 * torch.rand(n_tmh, device=self.device)
+                w_tmh = 0.15 + 0.15 * torch.rand(n_tmh, device=self.device)
+                w_dir_tmh = torch.where(torch.rand(n_tmh, device=self.device) < 0.5, 1.0, -1.0)
+                is_fwd_tmh = (torch.rand(n_tmh, device=self.device) < 0.5)
+
+                self.commands[ids_tmh, 1] = torch.where(is_fwd_tmh, v_tmh, -v_tmh)
+                self.commands[ids_tmh, 2] = w_dir_tmh * w_tmh
+                self.command_mode[ids_tmh] = torch.where(is_fwd_tmh, 4, 5)
+
+            self.task_type_buf[ids_mh] = 1
+
+        # 5. 任务 5 (5%): 高度边界保持 (两端持续保持与极值稳定性)
+        if task_boundary_hold.any():
+            ids_b = env_ids[task_boundary_hold]
+            n_b = len(ids_b)
+            # 50% 下界极值 0.30m, 50% 上界极值 0.50m
+            is_lower_b = (torch.rand(n_b, device=self.device) < 0.50)
+            target_h_b = torch.where(is_lower_b, torch.tensor(0.300, device=self.device), torch.tensor(0.500, device=self.device))
+            delta_h_b = torch.clamp(0.08 * (target_h_b - 0.39774), min=-0.010, max=0.010)
+
+            # 70% 静止平衡保持, 30% 缓速直行保持
+            is_still_b = (torch.rand(n_b, device=self.device) < 0.70)
+            v_slow_b = 0.08 * (2 * torch.rand(n_b, device=self.device) - 1.0) # [-0.08, 0.08] m/s
+
+            self.commands[ids_b, 1] = torch.where(is_still_b, torch.zeros_like(v_slow_b), v_slow_b)
+            self.commands[ids_b, 2] = 0.0
+            self.target_height_buf[ids_b] = target_h_b + delta_h_b
+            self.command_mode[ids_b] = torch.where(is_still_b, 0, torch.where(v_slow_b >= 0, 2, 3))
+            self.task_type_buf[ids_b] = 5
 
     # ==================== 奖励函数 ====================
 

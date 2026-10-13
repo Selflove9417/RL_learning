@@ -1,0 +1,37 @@
+{
+  "model_name": "phase7c_champion_deadzone005_m1",
+  "source_checkpoint": "legged_gym/logs/myrobot/Oct12_11-16-16_phase7c_deadzone005_beta020_iter1/model_1.pt",
+  "archived_path": "evaluation_assets/phase7c/champion_model/phase7c_champion_deadzone005_m1.pt",
+  "sha256": "ca3df2f9587ba60d3c3a1b490e727f8cac72227e04cfe0189a4b0135947f4b7b",
+  "training_run": "Oct12_11-16-16_phase7c_deadzone005_beta020_iter1",
+  "iteration": 1,
+  "hyperparameters": {
+    "warm_start_base": "legged_gym/logs/myrobot/Oct10_15-48-32_turning_height_stage5_3_formal/model_25.pt",
+    "warm_start_base_sha256": "d67474d0e47f908a8c863e605b8d5de7ea1bd9f89f41d2c303fbef33d963536c",
+    "warm_start_optimizer": false,
+    "learning_rate": 7.59375e-05,
+    "adaptive_lr": false,
+    "early_stopping": false,
+    "enable_ref_kl": true,
+    "ref_kl_coef": 0.20,
+    "height_deadzone": 0.005,
+    "num_envs": 2048,
+    "seed": 1,
+    "task_sampling_distribution": "nominal 50:50 inplace"
+  },
+  "metrics": {
+    "total_joint_pass_rate": 0.4821,
+    "total_env_pass_rate": 0.4702,
+    "group_g1_joint": 0.3286,
+    "group_g2_joint": 0.5982,
+    "group_g3_joint": 0.6004,
+    "group_g4_joint": 0.4148,
+    "g3_inplace_squat_joint": 0.2510,
+    "g3_inplace_squat_env": 0.3440,
+    "g3_inplace_squat_h_err_cm": 1.127,
+    "g3_inplace_squat_h_pass_rate": 0.3390,
+    "g3_inplace_squat_vy_pass_rate": 0.8980,
+    "g3_inplace_squat_wz_pass_rate": 1.0000
+  },
+  "status": "Phase 7C Champion (Best experimental checkpoint to date; exceeds Phase 6B Champion v2)"
+}

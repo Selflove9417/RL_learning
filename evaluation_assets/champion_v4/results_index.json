@@ -1,0 +1,17 @@
+{
+  "champion_version": "v4",
+  "model_name": "champion_v4_phase8b_m10",
+  "model_path": "evaluation_assets/phase8b/models/phase8b_m10.pt",
+  "sha256": "b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9",
+  "formal_21_scenarios_results_file": "evaluation_assets/phase8b/results/eval_phase8b_m10_formal_results.json",
+  "formal_21_scenarios_comparison_script": "scripts/compare_phase8b_formal.py",
+  "mid_checkpoints_eval_file": "evaluation_assets/phase8b/results/phase8b_mid_checkpoints_eval.json",
+  "training_log_dir": "legged_gym/logs/myrobot/Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter",
+  "training_diagnostics_file": "legged_gym/logs/myrobot/Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter/diagnostics.json",
+  "historical_champion_v3_reference": {
+    "model_path": "evaluation_assets/phase7c/champion_model/phase7c_champion_deadzone005_m1.pt",
+    "sha256": "ca3df2f9587ba60d3c3a1b490e727f8cac72227e04cfe0189a4b0135947f4b7b",
+    "metadata_file": "evaluation_assets/phase7c/champion_model/champion_model_meta.json",
+    "phase7f_aligned_results_file": "evaluation_assets/phase7f/results/eval_phase7f_formal_aligned_results.json"
+  }
+}

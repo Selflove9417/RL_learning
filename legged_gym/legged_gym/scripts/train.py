@@ -101,6 +101,11 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
     ))
     if os.path.isfile(ppo_source):
         shutil.copy2(ppo_source, os.path.join(source_dir, "ppo.py"))
+    wrapper_source = os.path.abspath(os.path.join(
+        LEGGED_GYM_ROOT_DIR, "..", "rsl_rl", "rsl_rl", "env", "mirrored_vec_env_wrapper.py"
+    ))
+    if os.path.isfile(wrapper_source):
+        shutil.copy2(wrapper_source, os.path.join(source_dir, "mirrored_vec_env_wrapper.py"))
 
 def train(args):
     # 根据任务名称和命令行参数创建强化学习环境及对应配置

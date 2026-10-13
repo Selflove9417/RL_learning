@@ -62,9 +62,16 @@ class PPO:
                  enable_ref_kl=False,
                  ref_kl_coef=0.0,
                  ref_policy_path=None,
+                 enable_sym_reg=False,
+                 sym_reg_coef=0.0,
+                 enable_mirrored_augmentation=False,
+                 mirror_ratio=0.5,
+                 **kwargs,
                  ):
 
         self.device = device
+        self.enable_mirrored_augmentation = enable_mirrored_augmentation
+        self.mirror_ratio = mirror_ratio
 
         self.desired_kl = desired_kl
         self.schedule = schedule
@@ -95,6 +102,12 @@ class PPO:
 
         if self.enable_ref_kl:
             self._init_reference_policy()
+
+        # Actor Symmetry Regularization (Phase 9A)
+        self.enable_sym_reg = enable_sym_reg
+        self.sym_reg_coef = sym_reg_coef
+        if self.enable_sym_reg:
+            self._init_symmetry_operators()
 
         # PPO parameters
         self.clip_param = clip_param
@@ -146,6 +159,32 @@ class PPO:
         else:
             self.ref_std = self.actor_critic.std.clone().detach().to(self.device)
         self.ref_std.requires_grad = False
+
+    def _init_symmetry_operators(self):
+        """Initializes exact bilateral reflection tensors for 31-dim obs and 6-dim action."""
+        obs_indices = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+            15, 16, 17, 12, 13, 14,
+            21, 22, 23, 18, 19, 20,
+            27, 28, 29, 24, 25, 26,
+            30
+        ]
+        obs_signs = [
+            -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0
+        ]
+        self.obs_sym_indices = torch.tensor(obs_indices, dtype=torch.long, device=self.device)
+        self.obs_sym_signs = torch.tensor(obs_signs, dtype=torch.float, device=self.device)
+        self.act_sym_indices = torch.tensor([3, 4, 5, 0, 1, 2], dtype=torch.long, device=self.device)
+
+    def _apply_obs_symmetry(self, obs):
+        return obs[..., self.obs_sym_indices] * self.obs_sym_signs
+
+    def _apply_act_symmetry(self, act):
+        return act[..., self.act_sym_indices]
 
     def init_storage(self, num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape):
         self.storage = RolloutStorage(num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, self.device)
@@ -215,6 +254,8 @@ class PPO:
         val_losses_list = []
         ref_kl_all = []
         ref_kl_loss_all = []
+        sym_loss_all = []
+        sym_loss_scaled_all = []
 
         if self.actor_critic.is_recurrent:
             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
@@ -296,6 +337,17 @@ class PPO:
                         ref_kl_all.append(ref_kl_batch.item())
                         ref_kl_loss_all.append(ref_kl_loss.item())
 
+                    # Actor Symmetry Regularization (Phase 9A, lambda_sym > 0)
+                    if self.enable_sym_reg and self.sym_reg_coef > 0:
+                        obs_batch_mirr = self._apply_obs_symmetry(obs_batch)
+                        mu_mirr = self.actor_critic.actor(obs_batch_mirr)
+                        mu_mirr_target = self._apply_act_symmetry(mu_batch)
+                        sym_loss_batch = torch.mean(torch.sum(torch.square(mu_mirr - mu_mirr_target), dim=-1) / 6.0)
+                        sym_loss = self.sym_reg_coef * sym_loss_batch
+                        loss = loss + sym_loss
+                        sym_loss_all.append(sym_loss_batch.item())
+                        sym_loss_scaled_all.append(sym_loss.item())
+
                     if torch.isnan(loss) or torch.isinf(loss):
                         raise FloatingPointError("Loss is NaN or Inf.")
 
@@ -341,6 +393,8 @@ class PPO:
         mean_actual_lr = float(np.mean(actual_lrs)) if actual_lrs else self.learning_rate
         mean_ref_kl = float(np.mean(ref_kl_all)) if ref_kl_all else 0.0
         mean_ref_kl_loss = float(np.mean(ref_kl_loss_all)) if ref_kl_loss_all else 0.0
+        mean_sym_loss = float(np.mean(sym_loss_all)) if sym_loss_all else 0.0
+        mean_sym_loss_scaled = float(np.mean(sym_loss_scaled_all)) if sym_loss_scaled_all else 0.0
 
         with torch.no_grad():
             current_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()])
@@ -403,6 +457,10 @@ class PPO:
             "ref_kl_loss_mean": mean_ref_kl_loss,
             "ref_policy_path": self.ref_policy_path,
             "ref_policy_sha256": self.ref_policy_sha256,
+            "enable_sym_reg": self.enable_sym_reg,
+            "sym_reg_coef": self.sym_reg_coef,
+            "sym_loss_mean": mean_sym_loss,
+            "sym_loss_scaled_mean": mean_sym_loss_scaled,
         }
 
         return mean_value_loss, mean_surrogate_loss

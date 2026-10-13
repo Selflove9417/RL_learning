@@ -1,0 +1,600 @@
+{
+  "candidate_delta_h_mm": 8.0,
+  "c048_mean": {
+    "parking_joint_pct": 93.55249999999998,
+    "parking_joint_pct_std": 1.1620648827267248,
+    "completed_count_mean": 6.0,
+    "signed_h_err_cm": -0.42907533080627525,
+    "signed_vy_mps": -0.017616619480152924,
+    "net_displacement_m": -0.08808309411009155,
+    "motion_joint_pct": 96.76531862745098
+  },
+  "c050_mean": {
+    "parking_joint_pct": 40.25416666666666,
+    "parking_joint_pct_std": 2.6550044465332068,
+    "signed_h_err_cm": -0.6045039463788271,
+    "signed_vy_mps": -0.029034640019138653
+  },
+  "per_seed_results": [
+    {
+      "seed_idx": 1,
+      "seed_val": 142,
+      "c048": {
+        "parking_joint_pct": 93.17291666666667,
+        "motion_joint_pct": 96.63296568627452,
+        "height_pass_pct": 99.72291666666668,
+        "vy_pass_pct": 93.45416666666665,
+        "signed_h_err_cm": -0.4294740889842312,
+        "signed_vy_mps": -0.017857583239674568,
+        "net_displacement_m": -0.08928791309396426,
+        "completed_count": 6
+      },
+      "c050": {
+        "parking_joint_pct": 41.291666666666664,
+        "motion_joint_pct": 77.29779411764706,
+        "height_pass_pct": 89.44166666666666,
+        "vy_pass_pct": 51.679166666666674,
+        "signed_h_err_cm": -0.6048894487321377,
+        "signed_vy_mps": -0.029258787011106808,
+        "net_displacement_m": -0.14629392822583517,
+        "completed_count": 0
+      },
+      "case_records": {
+        "2. fwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.94485294117646,
+          "parking_joint_pct": 93.4,
+          "height_pass_pct": 99.6875,
+          "vy_pass_pct": 93.7125,
+          "signed_h_err_cm": -0.43107206001877785,
+          "signed_vy_mps": -0.017709646373987198,
+          "net_displacement_m": -0.08854823559522629
+        },
+        "4. bwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.92647058823529,
+          "parking_joint_pct": 92.7625,
+          "height_pass_pct": 99.7375,
+          "vy_pass_pct": 93.0375,
+          "signed_h_err_cm": -0.42780577205121517,
+          "signed_vy_mps": -0.018028507009148598,
+          "net_displacement_m": -0.09014251828193665
+        },
+        "7. fwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.09926470588235,
+          "parking_joint_pct": 93.35,
+          "height_pass_pct": 99.7125,
+          "vy_pass_pct": 93.65,
+          "signed_h_err_cm": -0.4306192509829998,
+          "signed_vy_mps": -0.017749466001987457,
+          "net_displacement_m": -0.08874731510877609
+        },
+        "8. fwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 95.69852941176471,
+          "parking_joint_pct": 93.425,
+          "height_pass_pct": 99.725,
+          "vy_pass_pct": 93.7,
+          "signed_h_err_cm": -0.4306171555072069,
+          "signed_vy_mps": -0.017725251615047455,
+          "net_displacement_m": -0.08862626552581787
+        },
+        "11. bwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.2095588235294,
+          "parking_joint_pct": 93.05,
+          "height_pass_pct": 99.7375,
+          "vy_pass_pct": 93.3125,
+          "signed_h_err_cm": -0.4283518064767122,
+          "signed_vy_mps": -0.017973313108086586,
+          "net_displacement_m": -0.08986655622720718
+        },
+        "12. bwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 85.91911764705881,
+          "parking_joint_pct": 93.05,
+          "height_pass_pct": 99.7375,
+          "vy_pass_pct": 93.3125,
+          "signed_h_err_cm": -0.42837848886847496,
+          "signed_vy_mps": -0.017959315329790115,
+          "net_displacement_m": -0.08979658782482147
+        },
+        "16. fwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 81.45220588235294,
+          "parking_joint_pct": 41.3875,
+          "height_pass_pct": 89.4125,
+          "vy_pass_pct": 51.800000000000004,
+          "signed_h_err_cm": -0.6053317803889513,
+          "signed_vy_mps": -0.029217440634965897,
+          "net_displacement_m": -0.14608719944953918
+        },
+        "17. bwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 85.7720588235294,
+          "parking_joint_pct": 41.175,
+          "height_pass_pct": 89.55,
+          "vy_pass_pct": 51.4625,
+          "signed_h_err_cm": -0.6038906052708626,
+          "signed_vy_mps": -0.029346942901611328,
+          "net_displacement_m": -0.14673471450805664
+        },
+        "18. fwd_turn_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 64.66911764705883,
+          "parking_joint_pct": 41.3125,
+          "height_pass_pct": 89.3625,
+          "vy_pass_pct": 51.775000000000006,
+          "signed_h_err_cm": -0.6054459605365992,
+          "signed_vy_mps": -0.029211977496743202,
+          "net_displacement_m": -0.14605987071990967
+        }
+      }
+    },
+    {
+      "seed_idx": 2,
+      "seed_val": 242,
+      "c048": {
+        "parking_joint_pct": 91.45416666666665,
+        "motion_joint_pct": 96.68811274509805,
+        "height_pass_pct": 99.92916666666667,
+        "vy_pass_pct": 91.53125,
+        "signed_h_err_cm": -0.4259320441633463,
+        "signed_vy_mps": -0.01833047562589248,
+        "net_displacement_m": -0.09165237471461296,
+        "completed_count": 6
+      },
+      "c050": {
+        "parking_joint_pct": 36.40416666666667,
+        "motion_joint_pct": 77.00980392156863,
+        "height_pass_pct": 88.125,
+        "vy_pass_pct": 48.145833333333336,
+        "signed_h_err_cm": -0.6007963636269172,
+        "signed_vy_mps": -0.029758626595139503,
+        "net_displacement_m": -0.14879313111305237,
+        "completed_count": 0
+      },
+      "case_records": {
+        "2. fwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 91.85,
+          "height_pass_pct": 99.925,
+          "vy_pass_pct": 91.9375,
+          "signed_h_err_cm": -0.4275265149772167,
+          "signed_vy_mps": -0.0181871447712183,
+          "net_displacement_m": -0.09093571454286575
+        },
+        "4. bwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 90.975,
+          "height_pass_pct": 99.925,
+          "vy_pass_pct": 91.0625,
+          "signed_h_err_cm": -0.42418669909238815,
+          "signed_vy_mps": -0.018504928797483444,
+          "net_displacement_m": -0.09252464771270752
+        },
+        "7. fwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.30147058823529,
+          "parking_joint_pct": 91.7625,
+          "height_pass_pct": 99.925,
+          "vy_pass_pct": 91.8375,
+          "signed_h_err_cm": -0.42710229754447937,
+          "signed_vy_mps": -0.018215609714388847,
+          "net_displacement_m": -0.09107804298400879
+        },
+        "8. fwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 95.5514705882353,
+          "parking_joint_pct": 91.825,
+          "height_pass_pct": 99.9375,
+          "vy_pass_pct": 91.8875,
+          "signed_h_err_cm": -0.4272189922630787,
+          "signed_vy_mps": -0.018189478665590286,
+          "net_displacement_m": -0.09094738960266113
+        },
+        "11. bwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.59558823529412,
+          "parking_joint_pct": 91.14999999999999,
+          "height_pass_pct": 99.925,
+          "vy_pass_pct": 91.225,
+          "signed_h_err_cm": -0.42475215159356594,
+          "signed_vy_mps": -0.01844901591539383,
+          "net_displacement_m": -0.09224507957696915
+        },
+        "12. bwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 85.68014705882354,
+          "parking_joint_pct": 91.16250000000001,
+          "height_pass_pct": 99.9375,
+          "vy_pass_pct": 91.23750000000001,
+          "signed_h_err_cm": -0.42480560950934887,
+          "signed_vy_mps": -0.018436675891280174,
+          "net_displacement_m": -0.09218337386846542
+        },
+        "16. fwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 80.36764705882354,
+          "parking_joint_pct": 36.762499999999996,
+          "height_pass_pct": 88.11250000000001,
+          "vy_pass_pct": 48.512499999999996,
+          "signed_h_err_cm": -0.6012178026139736,
+          "signed_vy_mps": -0.029717547819018364,
+          "net_displacement_m": -0.14858773350715637
+        },
+        "17. bwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 85.99264705882354,
+          "parking_joint_pct": 35.862500000000004,
+          "height_pass_pct": 88.225,
+          "vy_pass_pct": 47.5,
+          "signed_h_err_cm": -0.5998786073178053,
+          "signed_vy_mps": -0.029847515746951103,
+          "net_displacement_m": -0.14923758804798126
+        },
+        "18. fwd_turn_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 64.66911764705883,
+          "parking_joint_pct": 36.5875,
+          "height_pass_pct": 88.03750000000001,
+          "vy_pass_pct": 48.425000000000004,
+          "signed_h_err_cm": -0.6012926809489727,
+          "signed_vy_mps": -0.029710816219449043,
+          "net_displacement_m": -0.14855407178401947
+        }
+      }
+    },
+    {
+      "seed_idx": 3,
+      "seed_val": 342,
+      "c048": {
+        "parking_joint_pct": 94.31041666666665,
+        "motion_joint_pct": 96.86274509803921,
+        "height_pass_pct": 99.91250000000001,
+        "vy_pass_pct": 94.40625,
+        "signed_h_err_cm": -0.4276427362735073,
+        "signed_vy_mps": -0.017556372098624706,
+        "net_displacement_m": -0.08778185645739238,
+        "completed_count": 6
+      },
+      "c050": {
+        "parking_joint_pct": 39.82083333333333,
+        "motion_joint_pct": 78.23529411764707,
+        "height_pass_pct": 88.0125,
+        "vy_pass_pct": 51.69166666666666,
+        "signed_h_err_cm": -0.6032912526279688,
+        "signed_vy_mps": -0.02897348627448082,
+        "net_displacement_m": -0.14486742516358694,
+        "completed_count": 0
+      },
+      "case_records": {
+        "2. fwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 94.78750000000001,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 94.875,
+          "signed_h_err_cm": -0.42927730828523636,
+          "signed_vy_mps": -0.017417054623365402,
+          "net_displacement_m": -0.08708526939153671
+        },
+        "4. bwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 93.63749999999999,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 93.75,
+          "signed_h_err_cm": -0.4259540233761072,
+          "signed_vy_mps": -0.01772107370197773,
+          "net_displacement_m": -0.0886053591966629
+        },
+        "7. fwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.19117647058823,
+          "parking_joint_pct": 94.75,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 94.83749999999999,
+          "signed_h_err_cm": -0.4288327880203724,
+          "signed_vy_mps": -0.017445705831050873,
+          "net_displacement_m": -0.08722852170467377
+        },
+        "8. fwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 95.22058823529412,
+          "parking_joint_pct": 94.7625,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 94.85,
+          "signed_h_err_cm": -0.4289100877940655,
+          "signed_vy_mps": -0.017417537048459053,
+          "net_displacement_m": -0.08708768337965012
+        },
+        "11. bwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 98.91544117647058,
+          "parking_joint_pct": 93.925,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 94.0375,
+          "signed_h_err_cm": -0.4264073446393013,
+          "signed_vy_mps": -0.017677616328001022,
+          "net_displacement_m": -0.08838807046413422
+        },
+        "12. bwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 87.84926470588236,
+          "parking_joint_pct": 94.0,
+          "height_pass_pct": 99.91250000000001,
+          "vy_pass_pct": 94.0875,
+          "signed_h_err_cm": -0.4264748655259609,
+          "signed_vy_mps": -0.017659245058894157,
+          "net_displacement_m": -0.08829623460769653
+        },
+        "16. fwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 83.49264705882354,
+          "parking_joint_pct": 40.0125,
+          "height_pass_pct": 88.0125,
+          "vy_pass_pct": 51.887499999999996,
+          "signed_h_err_cm": -0.6036732345819473,
+          "signed_vy_mps": -0.02893400937318802,
+          "net_displacement_m": -0.1446700394153595
+        },
+        "17. bwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 85.42279411764706,
+          "parking_joint_pct": 39.4875,
+          "height_pass_pct": 88.1,
+          "vy_pass_pct": 51.24999999999999,
+          "signed_h_err_cm": -0.6023113615810871,
+          "signed_vy_mps": -0.02906207926571369,
+          "net_displacement_m": -0.1453103870153427
+        },
+        "18. fwd_turn_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 65.7904411764706,
+          "parking_joint_pct": 39.9625,
+          "height_pass_pct": 87.925,
+          "vy_pass_pct": 51.9375,
+          "signed_h_err_cm": -0.6038891617208719,
+          "signed_vy_mps": -0.02892437018454075,
+          "net_displacement_m": -0.1446218490600586
+        }
+      }
+    },
+    {
+      "seed_idx": 4,
+      "seed_val": 442,
+      "c048": {
+        "parking_joint_pct": 94.6875,
+        "motion_joint_pct": 96.7095588235294,
+        "height_pass_pct": 99.87916666666666,
+        "vy_pass_pct": 94.83333333333336,
+        "signed_h_err_cm": -0.43012516883512336,
+        "signed_vy_mps": -0.01735950354486704,
+        "net_displacement_m": -0.08679751182595889,
+        "completed_count": 6
+      },
+      "c050": {
+        "parking_joint_pct": 39.24166666666667,
+        "motion_joint_pct": 77.4264705882353,
+        "height_pass_pct": 87.30416666666667,
+        "vy_pass_pct": 51.85,
+        "signed_h_err_cm": -0.6056061169753472,
+        "signed_vy_mps": -0.028791648025314014,
+        "net_displacement_m": -0.14395824074745178,
+        "completed_count": 0
+      },
+      "case_records": {
+        "2. fwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 95.075,
+          "height_pass_pct": 99.875,
+          "vy_pass_pct": 95.22500000000001,
+          "signed_h_err_cm": -0.4317303653806448,
+          "signed_vy_mps": -0.017215179279446602,
+          "net_displacement_m": -0.08607588708400726
+        },
+        "4. bwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 94.22500000000001,
+          "height_pass_pct": 99.88749999999999,
+          "vy_pass_pct": 94.36250000000001,
+          "signed_h_err_cm": -0.4284151829779148,
+          "signed_vy_mps": -0.017532940953969955,
+          "net_displacement_m": -0.08766470104455948
+        },
+        "7. fwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.30147058823529,
+          "parking_joint_pct": 95.0,
+          "height_pass_pct": 99.88749999999999,
+          "vy_pass_pct": 95.15,
+          "signed_h_err_cm": -0.4312594886869192,
+          "signed_vy_mps": -0.01724853552877903,
+          "net_displacement_m": -0.08624267578125
+        },
+        "8. fwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 96.21323529411765,
+          "parking_joint_pct": 95.0,
+          "height_pass_pct": 99.875,
+          "vy_pass_pct": 95.16250000000001,
+          "signed_h_err_cm": -0.4313420504331589,
+          "signed_vy_mps": -0.017223861068487167,
+          "net_displacement_m": -0.08611930906772614
+        },
+        "11. bwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.24632352941177,
+          "parking_joint_pct": 94.39999999999999,
+          "height_pass_pct": 99.875,
+          "vy_pass_pct": 94.5375,
+          "signed_h_err_cm": -0.4289949778467417,
+          "signed_vy_mps": -0.017476221546530724,
+          "net_displacement_m": -0.08738109469413757
+        },
+        "12. bwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 85.49632352941177,
+          "parking_joint_pct": 94.425,
+          "height_pass_pct": 99.875,
+          "vy_pass_pct": 94.5625,
+          "signed_h_err_cm": -0.4290089476853609,
+          "signed_vy_mps": -0.017460282891988754,
+          "net_displacement_m": -0.08730140328407288
+        },
+        "16. fwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 81.5625,
+          "parking_joint_pct": 39.35,
+          "height_pass_pct": 87.25,
+          "vy_pass_pct": 52.012499999999996,
+          "signed_h_err_cm": -0.6059923209249973,
+          "signed_vy_mps": -0.02875048853456974,
+          "net_displacement_m": -0.14375245571136475
+        },
+        "17. bwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 85.95588235294119,
+          "parking_joint_pct": 38.95,
+          "height_pass_pct": 87.4375,
+          "vy_pass_pct": 51.425,
+          "signed_h_err_cm": -0.604625977575779,
+          "signed_vy_mps": -0.028886422514915466,
+          "net_displacement_m": -0.14443211257457733
+        },
+        "18. fwd_turn_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 64.76102941176471,
+          "parking_joint_pct": 39.425,
+          "height_pass_pct": 87.225,
+          "vy_pass_pct": 52.1125,
+          "signed_h_err_cm": -0.6062000524252653,
+          "signed_vy_mps": -0.028738033026456833,
+          "net_displacement_m": -0.14369015395641327
+        }
+      }
+    },
+    {
+      "seed_idx": 5,
+      "seed_val": 542,
+      "c048": {
+        "parking_joint_pct": 94.1375,
+        "motion_joint_pct": 96.93321078431374,
+        "height_pass_pct": 99.78958333333333,
+        "vy_pass_pct": 94.36458333333333,
+        "signed_h_err_cm": -0.43220261577516794,
+        "signed_vy_mps": -0.01697916289170583,
+        "net_displacement_m": -0.08489581445852916,
+        "completed_count": 6
+      },
+      "c050": {
+        "parking_joint_pct": 44.512499999999996,
+        "motion_joint_pct": 76.80147058823529,
+        "height_pass_pct": 87.79583333333335,
+        "vy_pass_pct": 56.574999999999996,
+        "signed_h_err_cm": -0.6079365499317646,
+        "signed_vy_mps": -0.028390652189652126,
+        "net_displacement_m": -0.141953244805336,
+        "completed_count": 0
+      },
+      "case_records": {
+        "2. fwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 94.3125,
+          "height_pass_pct": 99.775,
+          "vy_pass_pct": 94.5625,
+          "signed_h_err_cm": -0.43381815776228905,
+          "signed_vy_mps": -0.016827598214149475,
+          "net_displacement_m": -0.08413799852132797
+        },
+        "4. bwd_straight_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 100.0,
+          "parking_joint_pct": 93.8,
+          "height_pass_pct": 99.8,
+          "vy_pass_pct": 94.025,
+          "signed_h_err_cm": -0.4304558504372835,
+          "signed_vy_mps": -0.01715993694961071,
+          "net_displacement_m": -0.0857996791601181
+        },
+        "7. fwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.31985294117646,
+          "parking_joint_pct": 94.35,
+          "height_pass_pct": 99.7875,
+          "vy_pass_pct": 94.5625,
+          "signed_h_err_cm": -0.43344898149371147,
+          "signed_vy_mps": -0.016861004754900932,
+          "net_displacement_m": -0.08430501818656921
+        },
+        "8. fwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 95.36764705882354,
+          "parking_joint_pct": 94.3,
+          "height_pass_pct": 99.8,
+          "vy_pass_pct": 94.525,
+          "signed_h_err_cm": -0.4334847442805767,
+          "signed_vy_mps": -0.016836067661643028,
+          "net_displacement_m": -0.0841803327202797
+        },
+        "11. bwd_left_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 99.02573529411765,
+          "parking_joint_pct": 94.025,
+          "height_pass_pct": 99.7875,
+          "vy_pass_pct": 94.2625,
+          "signed_h_err_cm": -0.4309481009840965,
+          "signed_vy_mps": -0.017105888575315475,
+          "net_displacement_m": -0.08552944660186768
+        },
+        "12. bwd_right_rise": {
+          "target_H": 0.48,
+          "motion_joint_pct": 87.88602941176471,
+          "parking_joint_pct": 94.0375,
+          "height_pass_pct": 99.7875,
+          "vy_pass_pct": 94.25,
+          "signed_h_err_cm": -0.4310598596930504,
+          "signed_vy_mps": -0.017084481194615364,
+          "net_displacement_m": -0.08542241156101227
+        },
+        "16. fwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 80.12867647058823,
+          "parking_joint_pct": 44.6,
+          "height_pass_pct": 87.7125,
+          "vy_pass_pct": 56.7125,
+          "signed_h_err_cm": -0.608379952609539,
+          "signed_vy_mps": -0.028344400227069855,
+          "net_displacement_m": -0.14172199368476868
+        },
+        "17. bwd_straight_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 85.66176470588235,
+          "parking_joint_pct": 44.2875,
+          "height_pass_pct": 87.8875,
+          "vy_pass_pct": 56.3,
+          "signed_h_err_cm": -0.6070323288440704,
+          "signed_vy_mps": -0.028482407331466675,
+          "net_displacement_m": -0.14241202175617218
+        },
+        "18. fwd_turn_rise_050m": {
+          "target_H": 0.5,
+          "motion_joint_pct": 64.61397058823529,
+          "parking_joint_pct": 44.65,
+          "height_pass_pct": 87.7875,
+          "vy_pass_pct": 56.7125,
+          "signed_h_err_cm": -0.6083973683416843,
+          "signed_vy_mps": -0.028345149010419846,
+          "net_displacement_m": -0.14172571897506714
+        }
+      }
+    }
+  ]
+}

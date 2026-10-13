@@ -1,0 +1,370 @@
+diff --git a/legged_gym/legged_gym/envs/myrobot/myrobot_config.py b/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
+index 777bb7a..f2bc6db 100644
+--- a/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
++++ b/legged_gym/legged_gym/envs/myrobot/myrobot_config.py
+@@ -246,12 +246,16 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
+         enable_ref_kl = False          # Phase 6B-Pilot: 可选 Reference-Policy KL 正则化 (默认关闭)
+         ref_kl_coef = 0.0              # 正则化惩罚系数 beta
+         ref_policy_path = 'legged_gym/logs/myrobot/Oct10_15-48-32_turning_height_stage5_3_formal/model_25.pt'
++        enable_sym_reg = False         # Phase 9A: Actor 镜像一致性正则化 (默认关闭)
++        sym_reg_coef = 0.0             # 镜像正则化惩罚系数 lambda_sym
++        enable_mirrored_augmentation = False  # Phase 10: On-policy 镜像视角在线增强 (默认关闭)
++        mirror_ratio = 0.5                    # 镜像环境占比 (默认 50%)
+ 
+     class runner(LeggedRobotCfgPPO.runner):
+         policy_class_name = 'ActorCritic'
+         algorithm_class_name = 'PPO'
+         num_steps_per_env = 24
+-        max_iterations = 3         # Phase 6A-S: 严格限制为 3 迭代
++        max_iterations = 3         # 默认迭代
+         save_interval = 1          # 每迭代保存 checkpoint
+         run_name = ''
+         experiment_name = 'myrobot'
+@@ -260,3 +264,5 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
+         warm_start_optimizer = False # 默认 False (Group A 为 False, Group B 为 True)
+         load_run = 'Oct10_15-48-32_turning_height_stage5_3_formal'
+         checkpoint = 25
++        enable_mirrored_augmentation = False  # Phase 10: On-policy 镜像视角在线增强 (默认关闭)
++        mirror_ratio = 0.5                    # 镜像环境占比 (默认 50%)
+diff --git a/legged_gym/legged_gym/envs/myrobot/myrobot_env.py b/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
+index 1577b9b..16879e0 100644
+--- a/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
++++ b/legged_gym/legged_gym/envs/myrobot/myrobot_env.py
+@@ -741,15 +741,15 @@ class MyRobot(LeggedRobot):
+ 
+         h_nom = torch.tensor(self.nominal_height, device=self.device)
+ 
+-        # 1. 任务 1 (35%): 复合转向中动态高度调节 (Stage 1 核心任务)
+-        # |v_y| in [0.08, 0.12] m/s, |yaw| in [0.15, 0.25] rad/s, H in [0.36, 0.44] m
++        # 1. 任务 1 (35%): 复合转向中动态高度调节 (Stage 1 核心任务，Phase 8A/8B 扩展采样域)
++        # |v_y| in [0.08, 0.16] m/s, |yaw| in [0.15, 0.30] rad/s, H in [0.36, 0.44] m
+         if task_compound_turn_h.any():
+             ids_ct = env_ids[task_compound_turn_h]
+             n_ct = len(ids_ct)
+             v_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
+-            v_mag = 0.08 + 0.04 * torch.rand(n_ct, device=self.device)
++            v_mag = 0.08 + 0.08 * torch.rand(n_ct, device=self.device)
+             w_dir = torch.where(torch.rand(n_ct, device=self.device) < 0.5, 1.0, -1.0)
+-            w_mag = 0.15 + 0.10 * torch.rand(n_ct, device=self.device)
++            w_mag = 0.15 + 0.15 * torch.rand(n_ct, device=self.device)
+ 
+             # 高度采样: 20% 标称, 40% 低蹲 [0.36, 0.38]m, 40% 升高 [0.42, 0.44]m
+             r_h_ct = torch.rand(n_ct, device=self.device)
+@@ -985,11 +985,16 @@ class MyRobot(LeggedRobot):
+         惩罚机身高度偏离动态目标值 (带可配几何死区的 L1 锁高):
+         在 [H_cmd - deadzone, H_cmd + deadzone]m 之间允许自然几何微沉降，不产生罚分；
+         一旦突破死区，施加严厉 L1 梯度强力拉回。
++        Phase 11: 低高度左转 (H_cmd <= 0.38m 且 omega_z >= +0.15 rad/s) 惩罚加权 2.0 倍。
+         """
+         deadzone = getattr(self.cfg.rewards, 'height_deadzone', 0.015)
+         base_height = self.root_states[:, 2]
+         height_error = torch.clamp(torch.abs(base_height - self.height_cmd_buf) - deadzone, min=0.0)
+-        return height_error
++
++        # Phase 11: 定向强化低高度左转的高度超差惩罚
++        is_low_left_turn = (self.height_cmd_buf <= 0.38) & (self.commands[:, 2] >= 0.15)
++        weight = torch.where(is_low_left_turn, 2.0, 1.0)
++        return height_error * weight
+ 
+     def _reward_wheel_throttle_margin(self):
+         """阶段 27 撤销节流软裕度惩罚，低层由差动优先力矩分配器硬保障"""
+diff --git a/legged_gym/legged_gym/scripts/train.py b/legged_gym/legged_gym/scripts/train.py
+index 4d9ef7a..b9ba1c8 100644
+--- a/legged_gym/legged_gym/scripts/train.py
++++ b/legged_gym/legged_gym/scripts/train.py
+@@ -101,6 +101,11 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
+     ))
+     if os.path.isfile(ppo_source):
+         shutil.copy2(ppo_source, os.path.join(source_dir, "ppo.py"))
++    wrapper_source = os.path.abspath(os.path.join(
++        LEGGED_GYM_ROOT_DIR, "..", "rsl_rl", "rsl_rl", "env", "mirrored_vec_env_wrapper.py"
++    ))
++    if os.path.isfile(wrapper_source):
++        shutil.copy2(wrapper_source, os.path.join(source_dir, "mirrored_vec_env_wrapper.py"))
+ 
+ def train(args):
+     # 根据任务名称和命令行参数创建强化学习环境及对应配置
+diff --git a/legged_gym/legged_gym/utils/helpers.py b/legged_gym/legged_gym/utils/helpers.py
+index aa4426e..67cefcd 100644
+--- a/legged_gym/legged_gym/utils/helpers.py
++++ b/legged_gym/legged_gym/utils/helpers.py
+@@ -130,6 +130,8 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
+         # num envs
+         if args.num_envs is not None:
+             env_cfg.env.num_envs = args.num_envs
++        if getattr(args, 'height_deadzone', None) is not None:
++            env_cfg.rewards.height_deadzone = args.height_deadzone
+     if cfg_train is not None:
+         if args.seed is not None:
+             cfg_train.seed = args.seed
+@@ -162,6 +164,16 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
+             cfg_train.algorithm.ref_kl_coef = args.ref_kl_coef
+         if getattr(args, 'ref_policy_path', None) is not None:
+             cfg_train.algorithm.ref_policy_path = args.ref_policy_path
++        if getattr(args, 'enable_sym_reg', False):
++            cfg_train.algorithm.enable_sym_reg = True
++        if getattr(args, 'sym_reg_coef', None) is not None:
++            cfg_train.algorithm.sym_reg_coef = args.sym_reg_coef
++        if getattr(args, 'enable_mirrored_augmentation', False):
++            cfg_train.runner.enable_mirrored_augmentation = True
++            cfg_train.algorithm.enable_mirrored_augmentation = True
++        if getattr(args, 'mirror_ratio', None) is not None:
++            cfg_train.runner.mirror_ratio = args.mirror_ratio
++            cfg_train.algorithm.mirror_ratio = args.mirror_ratio
+ 
+     return env_cfg, cfg_train
+ 
+@@ -181,6 +193,11 @@ def get_args():
+         {"name": "--enable_ref_kl", "action": "store_true", "default": False, "help": "Enable Reference-Policy KL regularization"},
+         {"name": "--ref_kl_coef", "type": float, "help": "Reference-Policy KL regularization coefficient (beta)"},
+         {"name": "--ref_policy_path", "type": str, "help": "Path to reference policy checkpoint"},
++        {"name": "--height_deadzone", "type": float, "help": "Override reward height deadzone"},
++        {"name": "--enable_sym_reg", "action": "store_true", "default": False, "help": "Enable Actor Symmetry Regularization"},
++        {"name": "--sym_reg_coef", "type": float, "help": "Actor Symmetry Regularization coefficient (lambda_sym)"},
++        {"name": "--enable_mirrored_augmentation", "action": "store_true", "default": False, "help": "Enable On-policy Mirrored-View Augmentation (Phase 10)"},
++        {"name": "--mirror_ratio", "type": float, "default": 0.5, "help": "Ratio of environments to mirror in On-policy Mirrored-View Augmentation (default: 0.5)"},
+         
+         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
+         {"name": "--horovod", "action": "store_true", "default": False, "help": "Use horovod for multi-gpu training"},
+diff --git a/rsl_rl/rsl_rl/algorithms/ppo.py b/rsl_rl/rsl_rl/algorithms/ppo.py
+index 27c2b3a..4824ef6 100644
+--- a/rsl_rl/rsl_rl/algorithms/ppo.py
++++ b/rsl_rl/rsl_rl/algorithms/ppo.py
+@@ -62,9 +62,16 @@ class PPO:
+                  enable_ref_kl=False,
+                  ref_kl_coef=0.0,
+                  ref_policy_path=None,
++                 enable_sym_reg=False,
++                 sym_reg_coef=0.0,
++                 enable_mirrored_augmentation=False,
++                 mirror_ratio=0.5,
++                 **kwargs,
+                  ):
+ 
+         self.device = device
++        self.enable_mirrored_augmentation = enable_mirrored_augmentation
++        self.mirror_ratio = mirror_ratio
+ 
+         self.desired_kl = desired_kl
+         self.schedule = schedule
+@@ -96,6 +103,12 @@ class PPO:
+         if self.enable_ref_kl:
+             self._init_reference_policy()
+ 
++        # Actor Symmetry Regularization (Phase 9A)
++        self.enable_sym_reg = enable_sym_reg
++        self.sym_reg_coef = sym_reg_coef
++        if self.enable_sym_reg:
++            self._init_symmetry_operators()
++
+         # PPO parameters
+         self.clip_param = clip_param
+         self.num_learning_epochs = num_learning_epochs
+@@ -147,6 +160,32 @@ class PPO:
+             self.ref_std = self.actor_critic.std.clone().detach().to(self.device)
+         self.ref_std.requires_grad = False
+ 
++    def _init_symmetry_operators(self):
++        """Initializes exact bilateral reflection tensors for 31-dim obs and 6-dim action."""
++        obs_indices = [
++            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
++            15, 16, 17, 12, 13, 14,
++            21, 22, 23, 18, 19, 20,
++            27, 28, 29, 24, 25, 26,
++            30
++        ]
++        obs_signs = [
++            -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
++            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++            1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++            1.0
++        ]
++        self.obs_sym_indices = torch.tensor(obs_indices, dtype=torch.long, device=self.device)
++        self.obs_sym_signs = torch.tensor(obs_signs, dtype=torch.float, device=self.device)
++        self.act_sym_indices = torch.tensor([3, 4, 5, 0, 1, 2], dtype=torch.long, device=self.device)
++
++    def _apply_obs_symmetry(self, obs):
++        return obs[..., self.obs_sym_indices] * self.obs_sym_signs
++
++    def _apply_act_symmetry(self, act):
++        return act[..., self.act_sym_indices]
++
+     def init_storage(self, num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape):
+         self.storage = RolloutStorage(num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, self.device)
+ 
+@@ -215,6 +254,8 @@ class PPO:
+         val_losses_list = []
+         ref_kl_all = []
+         ref_kl_loss_all = []
++        sym_loss_all = []
++        sym_loss_scaled_all = []
+ 
+         if self.actor_critic.is_recurrent:
+             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
+@@ -296,6 +337,17 @@ class PPO:
+                         ref_kl_all.append(ref_kl_batch.item())
+                         ref_kl_loss_all.append(ref_kl_loss.item())
+ 
++                    # Actor Symmetry Regularization (Phase 9A, lambda_sym > 0)
++                    if self.enable_sym_reg and self.sym_reg_coef > 0:
++                        obs_batch_mirr = self._apply_obs_symmetry(obs_batch)
++                        mu_mirr = self.actor_critic.actor(obs_batch_mirr)
++                        mu_mirr_target = self._apply_act_symmetry(mu_batch)
++                        sym_loss_batch = torch.mean(torch.sum(torch.square(mu_mirr - mu_mirr_target), dim=-1) / 6.0)
++                        sym_loss = self.sym_reg_coef * sym_loss_batch
++                        loss = loss + sym_loss
++                        sym_loss_all.append(sym_loss_batch.item())
++                        sym_loss_scaled_all.append(sym_loss.item())
++
+                     if torch.isnan(loss) or torch.isinf(loss):
+                         raise FloatingPointError("Loss is NaN or Inf.")
+ 
+@@ -341,6 +393,8 @@ class PPO:
+         mean_actual_lr = float(np.mean(actual_lrs)) if actual_lrs else self.learning_rate
+         mean_ref_kl = float(np.mean(ref_kl_all)) if ref_kl_all else 0.0
+         mean_ref_kl_loss = float(np.mean(ref_kl_loss_all)) if ref_kl_loss_all else 0.0
++        mean_sym_loss = float(np.mean(sym_loss_all)) if sym_loss_all else 0.0
++        mean_sym_loss_scaled = float(np.mean(sym_loss_scaled_all)) if sym_loss_scaled_all else 0.0
+ 
+         with torch.no_grad():
+             current_actor_params = torch.cat([p.detach().flatten() for p in self.actor_critic.actor.parameters()])
+@@ -403,6 +457,10 @@ class PPO:
+             "ref_kl_loss_mean": mean_ref_kl_loss,
+             "ref_policy_path": self.ref_policy_path,
+             "ref_policy_sha256": self.ref_policy_sha256,
++            "enable_sym_reg": self.enable_sym_reg,
++            "sym_reg_coef": self.sym_reg_coef,
++            "sym_loss_mean": mean_sym_loss,
++            "sym_loss_scaled_mean": mean_sym_loss_scaled,
+         }
+ 
+         return mean_value_loss, mean_surrogate_loss
+diff --git a/rsl_rl/rsl_rl/runners/on_policy_runner.py b/rsl_rl/rsl_rl/runners/on_policy_runner.py
+index 8bc63b9..192a462 100644
+--- a/rsl_rl/rsl_rl/runners/on_policy_runner.py
++++ b/rsl_rl/rsl_rl/runners/on_policy_runner.py
+@@ -35,6 +35,7 @@ import json
+ from collections import deque
+ import statistics
+ 
++import numpy as np
+ from torch.utils.tensorboard import SummaryWriter
+ import torch
+ 
+@@ -56,6 +57,15 @@ class OnPolicyRunner:
+         self.policy_cfg = train_cfg["policy"]
+         self.device = device
+         self.env = env
++        # Phase 10: On-policy Mirrored-View Augmentation (MDA)
++        self.enable_mirrored_augmentation = (
++            self.cfg.get("enable_mirrored_augmentation", False) or
++            self.alg_cfg.get("enable_mirrored_augmentation", False)
++        )
++        self.mirror_ratio = self.cfg.get("mirror_ratio", self.alg_cfg.get("mirror_ratio", 0.5))
++        if self.enable_mirrored_augmentation:
++            from rsl_rl.env.mirrored_vec_env_wrapper import MirroredVecEnvWrapper
++            self.env = MirroredVecEnvWrapper(self.env, mirror_ratio=self.mirror_ratio)
+         if self.env.num_privileged_obs is not None:
+             num_critic_obs = self.env.num_privileged_obs 
+         else:
+@@ -139,6 +149,14 @@ class OnPolicyRunner:
+                 diag_record = dict(self.alg.last_update_diagnostics)
+                 diag_record['iteration'] = it + 1
+                 diag_record['timesteps'] = self.tot_timesteps + self.num_steps_per_env * self.env.num_envs
++                diag_record['mean_reward'] = float(statistics.mean(rewbuffer)) if len(rewbuffer) > 0 else 0.0
++                diag_record['mean_episode_length'] = float(statistics.mean(lenbuffer)) if len(lenbuffer) > 0 else 0.0
++                fixed_l_sym = self._eval_fixed_obs_symmetry()
++                if fixed_l_sym is not None:
++                    diag_record['fixed_obs_l_sym_global'] = fixed_l_sym['global_l_sym']
++                    diag_record['fixed_obs_l_sym_left'] = fixed_l_sym['left_4cases_l_sym']
++                    diag_record['fixed_obs_l_sym_right'] = fixed_l_sym['right_4cases_l_sym']
++                    diag_record['fixed_obs_l_sym_inplace'] = fixed_l_sym['inplace_squat_l_sym']
+                 self.diagnostics_history.append(diag_record)
+                 if self.log_dir is not None:
+                     diag_path = os.path.join(self.log_dir, 'diagnostics.json')
+@@ -200,6 +218,12 @@ class OnPolicyRunner:
+             if diag.get('enable_ref_kl', False):
+                 self.writer.add_scalar('Policy/ref_kl_mean', diag['ref_kl_mean'], locs['it'])
+                 self.writer.add_scalar('Loss/ref_kl_loss', diag['ref_kl_loss_mean'], locs['it'])
++            if self.diagnostics_history and 'fixed_obs_l_sym_global' in self.diagnostics_history[-1]:
++                d_last = self.diagnostics_history[-1]
++                self.writer.add_scalar('Policy/fixed_obs_l_sym_global', d_last['fixed_obs_l_sym_global'], locs['it'])
++                self.writer.add_scalar('Policy/fixed_obs_l_sym_left', d_last['fixed_obs_l_sym_left'], locs['it'])
++                self.writer.add_scalar('Policy/fixed_obs_l_sym_right', d_last['fixed_obs_l_sym_right'], locs['it'])
++                self.writer.add_scalar('Policy/fixed_obs_l_sym_inplace', d_last['fixed_obs_l_sym_inplace'], locs['it'])
+         if len(locs['rewbuffer']) > 0:
+             self.writer.add_scalar('Train/mean_reward', statistics.mean(locs['rewbuffer']), locs['it'])
+             self.writer.add_scalar('Train/mean_episode_length', statistics.mean(locs['lenbuffer']), locs['it'])
+@@ -220,6 +244,9 @@ class OnPolicyRunner:
+                 f"""{'Optimizer updates:':>{pad}} {diag['updates_executed']}/{diag['updates_planned']}{stop_flag}\n"""
+                 f"""{'Policy delta L2 (rel):':>{pad}} {diag['actor_param_delta_l2']:.5f} ({diag['actor_param_delta_rel']:.3%})\n"""
+             )
++            if self.diagnostics_history and 'fixed_obs_l_sym_global' in self.diagnostics_history[-1]:
++                d_last = self.diagnostics_history[-1]
++                diag_str += f"""{'Fixed L_sym (glb/left/right):':>{pad}} {d_last['fixed_obs_l_sym_global']:.5f} / {d_last['fixed_obs_l_sym_left']:.5f} / {d_last['fixed_obs_l_sym_right']:.5f}\n"""
+             if diag.get('enable_ref_kl', False):
+                 diag_str += f"""{'Ref KL (mean / coef / loss):':>{pad}} {diag['ref_kl_mean']:.5f} / {diag['ref_kl_coef']:.4f} / {diag['ref_kl_loss_mean']:.5f}\n"""
+             if diag['early_stop_reason']:
+@@ -282,3 +309,61 @@ class OnPolicyRunner:
+         if device is not None:
+             self.alg.actor_critic.to(device)
+         return self.alg.actor_critic.act_inference
++
++    def _eval_fixed_obs_symmetry(self):
++        """Phase 10: Evaluates actor mirror error L_sym on evaluation_assets/phase9b/fixed_obs.pt."""
++        fixed_obs_path = "evaluation_assets/phase9b/fixed_obs.pt"
++        if not os.path.exists(fixed_obs_path):
++            return None
++        if not hasattr(self, "_fixed_obs_data"):
++            data = torch.load(fixed_obs_path, map_location=self.device)
++            self._fixed_obs_data = data["observations"].to(self.device)
++            self._fixed_obs_slices = data.get("sc_slices", {})
++            obs_indices = [
++                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
++                15, 16, 17, 12, 13, 14,
++                21, 22, 23, 18, 19, 20,
++                27, 28, 29, 24, 25, 26,
++                30
++            ]
++            obs_signs = [
++                -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
++                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++                1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
++                1.0
++            ]
++            self._fixed_obs_sym_indices = torch.tensor(obs_indices, dtype=torch.long, device=self.device)
++            self._fixed_obs_sym_signs = torch.tensor(obs_signs, dtype=torch.float, device=self.device)
++            self._fixed_act_sym_indices = torch.tensor([3, 4, 5, 0, 1, 2], dtype=torch.long, device=self.device)
++
++        was_training = self.alg.actor_critic.training
++        self.alg.actor_critic.eval()
++        with torch.no_grad():
++            obs = self._fixed_obs_data
++            obs_mirr = obs[:, self._fixed_obs_sym_indices] * self._fixed_obs_sym_signs
++            mu_orig = self.alg.actor_critic.actor(obs)
++            mu_mirr = self.alg.actor_critic.actor(obs_mirr)
++            mu_expected = mu_orig[:, self._fixed_act_sym_indices]
++            diff_sq = torch.square(mu_mirr - mu_expected)
++            global_l_sym = torch.mean(diff_sq).item()
++
++            per_sc_l_sym = {}
++            for sc, (start, end) in self._fixed_obs_slices.items():
++                per_sc_l_sym[sc] = torch.mean(diff_sq[start:end]).item()
++
++            left_cases = ["g1_fwd_left_squat", "g1_bwd_left_squat", "g4_exp_fwd_left_squat", "g4_exp_bwd_left_squat"]
++            right_cases = ["g1_fwd_right_squat", "g1_bwd_right_squat", "g4_exp_fwd_right_squat", "g4_exp_bwd_right_squat"]
++            left_l_sym = float(np.mean([per_sc_l_sym[c] for c in left_cases])) if all(c in per_sc_l_sym for c in left_cases) else 0.0
++            right_l_sym = float(np.mean([per_sc_l_sym[c] for c in right_cases])) if all(c in per_sc_l_sym for c in right_cases) else 0.0
++            inplace_l_sym = per_sc_l_sym.get("g3_inplace_squat", 0.0)
++
++        if was_training:
++            self.alg.actor_critic.train()
++
++        return {
++            "global_l_sym": global_l_sym,
++            "left_4cases_l_sym": left_l_sym,
++            "right_4cases_l_sym": right_l_sym,
++            "inplace_squat_l_sym": inplace_l_sym,
++        }

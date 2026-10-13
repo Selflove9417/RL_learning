@@ -19,19 +19,31 @@ from legged_gym.envs import *
 from legged_gym.utils import get_args, export_policy_as_jit, task_registry, Logger
 
 
+# 用户在低蹲仿真中观察到机械干涉；先收紧用户目标高度，间隙仍需实测确认。
+# 这些是补偿前的用户高度边界，内部 IK 高度继续使用既有柔性补偿。
+TELEOP_MIN_HEIGHT = 0.340
+TELEOP_MAX_HEIGHT = 0.500
+
+
 class KeyboardReader:
     """
     从终端原始模式读取键盘按键，非阻塞，不依赖 Isaac Gym 事件系统。
     支持: W/S/A/D, 方向键 (ESC [ A/B/C/D), Space, R
     """
     def __init__(self):
-        self.fd = sys.stdin.fileno()
-        self.old_settings = termios.tcgetattr(self.fd)
-        # 切换到 raw 模式: 按键立即可读，不需要回车
-        tty.setraw(self.fd)
+        self.is_tty = sys.stdin.isatty()
+        if self.is_tty:
+            try:
+                self.fd = sys.stdin.fileno()
+                self.old_settings = termios.tcgetattr(self.fd)
+                tty.setraw(self.fd)
+            except Exception:
+                self.is_tty = False
 
     def read_key(self):
         """非阻塞读取按键, 返回字符串 key 或 None"""
+        if not self.is_tty:
+            return None
         if select.select([sys.stdin], [], [], 0.0)[0]:
             ch = sys.stdin.read(1)
             if ch == '\x1b':
@@ -47,21 +59,25 @@ class KeyboardReader:
 
     def restore(self):
         """恢复终端设置"""
-        termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old_settings)
+        if getattr(self, 'is_tty', False):
+            try:
+                termios.tcsetattr(self.fd, termios.TCSADRAIN, self.old_settings)
+            except Exception:
+                pass
 
 
 def teleop(args):
     print("\n" + "=" * 72)
-    print("🎮 双足轮足机器人实时键盘遥控系统 (Phase 5.3 运动与高度全态遥控)")
+    print("🎮 双足轮足机器人实时键盘遥控系统 (Champion v6 运动与高度全态遥控)")
     print("=" * 72)
     print("  【运动控制 (速度/转向)】:")
-    print("    [W] 或 [↑]   : 前进加速 (+0.04 m/s, 上限 +0.20 m/s [平滑滤波])")
-    print("    [S] 或 [↓]   : 减速 / 倒车 (-0.04 m/s, 下限 -0.20 m/s [平滑滤波])")
+    print("    [W] 或 [↑]   : 前进加速 (+0.04 m/s, 上限 +0.50 m/s [平滑滤波])")
+    print("    [S] 或 [↓]   : 减速 / 倒车 (-0.04 m/s, 下限 -0.30 m/s [平滑滤波])")
     print("    [A] 或 [←]   : 向左旋转转向 (+0.05 rad/s, 上限 +0.35 rad/s)")
     print("    [D] 或 [→]   : 向右旋转转向 (-0.05 rad/s, 下限 -0.35 rad/s)")
-    print("  【高度调节 (动态升降/下蹲)】:")
-    print("    [E] 或 [U]   : 升高机身 (+0.01 m, 上限 0.440 m)")
-    print("    [C] 或 [J]   : 降低/下蹲 (-0.01 m, 下限 0.360 m)")
+    print(f"  【高度调节 (动态升降/下蹲 - {(TELEOP_MAX_HEIGHT - TELEOP_MIN_HEIGHT) * 100:.0f}cm 行程 {TELEOP_MIN_HEIGHT:.2f}~{TELEOP_MAX_HEIGHT:.2f}m)】:")
+    print(f"    [E] 或 [U]   : 升高机身 (+0.01 m, 上限 {TELEOP_MAX_HEIGHT:.3f} m)")
+    print(f"    [C] 或 [J]   : 降低/下蹲 (-0.01 m, 下限 {TELEOP_MIN_HEIGHT:.3f} m)")
     print("    [Z] 或 [N]   : 恢复标称高度 (0.398 m)")
     print("  【辅助控制】:")
     print("    [Space]      : 刹车驻车 (速度清零，保持当前高度平衡)")
@@ -125,8 +141,26 @@ def teleop(args):
             env.gym.subscribe_viewer_keyboard_event(env.viewer, key_code, act_name)
 
     train_cfg.runner.resume = True
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
-    policy = ppo_runner.get_inference_policy(device=env.device)
+    custom_model = getattr(args, 'model_path', None)
+    if custom_model is not None:
+        if not os.path.exists(custom_model):
+            raise FileNotFoundError(f"指定的模型文件不存在: {custom_model}")
+    elif not getattr(args, 'load_run', None):
+        default_champ = 'evaluation_assets/champion_v6/models/champion_v6_m115.pt'
+        if os.path.exists(default_champ):
+            custom_model = default_champ
+
+    if custom_model:
+        from rsl_rl.modules import ActorCritic
+        print(f"📦 正在加载指定策略模型: {custom_model}")
+        loaded = torch.load(custom_model, map_location=env.device)
+        ac = ActorCritic(env.num_obs, env.num_obs, env.num_actions, [512, 256, 128], [512, 256, 128], 'elu', 1.0).to(env.device)
+        ac.load_state_dict(loaded['model_state_dict'])
+        ac.eval()
+        policy = ac.act_inference
+    else:
+        ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+        policy = ppo_runner.get_inference_policy(device=env.device)
 
     # 目标控制值与平滑过渡指令 (Ramp Limiter)
     target_ctrl = {'vel_y': 0.0, 'ang': 0.0, 'height': 0.398}
@@ -142,17 +176,17 @@ def teleop(args):
         act = action_name.upper()
 
         if act in ['W', 'UP', 'FORWARD']:
-            target_ctrl['vel_y'] = round(min(target_ctrl['vel_y'] + 0.04, 0.20), 2)
+            target_ctrl['vel_y'] = round(min(target_ctrl['vel_y'] + 0.04, 0.50), 2)
         elif act in ['S', 'DOWN', 'BACKWARD']:
-            target_ctrl['vel_y'] = round(max(target_ctrl['vel_y'] - 0.04, -0.20), 2)
+            target_ctrl['vel_y'] = round(max(target_ctrl['vel_y'] - 0.04, -0.30), 2)
         elif act in ['A', 'LEFT']:
             target_ctrl['ang'] = round(min(target_ctrl['ang'] + 0.05, 0.35), 2)
         elif act in ['D', 'RIGHT']:
             target_ctrl['ang'] = round(max(target_ctrl['ang'] - 0.05, -0.35), 2)
         elif act in ['E', 'U', 'RISE']:
-            target_ctrl['height'] = round(min(target_ctrl['height'] + 0.01, 0.440), 3)
+            target_ctrl['height'] = round(min(target_ctrl['height'] + 0.01, TELEOP_MAX_HEIGHT), 3)
         elif act in ['C', 'J', 'SQUAT']:
-            target_ctrl['height'] = round(max(target_ctrl['height'] - 0.01, 0.360), 3)
+            target_ctrl['height'] = round(max(target_ctrl['height'] - 0.01, TELEOP_MIN_HEIGHT), 3)
         elif act in ['Z', 'N', 'NOMINAL_H']:
             target_ctrl['height'] = 0.398
         elif act in [' ', 'BRAKE']:
@@ -191,13 +225,23 @@ def teleop(args):
         else:
             status_items.append("⚖️ 标称高度")
 
-        h_err_cm = (actual_h - actual_cmd['height']) * 100.0
+        target_h_user = target_ctrl['height']
+        h_smooth = actual_cmd['height']
+        delta_comp = float(np.clip(0.08 * (h_smooth - 0.39774), -0.010, 0.010))
+        h_ctrl_cmd = round(h_smooth + delta_comp, 4)
+
+        if abs(h_smooth - target_h_user) > 0.002:
+            status_items.append("⏳ 变高过渡中")
+        else:
+            status_items.append("🎯 稳态保持")
+
+        h_err_cm = (actual_h - target_h_user) * 100.0
         status_str = " | ".join(status_items)
         sys.stdout.write(
             f"\r\033[K[{status_str}] "
-            f"高度目标:{actual_cmd['height']:.3f}m(实测:{actual_h:.3f}m, 差:{h_err_cm:+.1f}cm) | "
-            f"线速目标:{actual_cmd['vel_y']:+.2f}m/s(实测:{actual_vy:+.2f}) | "
-            f"转向目标:{actual_cmd['ang']:+.2f}rad/s(实测:{actual_yaw:+.2f})"
+            f"目标:{target_h_user:.3f}m | 平滑:{h_smooth:.3f}m | 补偿:{h_ctrl_cmd:.3f}m | 实测:{actual_h:.3f}m(误差:{h_err_cm:+.1f}cm) | "
+            f"线速目标:{actual_cmd['vel_y']:+.2f}(实测:{actual_vy:+.2f}) | "
+            f"转向目标:{actual_cmd['ang']:+.2f}(实测:{actual_yaw:+.2f})"
         )
         sys.stdout.flush()
 
@@ -255,7 +299,8 @@ def teleop(args):
                 actual_cmd['ang'] += math.copysign(step_max_ang, delta_ang)
 
             # 机身高度平滑
-            target_h = target_ctrl['height']
+            target_h = min(max(target_ctrl['height'], TELEOP_MIN_HEIGHT), TELEOP_MAX_HEIGHT)
+            target_ctrl['height'] = target_h
             delta_h = target_h - actual_cmd['height']
             step_max_h = max_speed_h * dt
             if abs(delta_h) <= step_max_h:
@@ -267,7 +312,13 @@ def teleop(args):
             env.commands[:, 0] = 0.0
             env.commands[:, 1] = actual_cmd['vel_y']
             env.commands[:, 2] = actual_cmd['ang']
-            env.height_cmd_buf[:] = actual_cmd['height']
+            # 前馈柔性软补偿: 保证物理实际高度精准对齐用户目标高度 (消除有限 PD 刚度下的重力下沉)
+            h_smooth = actual_cmd['height']
+            delta_comp = float(np.clip(0.08 * (h_smooth - 0.39774), -0.010, 0.010))
+            h_ctrl = round(h_smooth + delta_comp, 4)
+            env.height_cmd_buf[:] = h_ctrl
+            if hasattr(env, 'target_height_buf'):
+                env.target_height_buf[:] = h_ctrl
 
             # 刷新观测向量，确保网络推理即时获取最新指令与高度特征
             env.compute_observations()
@@ -295,5 +346,28 @@ def teleop(args):
 
 
 if __name__ == '__main__':
+    custom_model_path = None
+    has_explicit_task = False
+    cleaned_argv = [sys.argv[0]]
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == "--model_path" and i + 1 < len(sys.argv):
+            custom_model_path = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == "--task":
+            has_explicit_task = True
+            cleaned_argv.append(sys.argv[i])
+            i += 1
+        else:
+            cleaned_argv.append(sys.argv[i])
+            i += 1
+    sys.argv = cleaned_argv
+
     args = get_args()
+    if not has_explicit_task:
+        args.task = 'myrobot'
+    if custom_model_path:
+        if not os.path.exists(custom_model_path):
+            raise FileNotFoundError(f"指定的模型文件不存在: {custom_model_path}")
+        args.model_path = custom_model_path
     teleop(args)

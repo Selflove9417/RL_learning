@@ -1,0 +1,62 @@
+{
+  "model_path": "evaluation_assets/phase14/models/phase14_exp1_m115.pt",
+  "cruise_duration_s": 30.0,
+  "num_seeds": 5,
+  "avg_vy": 0.5139502763748169,
+  "avg_err_ms": 0.015375852398574353,
+  "avg_pass_rate": 99.80166666666666,
+  "avg_survival_rate": 100.0,
+  "all_seeds_passed": true,
+  "seeds": [
+    {
+      "seed": 1,
+      "mean_vy": 0.5137574672698975,
+      "mean_err_ms": 0.015221098437905312,
+      "pass_rate_005": 99.81041666666667,
+      "pitch_rms_deg": 1.5699915885925293,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 2,
+      "mean_vy": 0.5138663053512573,
+      "mean_err_ms": 0.015307838097214699,
+      "pass_rate_005": 99.79583333333333,
+      "pitch_rms_deg": 1.5754526853561401,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 3,
+      "mean_vy": 0.5139155387878418,
+      "mean_err_ms": 0.015339638106524944,
+      "pass_rate_005": 99.80833333333334,
+      "pitch_rms_deg": 1.5724916458129883,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 4,
+      "mean_vy": 0.5141009092330933,
+      "mean_err_ms": 0.015499766916036606,
+      "pass_rate_005": 99.825,
+      "pitch_rms_deg": 1.5682474374771118,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    },
+    {
+      "seed": 5,
+      "mean_vy": 0.5141111612319946,
+      "mean_err_ms": 0.0155109204351902,
+      "pass_rate_005": 99.76875,
+      "pitch_rms_deg": 1.5665680170059204,
+      "wheel_sat_rate": 0.0,
+      "survival_rate": 100.0,
+      "passed": true
+    }
+  ]
+}

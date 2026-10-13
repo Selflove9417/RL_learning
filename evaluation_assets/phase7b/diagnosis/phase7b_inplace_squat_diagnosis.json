@@ -1,0 +1,216 @@
+{
+  "Phase6B_Champ_v2": {
+    "joint_pass_rate": 21.59,
+    "pass_h_rate": 34.19,
+    "pass_vy_rate": 85.72,
+    "pass_wz_rate": 99.91,
+    "early_resets_count": 0,
+    "survival_rate": 100.0,
+    "reset_events": [],
+    "steady_h_mean_m": 0.3712,
+    "steady_h_err_cm": 1.123,
+    "wheel_vel_mean_rad_s": 0.3327,
+    "wheel_vel_std_rad_s": 0.233,
+    "wheel_vel_rms_rad_s": 0.4062,
+    "wheel_vel_zero_fraction_pct": 3.34,
+    "wheel_tau_mean_Nm": 0.325,
+    "wheel_tau_max_Nm": 0.784,
+    "wheel_sat_rate_pct": 0.0,
+    "pitch_mean_deg": -0.121,
+    "pitch_abs_mean_deg": 0.324,
+    "pitch_max_deg": 0.778,
+    "pitch_rate_rms_deg_s": 1.936,
+    "roll_abs_mean_deg": 0.018,
+    "drift_x_end_m": 0.0013,
+    "drift_y_end_m": 0.0699,
+    "drift_dist_end_m": 0.0699,
+    "knee_tau_mean_Nm": -22.734,
+    "hip_tau_mean_Nm": -0.501,
+    "trajectory_profile": {
+      "step_100": {
+        "h_mean": 0.3972,
+        "h_err_cm": 3.716,
+        "pitch_deg": 0.193,
+        "wheel_vel": 0.2585,
+        "wheel_tau": 0.312
+      },
+      "step_120": {
+        "h_mean": 0.3734,
+        "h_err_cm": 1.34,
+        "pitch_deg": -0.477,
+        "wheel_vel": 0.525,
+        "wheel_tau": 0.403
+      },
+      "step_140": {
+        "h_mean": 0.3714,
+        "h_err_cm": 1.139,
+        "pitch_deg": -0.24,
+        "wheel_vel": 0.3341,
+        "wheel_tau": 0.318
+      },
+      "step_160": {
+        "h_mean": 0.3711,
+        "h_err_cm": 1.107,
+        "pitch_deg": -0.176,
+        "wheel_vel": 0.3133,
+        "wheel_tau": 0.348
+      },
+      "step_180": {
+        "h_mean": 0.3712,
+        "h_err_cm": 1.125,
+        "pitch_deg": -0.13,
+        "wheel_vel": 0.3323,
+        "wheel_tau": 0.304
+      },
+      "step_200": {
+        "h_mean": 0.3712,
+        "h_err_cm": 1.118,
+        "pitch_deg": -0.097,
+        "wheel_vel": 0.3612,
+        "wheel_tau": 0.331
+      },
+      "step_220": {
+        "h_mean": 0.3713,
+        "h_err_cm": 1.13,
+        "pitch_deg": -0.106,
+        "wheel_vel": 0.3678,
+        "wheel_tau": 0.32
+      },
+      "step_240": {
+        "h_mean": 0.3712,
+        "h_err_cm": 1.118,
+        "pitch_deg": -0.143,
+        "wheel_vel": 0.2342,
+        "wheel_tau": 0.337
+      },
+      "step_260": {
+        "h_mean": 0.3712,
+        "h_err_cm": 1.123,
+        "pitch_deg": -0.121,
+        "wheel_vel": 0.289,
+        "wheel_tau": 0.351
+      },
+      "step_280": {
+        "h_mean": 0.3713,
+        "h_err_cm": 1.125,
+        "pitch_deg": -0.118,
+        "wheel_vel": 0.3008,
+        "wheel_tau": 0.316
+      },
+      "step_300": {
+        "h_mean": 0.3713,
+        "h_err_cm": 1.125,
+        "pitch_deg": -0.137,
+        "wheel_vel": 0.292,
+        "wheel_tau": 0.307
+      }
+    }
+  },
+  "Phase7A_Sampling": {
+    "joint_pass_rate": 15.66,
+    "pass_h_rate": 31.5,
+    "pass_vy_rate": 81.81,
+    "pass_wz_rate": 99.88,
+    "early_resets_count": 0,
+    "survival_rate": 100.0,
+    "reset_events": [],
+    "steady_h_mean_m": 0.3719,
+    "steady_h_err_cm": 1.189,
+    "wheel_vel_mean_rad_s": 0.3453,
+    "wheel_vel_std_rad_s": 0.2405,
+    "wheel_vel_rms_rad_s": 0.4208,
+    "wheel_vel_zero_fraction_pct": 3.28,
+    "wheel_tau_mean_Nm": 0.405,
+    "wheel_tau_max_Nm": 0.784,
+    "wheel_sat_rate_pct": 0.0,
+    "pitch_mean_deg": -0.122,
+    "pitch_abs_mean_deg": 0.328,
+    "pitch_max_deg": 0.785,
+    "pitch_rate_rms_deg_s": 1.938,
+    "roll_abs_mean_deg": 0.017,
+    "drift_x_end_m": 0.0013,
+    "drift_y_end_m": 0.0752,
+    "drift_dist_end_m": 0.0752,
+    "knee_tau_mean_Nm": -22.73,
+    "hip_tau_mean_Nm": -0.501,
+    "trajectory_profile": {
+      "step_100": {
+        "h_mean": 0.3979,
+        "h_err_cm": 3.795,
+        "pitch_deg": 0.188,
+        "wheel_vel": 0.2555,
+        "wheel_tau": 0.361
+      },
+      "step_120": {
+        "h_mean": 0.374,
+        "h_err_cm": 1.402,
+        "pitch_deg": -0.485,
+        "wheel_vel": 0.5496,
+        "wheel_tau": 0.484
+      },
+      "step_140": {
+        "h_mean": 0.372,
+        "h_err_cm": 1.204,
+        "pitch_deg": -0.242,
+        "wheel_vel": 0.3421,
+        "wheel_tau": 0.407
+      },
+      "step_160": {
+        "h_mean": 0.3717,
+        "h_err_cm": 1.174,
+        "pitch_deg": -0.178,
+        "wheel_vel": 0.324,
+        "wheel_tau": 0.439
+      },
+      "step_180": {
+        "h_mean": 0.3719,
+        "h_err_cm": 1.192,
+        "pitch_deg": -0.13,
+        "wheel_vel": 0.3505,
+        "wheel_tau": 0.391
+      },
+      "step_200": {
+        "h_mean": 0.3718,
+        "h_err_cm": 1.185,
+        "pitch_deg": -0.097,
+        "wheel_vel": 0.371,
+        "wheel_tau": 0.411
+      },
+      "step_220": {
+        "h_mean": 0.372,
+        "h_err_cm": 1.196,
+        "pitch_deg": -0.106,
+        "wheel_vel": 0.3832,
+        "wheel_tau": 0.394
+      },
+      "step_240": {
+        "h_mean": 0.3718,
+        "h_err_cm": 1.184,
+        "pitch_deg": -0.145,
+        "wheel_vel": 0.2441,
+        "wheel_tau": 0.426
+      },
+      "step_260": {
+        "h_mean": 0.3719,
+        "h_err_cm": 1.189,
+        "pitch_deg": -0.121,
+        "wheel_vel": 0.2972,
+        "wheel_tau": 0.422
+      },
+      "step_280": {
+        "h_mean": 0.3719,
+        "h_err_cm": 1.191,
+        "pitch_deg": -0.119,
+        "wheel_vel": 0.3138,
+        "wheel_tau": 0.403
+      },
+      "step_300": {
+        "h_mean": 0.3719,
+        "h_err_cm": 1.191,
+        "pitch_deg": -0.137,
+        "wheel_vel": 0.302,
+        "wheel_tau": 0.39
+      }
+    }
+  }
+}

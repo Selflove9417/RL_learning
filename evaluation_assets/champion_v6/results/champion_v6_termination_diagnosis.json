@@ -1,0 +1,180 @@
+{
+  "protocol_A_original": {
+    "g3_cruise_squat": {
+      "num_envs": 32,
+      "survival_rate": 96.875,
+      "terminated_count": 1,
+      "records": [
+        {
+          "env_id": 20,
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "stage": "initialization",
+          "contact_reset": true,
+          "violating_bodies": [
+            {
+              "body_name": "link_005",
+              "force_N": 174.10739135742188
+            }
+          ],
+          "tilt_reset": false,
+          "proj_g_z": -0.9003502130508423,
+          "pitch_deg": -4.909850054974569,
+          "roll_deg": 25.437321184731513,
+          "height_reset": false,
+          "time_out_reset": false,
+          "base_z_m": 0.31096309423446655,
+          "base_vy_mps": 0.725585401058197,
+          "base_wz_radps": -0.892031192779541,
+          "cmd_vy_mps": 0.15,
+          "cmd_wz_radps": 0.0,
+          "cmd_h_m": 0.39774,
+          "knee_torque_nm": [
+            21.196720123291016,
+            21.889991760253906
+          ],
+          "wheel_torque_nm": [
+            -2.5807310066738864e-07,
+            -2.2186355863595963e-07
+          ]
+        }
+      ]
+    },
+    "g3_nominal_cruise": {
+      "num_envs": 32,
+      "survival_rate": 96.875,
+      "terminated_count": 1,
+      "records": [
+        {
+          "env_id": 20,
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "stage": "initialization",
+          "contact_reset": true,
+          "violating_bodies": [
+            {
+              "body_name": "link_005",
+              "force_N": 170.32778930664062
+            }
+          ],
+          "tilt_reset": false,
+          "proj_g_z": -0.9006868004798889,
+          "pitch_deg": -5.026437000877578,
+          "roll_deg": 25.374417910983293,
+          "height_reset": false,
+          "time_out_reset": false,
+          "base_z_m": 0.3106696605682373,
+          "base_vy_mps": 0.7558931708335876,
+          "base_wz_radps": -0.8956398963928223,
+          "cmd_vy_mps": 0.2,
+          "cmd_wz_radps": 0.0,
+          "cmd_h_m": 0.39774,
+          "knee_torque_nm": [
+            21.560880661010742,
+            22.394039154052734
+          ],
+          "wheel_torque_nm": [
+            -1.4108235291132587e-06,
+            -1.1896432852154248e-06
+          ]
+        }
+      ]
+    },
+    "g4_exp_fwd_left_squat": {
+      "num_envs": 32,
+      "survival_rate": 96.875,
+      "terminated_count": 1,
+      "records": [
+        {
+          "env_id": 20,
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "stage": "initialization",
+          "contact_reset": false,
+          "violating_bodies": [],
+          "tilt_reset": false,
+          "proj_g_z": -0.7733475565910339,
+          "pitch_deg": 5.313090812300959,
+          "roll_deg": 39.162722535388966,
+          "height_reset": true,
+          "time_out_reset": false,
+          "base_z_m": 0.23856541514396667,
+          "base_vy_mps": 0.5552281737327576,
+          "base_wz_radps": -2.2308311462402344,
+          "cmd_vy_mps": 0.16,
+          "cmd_wz_radps": 0.3,
+          "cmd_h_m": 0.39774,
+          "knee_torque_nm": [
+            -60.0,
+            -17.868576049804688
+          ],
+          "wheel_torque_nm": [
+            -7.0,
+            -1.0646708011627197
+          ]
+        }
+      ]
+    },
+    "g4_exp_fwd_left_rise": {
+      "num_envs": 32,
+      "survival_rate": 96.875,
+      "terminated_count": 1,
+      "records": [
+        {
+          "env_id": 20,
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "stage": "initialization",
+          "contact_reset": false,
+          "violating_bodies": [],
+          "tilt_reset": false,
+          "proj_g_z": -0.738711953163147,
+          "pitch_deg": 4.322088691674974,
+          "roll_deg": 42.2799999526828,
+          "height_reset": true,
+          "time_out_reset": false,
+          "base_z_m": 0.24440152943134308,
+          "base_vy_mps": 0.7419132590293884,
+          "base_wz_radps": -2.496218681335449,
+          "cmd_vy_mps": 0.16,
+          "cmd_wz_radps": 0.3,
+          "cmd_h_m": 0.39774,
+          "knee_torque_nm": [
+            -60.0,
+            12.810606956481934
+          ],
+          "wheel_torque_nm": [
+            -7.0,
+            -0.7801303863525391
+          ]
+        }
+      ]
+    }
+  },
+  "protocol_B_stabilized_settling": {
+    "g3_cruise_squat": {
+      "num_envs": 32,
+      "survival_rate": 100.0,
+      "terminated_count": 0,
+      "records": []
+    },
+    "g3_nominal_cruise": {
+      "num_envs": 32,
+      "survival_rate": 100.0,
+      "terminated_count": 0,
+      "records": []
+    },
+    "g4_exp_fwd_left_squat": {
+      "num_envs": 32,
+      "survival_rate": 100.0,
+      "terminated_count": 0,
+      "records": []
+    },
+    "g4_exp_fwd_left_rise": {
+      "num_envs": 32,
+      "survival_rate": 100.0,
+      "terminated_count": 0,
+      "records": []
+    }
+  }
+}

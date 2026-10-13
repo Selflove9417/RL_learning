@@ -1,0 +1,1051 @@
+{
+  "urdf_torque_limits": {
+    "hip_nm": 75.0,
+    "knee_nm": 60.0,
+    "wheel_nm": 7.0
+  },
+  "sampling_metadata": {
+    "sampling_rate_hz": 50,
+    "sampling_dt_s": 0.019999999552965164,
+    "scope": "Isaac Gym policy control step (20 ms / 50 Hz macro-step).",
+    "disclosure": "Torque metrics are sampled at 50 Hz (every 20 ms macro-step). Intra-step PhysX sub-steps (e.g. 200 Hz / 1000 Hz) peak torques during rapid ground contact or abrupt transitions may briefly exceed macro-step sampled values. Knee near-saturation (60 Nm) was verified to occur strictly during initial ground contact drop (first 1~2 steps, <= 0.04s) and settles to safe operating ranges immediately."
+  },
+  "saturation_comparison_summary": {
+    "continuous_sequence_60s_wheel_sat_pct": 0.02,
+    "dynamic_compound_scenarios_wheel_sat_pct_range": [
+      0.12,
+      0.17
+    ],
+    "safety_limit_pct": 2.0,
+    "notes": "Wheel near-saturation during long-duration steady cruising (60s continuous test) is 0.02%. In dynamic compound scenarios (involving height transitions and yaw turning), wheel near-saturation is 0.12% ~ 0.17%. Both are reported separately and remain well below the 2.0% safety threshold."
+  },
+  "scenarios": {
+    "nominal_stand_0398m": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 1.7205018997192383,
+        "p95_nm": 2.4811718225479127,
+        "p99_nm": 4.691377210617072,
+        "peak_nm": 15.099668502807617,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 23.491466522216797,
+        "p95_nm": 25.698754024505615,
+        "p99_nm": 36.36681324005128,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.0625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 0.46757644414901733,
+        "p95_nm": 0.7910529822111129,
+        "p99_nm": 3.7601036763191504,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.16666666666666669,
+        "max_consecutive_sat_steps": 3,
+        "max_consecutive_sat_time_s": 0.05999999865889549
+      },
+      "num_peak_events": 9,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.433055877685547
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.24854040145874
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 48.385250091552734,
+          "max_wheel_nm": 6.820056915283203
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 46.21099853515625,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.97399139404297,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 42.10213088989258,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.30126190185547,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.337974548339844,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.83690643310547,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "deep_squat_0300m": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 1.2285467386245728,
+        "p95_nm": 2.187408769130705,
+        "p99_nm": 4.158651127815259,
+        "peak_nm": 15.206275939941406,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 23.302139282226562,
+        "p95_nm": 25.218896293640135,
+        "p99_nm": 33.66421108245851,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 0.4145745038986206,
+        "p95_nm": 0.7399418026208872,
+        "p99_nm": 2.55452852725984,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.1484375,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.167267322540283
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.44547700881958
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.28215026855469,
+          "max_wheel_nm": 6.7352294921875
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.85076904296875,
+          "max_wheel_nm": 6.9237060546875
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.64906311035156,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.94331741333008,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.675052642822266,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.60088348388672,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.59683609008789,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.065589904785156,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "high_rise_0500m": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 1.9613476991653442,
+        "p95_nm": 2.6882163166999815,
+        "p99_nm": 4.22020691394806,
+        "peak_nm": 15.214254379272461,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 22.2203311920166,
+        "p95_nm": 24.900109291076653,
+        "p99_nm": 33.708924407958996,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 0.42866650223731995,
+        "p95_nm": 0.7025792151689526,
+        "p99_nm": 2.5144429969787687,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.167010307312012
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.459788799285889
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.24382019042969,
+          "max_wheel_nm": 6.7334818840026855
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.851009368896484,
+          "max_wheel_nm": 6.925357818603516
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.664878845214844,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.95744323730469,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.67919921875,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.627708435058594,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.56201171875,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.0171012878418,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "cruise_high_speed_050mps": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 0.9001104831695557,
+        "p95_nm": 1.815782898664473,
+        "p99_nm": 3.7495779204368596,
+        "peak_nm": 15.240962982177734,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 24.909948348999023,
+        "p95_nm": 26.898476696014402,
+        "p99_nm": 31.711714153289808,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.0375,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 0.7914490699768066,
+        "p95_nm": 1.7281801879405974,
+        "p99_nm": 2.528521187305451,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.11875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.165252685546875
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.437435626983643
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.22409439086914,
+          "max_wheel_nm": 6.731884002685547
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.85247802734375,
+          "max_wheel_nm": 6.927815914154053
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.6528434753418,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.94671630859375,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.669193267822266,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.5833854675293,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.529441833496094,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.00935745239258,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "reverse_speed_030mps": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 1.4224143028259277,
+        "p95_nm": 2.710014986991881,
+        "p99_nm": 4.210288639068605,
+        "peak_nm": 15.204257011413574,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 23.4433536529541,
+        "p95_nm": 25.978054332733155,
+        "p99_nm": 33.705289421081545,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 0.4129782021045685,
+        "p95_nm": 0.9346329927444454,
+        "p99_nm": 2.6225152850151146,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.161667346954346
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.453283786773682
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.24529266357422,
+          "max_wheel_nm": 6.732321739196777
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.85866165161133,
+          "max_wheel_nm": 6.929968357086182
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.662960052490234,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.95595932006836,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.672332763671875,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.61614990234375,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.5404052734375,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.00422286987305,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "fwd_left_squat_combo": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 4.548548698425293,
+        "p95_nm": 5.928935718536375,
+        "p99_nm": 6.532871923446656,
+        "peak_nm": 15.199042320251465,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 26.353036880493164,
+        "p95_nm": 28.74364433288574,
+        "p99_nm": 33.74528072357179,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 1.3159537315368652,
+        "p95_nm": 1.7605412244796752,
+        "p99_nm": 2.5133462619781586,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.168117046356201
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.442140579223633
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.231163024902344,
+          "max_wheel_nm": 6.733823776245117
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.85007858276367,
+          "max_wheel_nm": 6.928918361663818
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.65049743652344,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.952945709228516,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.68128967285156,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.604042053222656,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.61274719238281,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.09147262573242,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "fwd_right_rise_combo": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 6.2274489402771,
+        "p95_nm": 7.916554021835327,
+        "p99_nm": 8.27810814857483,
+        "peak_nm": 15.298940658569336,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 28.406339645385742,
+        "p95_nm": 30.908116340637203,
+        "p99_nm": 33.706664581298845,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 1.2637240886688232,
+        "p95_nm": 1.7061461448669428,
+        "p99_nm": 2.692766935825348,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.159807205200195
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.511332035064697
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.21571350097656,
+          "max_wheel_nm": 6.7331671714782715
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.850830078125,
+          "max_wheel_nm": 6.919600009918213
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.65428161621094,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.96037673950195,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.669376373291016,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.595916748046875,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.61628723144531,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.093482971191406,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "bwd_left_squat_combo": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 4.470452785491943,
+        "p95_nm": 5.93262345790863,
+        "p99_nm": 6.785840106010439,
+        "peak_nm": 15.335968971252441,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 27.4862117767334,
+        "p95_nm": 30.10412015914917,
+        "p99_nm": 34.150559387207046,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 1.3665331602096558,
+        "p95_nm": 1.8611120700836177,
+        "p99_nm": 3.0809322166442894,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.1573615074157715
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.539997100830078
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.1934700012207,
+          "max_wheel_nm": 6.736184120178223
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.846473693847656,
+          "max_wheel_nm": 6.948906421661377
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.64383316040039,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.94730758666992,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.691314697265625,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.613346099853516,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.773250579833984,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.24814224243164,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    },
+    "bwd_right_rise_combo": {
+      "hip": {
+        "limit_nm": 75.0,
+        "mean_nm": 6.254687309265137,
+        "p95_nm": 7.8929815769195555,
+        "p99_nm": 8.330585269927978,
+        "peak_nm": 15.59193229675293,
+        "near_saturation_pct": 0.0,
+        "max_consecutive_sat_steps": 0,
+        "max_consecutive_sat_time_s": 0.0
+      },
+      "knee": {
+        "limit_nm": 60.0,
+        "mean_nm": 27.618701934814453,
+        "p95_nm": 30.297237014770506,
+        "p99_nm": 33.795837059021004,
+        "peak_nm": 60.0,
+        "near_saturation_pct": 0.046875,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "wheel": {
+        "limit_nm": 7.0,
+        "mean_nm": 1.1974692344665527,
+        "p95_nm": 1.5754257798194884,
+        "p99_nm": 2.7007497954368627,
+        "peak_nm": 7.0,
+        "near_saturation_pct": 0.140625,
+        "max_consecutive_sat_steps": 2,
+        "max_consecutive_sat_time_s": 0.03999999910593033
+      },
+      "num_peak_events": 10,
+      "peak_events_sample": [
+        {
+          "step": 1,
+          "time_s": 0.019999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.1621928215026855
+        },
+        {
+          "step": 2,
+          "time_s": 0.03999999910593033,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 60.0,
+          "max_wheel_nm": 5.586915493011475
+        },
+        {
+          "step": 4,
+          "time_s": 0.07999999821186066,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 50.2103385925293,
+          "max_wheel_nm": 6.736212253570557
+        },
+        {
+          "step": 5,
+          "time_s": 0.09999999776482582,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 47.8504638671875,
+          "max_wheel_nm": 6.924191951751709
+        },
+        {
+          "step": 6,
+          "time_s": 0.11999999731779099,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 45.64736557006836,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 7,
+          "time_s": 0.13999999687075615,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 43.946502685546875,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 8,
+          "time_s": 0.1599999964237213,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 40.67068099975586,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 9,
+          "time_s": 0.17999999597668648,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 35.60373306274414,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 10,
+          "time_s": 0.19999999552965164,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 38.75637435913086,
+          "max_wheel_nm": 7.0
+        },
+        {
+          "step": 11,
+          "time_s": 0.2199999950826168,
+          "cur_h": 0.39774,
+          "cur_vy": 0.0,
+          "max_knee_nm": 37.225074768066406,
+          "max_wheel_nm": 7.0
+        }
+      ]
+    }
+  }
+}

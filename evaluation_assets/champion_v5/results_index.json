@@ -1,0 +1,21 @@
+{
+  "champion_version": "v5",
+  "model_name": "champion_v5_phase13_m100",
+  "model_path": "evaluation_assets/champion_v5/models/champion_v5_m100.pt",
+  "sha256": "5d006113b09c48e4171db9f9a7ed4f185256d73706544d291b42bd202f9e4499",
+  "speed_ramp_results_file": "evaluation_assets/phase13/results/phase13_exp7_m100_speed_ramp.json",
+  "formal_21_scenarios_results_file": "evaluation_assets/phase13/results/phase13_exp7_m100_21scenarios.json",
+  "sequential_compound_results_file": "evaluation_assets/phase13/results/phase13_exp7_m100_sequential.json",
+  "multi_seed_sequential_results": [
+    "evaluation_assets/phase13/results/phase13_exp7_m100_seq_seed1.json",
+    "evaluation_assets/phase13/results/phase13_exp7_m100_seq_seed42.json",
+    "evaluation_assets/phase13/results/phase13_exp7_m100_seq_seed100.json"
+  ],
+  "training_log_dir": "legged_gym/logs/myrobot/Oct13_09-50-52_phase13_exp7_speed050_sig002_beta002_resume15iter",
+  "training_diagnostics_file": "legged_gym/logs/myrobot/Oct13_09-50-52_phase13_exp7_speed050_sig002_beta002_resume15iter/diagnostics.json",
+  "historical_champion_v4_reference": {
+    "model_path": "evaluation_assets/phase8b/models/phase8b_m10.pt",
+    "sha256": "b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9",
+    "metadata_file": "evaluation_assets/champion_v4/champion_v4_meta.json"
+  }
+}

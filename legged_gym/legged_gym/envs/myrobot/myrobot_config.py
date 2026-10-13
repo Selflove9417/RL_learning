@@ -41,11 +41,16 @@ class MyRobotCfg(LeggedRobotCfg):
         curriculum = False
         max_curriculum = 1.0
         num_commands = 4
-        resampling_time = 4.0
+        resampling_time = 5.0
         heading_command = False
+        fwd_speed_max = 0.50  # Champion v5 0.50 m/s 巡航上限
+        bwd_speed_max = 0.35  # Champion v5 0.35 m/s 后退上限
+        min_height = 0.32     # Phase 2a 升降下界 (Phase 2b 将扩至 0.30)
+        max_height = 0.48     # Phase 2a 升降上界 (Phase 2b 将扩至 0.50)
+        elevation_speed = 0.04 # 4 cm/s 平滑变高速度
         class ranges:
             lin_vel_x = [0.0, 0.0]
-            lin_vel_y = [-0.3, 0.3]
+            lin_vel_y = [-0.6, 0.6]
             ang_vel_yaw = [-0.5, 0.5]
             heading = [0.0, 0.0]
 
@@ -170,8 +175,8 @@ class MyRobotCfg(LeggedRobotCfg):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.40
         only_positive_rewards = True
-        height_deadzone = 0.015  # 维持 Stage 1 标称死区 0.015m
-        tracking_sigma = 0.18    # 强化速度跟踪刚度 (杜绝妥协性失速下滑)
+        height_deadzone = 0.005  # Champion v5 精准死区 0.005m (5mm)
+        tracking_sigma = 0.02    # Champion v5 刚性速度跟踪 sigma 0.02
 
         # 阶段 23 课程已完成，阶段 24/25 冻结在 3.0
         tracking_lin_vel_start = 3.0
@@ -243,20 +248,26 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         schedule = 'fixed'         # Phase 6A-S: 禁用自适应学习率调度，保持恒定步长
         enable_early_stopping = False # 禁用 KL Early Stopping
         early_stop_kl = 0.02
-        enable_ref_kl = False          # Phase 6B-Pilot: 可选 Reference-Policy KL 正则化 (默认关闭)
-        ref_kl_coef = 0.0              # 正则化惩罚系数 beta
-        ref_policy_path = 'legged_gym/logs/myrobot/Oct10_15-48-32_turning_height_stage5_3_formal/model_25.pt'
+        enable_ref_kl = True           # 启用 Reference-Policy KL 正则化以 Champion v5 为锚点防遗忘
+        ref_kl_coef = 0.02             # 正则化惩罚系数 beta=0.02
+        ref_policy_path = 'evaluation_assets/champion_v5/models/champion_v5_m100.pt'
+        enable_sym_reg = False         # Phase 9A: Actor 镜像一致性正则化 (默认关闭)
+        sym_reg_coef = 0.0             # 镜像正则化惩罚系数 lambda_sym
+        enable_mirrored_augmentation = False  # Phase 10: On-policy 镜像视角在线增强 (默认关闭)
+        mirror_ratio = 0.5                    # 镜像环境占比 (默认 50%)
 
     class runner(LeggedRobotCfgPPO.runner):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24
-        max_iterations = 3         # Phase 6A-S: 严格限制为 3 迭代
+        max_iterations = 10        # Phase 14 Exp 3: 驻车针对性续训完成 (峰值模型 model_125)
         save_interval = 1          # 每迭代保存 checkpoint
-        run_name = ''
+        run_name = 'phase14_exp3_parking_focus_resume10iter'
         experiment_name = 'myrobot'
-        resume = False
-        warm_start = True
-        warm_start_optimizer = False # 默认 False (Group A 为 False, Group B 为 True)
-        load_run = 'Oct10_15-48-32_turning_height_stage5_3_formal'
-        checkpoint = 25
+        resume = True              # 最佳模型来自 Exp 3 m125
+        warm_start = False
+        warm_start_optimizer = False
+        load_run = 'Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter'
+        checkpoint = 125
+        enable_mirrored_augmentation = False
+        mirror_ratio = 0.5

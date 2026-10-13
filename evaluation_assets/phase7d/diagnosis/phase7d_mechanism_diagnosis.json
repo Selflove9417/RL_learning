@@ -1,0 +1,112 @@
+{
+  "Phase6B_Champ_v2": {
+    "joint_pass_rate_pct": 21.59,
+    "h_pass_rate_pct": 34.19,
+    "vy_pass_rate_pct": 85.72,
+    "wz_pass_rate_pct": 99.91,
+    "intersection": {
+      "joint_pass_all_3": 21.59,
+      "h_pass_but_vy_fail": 12.5,
+      "vy_pass_but_h_fail": 64.06,
+      "both_h_and_vy_fail": 1.75,
+      "cond_p_vy_pass_given_h_pass_pct": 63.35
+    },
+    "vy_stats": {
+      "vy_mean_mps": 0.01666,
+      "vy_std_mps": 0.01162,
+      "vy_rms_mps": 0.02032,
+      "abs_vy_p50_mps": 0.0167,
+      "abs_vy_p75_mps": 0.0265,
+      "abs_vy_p90_mps": 0.0315,
+      "abs_vy_p95_mps": 0.0354,
+      "abs_vy_p99_mps": 0.0408,
+      "abs_vy_max_mps": 0.0441
+    },
+    "phase_comparison": {
+      "trans_step100_200": {
+        "base_h_mean_m": 0.3733,
+        "h_err_mean_cm": 1.327
+      },
+      "steady_step200_300": {
+        "base_h_mean_m": 0.3712,
+        "h_err_mean_cm": 1.123
+      },
+      "step_trajectory": {
+        "step_120": 0.3734,
+        "step_140": 0.3714,
+        "step_160": 0.3711,
+        "step_180": 0.3712,
+        "step_200": 0.3712
+      }
+    },
+    "height_bias": {
+      "signed_h_mean_cm": 1.123,
+      "signed_h_median_cm": 1.177,
+      "pct_z_greater_than_target": 100.0,
+      "pct_z_less_than_target": 0.0,
+      "pct_in_tol_range_35_37": 34.19,
+      "pct_above_tol_z_gt_37": 65.81,
+      "pct_below_tol_z_lt_35": 0.0
+    },
+    "wheel_stats": {
+      "wheel_vel_mean_rad_s": 0.3327,
+      "wheel_vel_rms_rad_s": 0.4062,
+      "wheel_tau_mean_Nm": 0.325
+    }
+  },
+  "Phase7C_Champ_v3": {
+    "joint_pass_rate_pct": 25.16,
+    "h_pass_rate_pct": 33.94,
+    "vy_pass_rate_pct": 89.78,
+    "wz_pass_rate_pct": 99.91,
+    "intersection": {
+      "joint_pass_all_3": 25.16,
+      "h_pass_but_vy_fail": 8.75,
+      "vy_pass_but_h_fail": 64.53,
+      "both_h_and_vy_fail": 1.47,
+      "cond_p_vy_pass_given_h_pass_pct": 74.22
+    },
+    "vy_stats": {
+      "vy_mean_mps": 0.01529,
+      "vy_std_mps": 0.01165,
+      "vy_rms_mps": 0.01922,
+      "abs_vy_p50_mps": 0.0154,
+      "abs_vy_p75_mps": 0.0252,
+      "abs_vy_p90_mps": 0.0302,
+      "abs_vy_p95_mps": 0.0339,
+      "abs_vy_p99_mps": 0.0395,
+      "abs_vy_max_mps": 0.0429
+    },
+    "phase_comparison": {
+      "trans_step100_200": {
+        "base_h_mean_m": 0.3733,
+        "h_err_mean_cm": 1.332
+      },
+      "steady_step200_300": {
+        "base_h_mean_m": 0.3713,
+        "h_err_mean_cm": 1.128
+      },
+      "step_trajectory": {
+        "step_120": 0.3734,
+        "step_140": 0.3714,
+        "step_160": 0.3711,
+        "step_180": 0.3713,
+        "step_200": 0.3712
+      }
+    },
+    "height_bias": {
+      "signed_h_mean_cm": 1.128,
+      "signed_h_median_cm": 1.181,
+      "pct_z_greater_than_target": 100.0,
+      "pct_z_less_than_target": 0.0,
+      "pct_in_tol_range_35_37": 33.94,
+      "pct_above_tol_z_gt_37": 66.06,
+      "pct_below_tol_z_lt_35": 0.0
+    },
+    "wheel_stats": {
+      "wheel_vel_mean_rad_s": 0.3228,
+      "wheel_vel_rms_rad_s": 0.3944,
+      "wheel_tau_mean_Nm": 0.34
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "model_name": "champion_v4_phase8b_m10",
+  "source_checkpoint": "legged_gym/logs/myrobot/Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter/model_10.pt",
+  "archived_path": "evaluation_assets/phase8b/models/phase8b_m10.pt",
+  "sha256": "b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9",
+  "promotion_date": "2026-10-12T15:38:00+08:00",
+  "training_run": "Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter",
+  "cumulative_iterations": 10,
+  "cumulative_ppo_updates": 200,
+  "hyperparameters": {
+    "warm_start_base": "evaluation_assets/phase7c/champion_model/phase7c_champion_deadzone005_m1.pt",
+    "warm_start_base_sha256": "ca3df2f9587ba60d3c3a1b490e727f8cac72227e04cfe0189a4b0135947f4b7b",
+    "learning_rate": 7.59375e-05,
+    "adaptive_lr": false,
+    "early_stopping": false,
+    "enable_ref_kl": true,
+    "ref_kl_coef": 0.20,
+    "ref_policy_path": "evaluation_assets/phase7c/champion_model/phase7c_champion_deadzone005_m1.pt",
+    "ref_policy_sha256": "ca3df2f9587ba60d3c3a1b490e727f8cac72227e04cfe0189a4b0135947f4b7b",
+    "height_deadzone": 0.005,
+    "num_envs": 2048,
+    "seed": 1,
+    "rollout_steps": 24,
+    "ppo_epochs": 5,
+    "mini_batches": 4,
+    "curriculum_extension": {
+      "compound_motion_high_difficulty": true,
+      "vy_range": [-0.16, 0.16],
+      "wz_range": [-0.30, 0.30]
+    }
+  },
+  "metrics": {
+    "evaluation_protocol": "21_scenarios_phase7f_feedforward_compensation_Href_aligned",
+    "total_joint_pass_rate": 0.6652,
+    "total_env_pass_rate": 0.6324,
+    "total_height_pass_rate": 0.7770,
+    "mean_height_err_cm": 0.656,
+    "mean_vy_rms_mps": 0.0145,
+    "mean_wz_rms_radps": 0.0300,
+    "global_survival_rate": 0.9985,
+    "wheel_saturation_rate": 0.0016,
+    "group_g1_joint": 0.663,
+    "group_g2_joint": 0.640,
+    "group_g3_joint": 0.836,
+    "group_g4_joint": 0.546,
+    "group_g1_env": 0.612,
+    "group_g2_env": 0.638,
+    "group_g3_env": 0.844,
+    "group_g4_env": 0.469,
+    "g3_inplace_squat_joint": 0.888,
+    "g3_inplace_squat_env": 0.906,
+    "g3_inplace_squat_height": 0.910,
+    "g3_inplace_squat_h_err_cm": 0.65,
+    "g3_inplace_squat_vy_rms_mps": 0.0141,
+    "weak_scenarios": {
+      "g4_exp_fwd_left_squat_joint": 0.122,
+      "g4_exp_bwd_left_squat_joint": 0.148,
+      "g2_bwd_right_rise_joint": 0.163,
+      "g1_fwd_left_squat_joint": 0.334
+    }
+  },
+  "status": "Champion v4 (Official new benchmark; promoted in Phase 8C replacing Phase 7C Champion v3)"
+}

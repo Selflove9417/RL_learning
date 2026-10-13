@@ -1,0 +1,62 @@
+{
+  "champ_v4_m10": {
+    "global_l_sym": 0.06848540902137756,
+    "left_4cases_l_sym": 0.08432084787636995,
+    "right_4cases_l_sym": 0.0810913797467947,
+    "inplace_squat_l_sym": 0.011827968060970306,
+    "per_sc_l_sym": {
+      "g1_fwd_left_squat": 0.0805056020617485,
+      "g1_bwd_left_squat": 0.056872475892305374,
+      "g1_fwd_right_squat": 0.10168526321649551,
+      "g1_bwd_right_squat": 0.04555060714483261,
+      "g4_exp_fwd_left_squat": 0.12646479904651642,
+      "g4_exp_bwd_left_squat": 0.07344051450490952,
+      "g4_exp_fwd_right_squat": 0.12400820851325989,
+      "g4_exp_bwd_right_squat": 0.05312144011259079,
+      "g3_inplace_squat": 0.011827968060970306,
+      "g3_cruise_squat": 0.05788468196988106,
+      "g3_nominal_compound": 0.05945124477148056,
+      "g2_bwd_right_rise": 0.031012093648314476
+    }
+  },
+  "phase8c_m13": {
+    "global_l_sym": 0.07909020781517029,
+    "left_4cases_l_sym": 0.09551543556153774,
+    "right_4cases_l_sym": 0.09315087739378214,
+    "inplace_squat_l_sym": 0.014465288259088993,
+    "per_sc_l_sym": {
+      "g1_fwd_left_squat": 0.09469994902610779,
+      "g1_bwd_left_squat": 0.06228169798851013,
+      "g1_fwd_right_squat": 0.11795420944690704,
+      "g1_bwd_right_squat": 0.052382342517375946,
+      "g4_exp_fwd_left_squat": 0.14429901540279388,
+      "g4_exp_bwd_left_squat": 0.08078107982873917,
+      "g4_exp_fwd_right_squat": 0.14180006086826324,
+      "g4_exp_bwd_right_squat": 0.06046689674258232,
+      "g3_inplace_squat": 0.014465288259088993,
+      "g3_cruise_squat": 0.07449360936880112,
+      "g3_nominal_compound": 0.07156769931316376,
+      "g2_bwd_right_rise": 0.033890604972839355
+    }
+  },
+  "phase9a_m13": {
+    "global_l_sym": 0.07004478573799133,
+    "left_4cases_l_sym": 0.08546017203480005,
+    "right_4cases_l_sym": 0.0831583570688963,
+    "inplace_squat_l_sym": 0.012810259126126766,
+    "per_sc_l_sym": {
+      "g1_fwd_left_squat": 0.08239826560020447,
+      "g1_bwd_left_squat": 0.05824660137295723,
+      "g1_fwd_right_squat": 0.10480654984712601,
+      "g1_bwd_right_squat": 0.04786837846040726,
+      "g4_exp_fwd_left_squat": 0.12534771859645844,
+      "g4_exp_bwd_left_squat": 0.07584810256958008,
+      "g4_exp_fwd_right_squat": 0.12489358335733414,
+      "g4_exp_bwd_right_squat": 0.05506491661071777,
+      "g3_inplace_squat": 0.012810259126126766,
+      "g3_cruise_squat": 0.06241133436560631,
+      "g3_nominal_compound": 0.060978878289461136,
+      "g2_bwd_right_rise": 0.02986280806362629
+    }
+  }
+}

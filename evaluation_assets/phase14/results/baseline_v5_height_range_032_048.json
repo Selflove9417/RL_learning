@@ -1,0 +1,103 @@
+{
+  "model_path": "evaluation_assets/champion_v5/models/champion_v5_m100.pt",
+  "h_min": 0.32,
+  "h_max": 0.48,
+  "h_step": 0.02,
+  "hold_duration_s": 10.0,
+  "overall_mean_pass_rate": 76.39429012345677,
+  "min_point_pass_rate": 31.305555555555554,
+  "overall_survival_rate": 100.0,
+  "all_points_pass_ge_90": false,
+  "per_point_results": {
+    "H_0.32": {
+      "H_target_m": 0.32,
+      "mean_act_h_m": 0.33160272240638733,
+      "mean_err_cm": 1.1602722108364105,
+      "pass_rate_1cm": 31.305555555555554,
+      "pitch_rms_deg": 0.9758496284484863,
+      "mean_tau_knee_nm": 22.61737823486328,
+      "max_tau_knee_nm": 25.218826293945312,
+      "survival_rate": 100.0
+    },
+    "H_0.34": {
+      "H_target_m": 0.34,
+      "mean_act_h_m": 0.3489507734775543,
+      "mean_err_cm": 0.895075686275959,
+      "pass_rate_1cm": 58.38194444444444,
+      "pitch_rms_deg": 0.41212043166160583,
+      "mean_tau_knee_nm": 22.764890670776367,
+      "max_tau_knee_nm": 25.428627014160156,
+      "survival_rate": 100.0
+    },
+    "H_0.36": {
+      "H_target_m": 0.36,
+      "mean_act_h_m": 0.36606550216674805,
+      "mean_err_cm": 0.6065725814551115,
+      "pass_rate_1cm": 97.27777777777777,
+      "pitch_rms_deg": 0.4364970326423645,
+      "mean_tau_knee_nm": 22.811628341674805,
+      "max_tau_knee_nm": 25.539581298828125,
+      "survival_rate": 100.0
+    },
+    "H_0.38": {
+      "H_target_m": 0.38,
+      "mean_act_h_m": 0.38305169343948364,
+      "mean_err_cm": 0.3495505079627037,
+      "pass_rate_1cm": 100.0,
+      "pitch_rms_deg": 0.729094386100769,
+      "mean_tau_knee_nm": 22.776874542236328,
+      "max_tau_knee_nm": 25.508377075195312,
+      "survival_rate": 100.0
+    },
+    "H_0.40": {
+      "H_target_m": 0.4,
+      "mean_act_h_m": 0.40001627802848816,
+      "mean_err_cm": 0.23813368752598763,
+      "pass_rate_1cm": 100.0,
+      "pitch_rms_deg": 0.9573158621788025,
+      "mean_tau_knee_nm": 22.6710205078125,
+      "max_tau_knee_nm": 25.39632797241211,
+      "survival_rate": 100.0
+    },
+    "H_0.42": {
+      "H_target_m": 0.42,
+      "mean_act_h_m": 0.4170368015766144,
+      "mean_err_cm": 0.3141850931569934,
+      "pass_rate_1cm": 100.0,
+      "pitch_rms_deg": 1.0824326276779175,
+      "mean_tau_knee_nm": 22.501522064208984,
+      "max_tau_knee_nm": 25.20465850830078,
+      "survival_rate": 100.0
+    },
+    "H_0.44": {
+      "H_target_m": 0.44,
+      "mean_act_h_m": 0.43417084217071533,
+      "mean_err_cm": 0.582915311679244,
+      "pass_rate_1cm": 90.76388888888889,
+      "pitch_rms_deg": 1.1086961030960083,
+      "mean_tau_knee_nm": 22.271896362304688,
+      "max_tau_knee_nm": 24.90782928466797,
+      "survival_rate": 100.0
+    },
+    "H_0.46": {
+      "H_target_m": 0.46,
+      "mean_act_h_m": 0.45144328474998474,
+      "mean_err_cm": 0.855674035847187,
+      "pass_rate_1cm": 67.52777777777777,
+      "pitch_rms_deg": 1.053957462310791,
+      "mean_tau_knee_nm": 21.987245559692383,
+      "max_tau_knee_nm": 24.601808547973633,
+      "survival_rate": 100.0
+    },
+    "H_0.48": {
+      "H_target_m": 0.48,
+      "mean_act_h_m": 0.4690532088279724,
+      "mean_err_cm": 1.0946765542030334,
+      "pass_rate_1cm": 42.291666666666664,
+      "pitch_rms_deg": 0.9225220680236816,
+      "mean_tau_knee_nm": 21.64322280883789,
+      "max_tau_knee_nm": 24.207242965698242,
+      "survival_rate": 100.0
+    }
+  }
+}

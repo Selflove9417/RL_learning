@@ -1,0 +1,67 @@
+{
+  "model_path": "evaluation_assets/phase14/models/phase14_exp1_m115.pt",
+  "total_duration_s": 60.0,
+  "num_seeds": 5,
+  "avg_survival_rate": 100.0,
+  "avg_joint_pass_pct_internal_cmd": 93.75125,
+  "avg_joint_pass_pct_user_target": 81.69291666666666,
+  "avg_wheel_sat_rate": 0.01583333333333333,
+  "all_seeds_passed": true,
+  "seeds": [
+    {
+      "seed": 1,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 93.74791666666667,
+      "joint_pass_pct_user_target": 81.6875,
+      "max_pitch_deg": 5.94860315322876,
+      "max_roll_deg": 3.34407377243042,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.020833333333333336,
+      "passed": true
+    },
+    {
+      "seed": 2,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 93.684375,
+      "joint_pass_pct_user_target": 81.646875,
+      "max_pitch_deg": 4.705677032470703,
+      "max_roll_deg": 3.3672187328338623,
+      "max_knee_tau_nm": 55.746498107910156,
+      "wheel_sat_rate": 0.017708333333333333,
+      "passed": true
+    },
+    {
+      "seed": 3,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 93.73854166666666,
+      "joint_pass_pct_user_target": 81.66041666666666,
+      "max_pitch_deg": 4.624678611755371,
+      "max_roll_deg": 3.0626273155212402,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.0125,
+      "passed": true
+    },
+    {
+      "seed": 4,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 93.80729166666667,
+      "joint_pass_pct_user_target": 81.69375,
+      "max_pitch_deg": 5.665397644042969,
+      "max_roll_deg": 3.575227975845337,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.015625,
+      "passed": true
+    },
+    {
+      "seed": 5,
+      "survival_rate": 100.0,
+      "joint_pass_pct_internal_cmd": 93.778125,
+      "joint_pass_pct_user_target": 81.77604166666667,
+      "max_pitch_deg": 4.879767417907715,
+      "max_roll_deg": 3.3577191829681396,
+      "max_knee_tau_nm": 60.0,
+      "wheel_sat_rate": 0.0125,
+      "passed": true
+    }
+  ]
+}

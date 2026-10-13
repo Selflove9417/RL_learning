@@ -1,0 +1,97 @@
+{
+  "model_name": "champion_v6_phase14_m115",
+  "source_checkpoint": "legged_gym/logs/myrobot/Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter/model_115.pt",
+  "archived_path": "evaluation_assets/champion_v6/models/champion_v6_m115.pt",
+  "phase14_archived_path": "evaluation_assets/phase14/models/phase14_exp1_m115.pt",
+  "sha256": "7055b3cefece6406aeb60db1b21102337399e4af4163fc9c921f738aea03e495",
+  "promotion_date": "2026-10-13T11:15:00+08:00",
+  "training_run": "Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter",
+  "cumulative_iterations": 115,
+  "teleop_launch_command": "python legged_gym/legged_gym/scripts/teleop.py --task myrobot --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt",
+  "height_capabilities": {
+    "stroke_cm": 20.0,
+    "min_height_m": 0.30,
+    "max_height_m": 0.50,
+    "step_cm": 2.0,
+    "hold_duration_per_point_s": 10.0,
+    "overall_steady_pass_rate_1cm": 1.0,
+    "overall_survival_rate": 1.0,
+    "mean_steady_error_range_cm": [0.24, 0.36],
+    "mean_knee_torque_range_nm": [20.90, 22.86],
+    "max_knee_torque_range_nm": [23.29, 25.64],
+    "max_pitch_rms_deg": 1.699,
+    "per_point_summary": {
+      "0.30m": {"actual_h": 0.3033, "err_cm": 0.358, "pass_rate": 1.0, "tau_knee": 22.2},
+      "0.32m": {"actual_h": 0.3230, "err_cm": 0.342, "pass_rate": 1.0, "tau_knee": 22.6},
+      "0.34m": {"actual_h": 0.3422, "err_cm": 0.310, "pass_rate": 1.0, "tau_knee": 22.8},
+      "0.36m": {"actual_h": 0.3614, "err_cm": 0.283, "pass_rate": 1.0, "tau_knee": 22.9},
+      "0.38m": {"actual_h": 0.3806, "err_cm": 0.262, "pass_rate": 1.0, "tau_knee": 22.8},
+      "0.40m": {"actual_h": 0.3999, "err_cm": 0.251, "pass_rate": 1.0, "tau_knee": 22.7},
+      "0.42m": {"actual_h": 0.4193, "err_cm": 0.250, "pass_rate": 1.0, "tau_knee": 22.5},
+      "0.44m": {"actual_h": 0.4390, "err_cm": 0.250, "pass_rate": 1.0, "tau_knee": 22.2},
+      "0.46m": {"actual_h": 0.4587, "err_cm": 0.251, "pass_rate": 1.0, "tau_knee": 21.8},
+      "0.48m": {"actual_h": 0.4788, "err_cm": 0.249, "pass_rate": 1.0, "tau_knee": 21.4},
+      "0.50m": {"actual_h": 0.4994, "err_cm": 0.241, "pass_rate": 1.0, "tau_knee": 20.9}
+    }
+  },
+  "in_motion_and_turning_elevation": {
+    "num_combinations": 12,
+    "overall_joint_pass_rate": 0.8894,
+    "overall_env_pass_rate": 0.8151,
+    "overall_survival_rate": 1.0,
+    "acceptance_threshold_joint": 0.85,
+    "passed": true
+  },
+  "high_speed_cruise_050_mps_5seeds": {
+    "target_vy_mps": 0.50,
+    "cruise_duration_s": 30.0,
+    "num_seeds": 5,
+    "mean_actual_vy_mps": 0.5140,
+    "mean_abs_err_mps": 0.0154,
+    "steady_pass_rate_005": 0.9980,
+    "survival_rate": 1.0,
+    "wheel_torque_saturation_rate": 0.0,
+    "all_seeds_passed": true
+  },
+  "continuous_sequence_60s_5seeds": {
+    "total_duration_s": 60.0,
+    "num_seeds": 5,
+    "total_sim_steps_per_seed": 3000,
+    "survival_rate": 1.0,
+    "overall_joint_pass_rate": 0.9375,
+    "wheel_torque_saturation_rate": 0.00016,
+    "all_seeds_passed": true
+  },
+  "benchmark_21_scenarios": {
+    "global_joint_pass_rate": 0.8736,
+    "global_env_pass_rate": 0.8080,
+    "global_height_pass_rate": 0.9877,
+    "global_survival_rate": 0.9940,
+    "in_place_squat_joint_rate": 0.993,
+    "in_place_squat_env_rate": 1.000,
+    "wheel_torque_saturation_rate": 0.0016
+  },
+  "reverse_speed_capabilities": {
+    "-0.20_mps": {
+      "actual_vy_mps": -0.1752,
+      "mean_abs_err_mps": 0.0248,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.034
+    },
+    "-0.30_mps": {
+      "actual_vy_mps": -0.2761,
+      "mean_abs_err_mps": 0.0239,
+      "steady_pass_rate": 1.0,
+      "brake_dist_m": 0.082
+    }
+  },
+  "comparison_with_champion_v5": {
+    "champion_v5_sha256": "5d006113b09c48e4171db9f9a7ed4f185256d73706544d291b42bd202f9e4499",
+    "height_stroke_expansion": "From 8 cm (0.36~0.44m) to 20 cm (0.30~0.50m) — 2.5x expansion",
+    "height_pass_rate_030_050": "100.0% steady pass rate across all 11 points (within +-1 cm)",
+    "21_scenario_joint_delta": "+1.58% (87.36% vs 85.78%)",
+    "21_scenario_env_delta": "+1.78% (80.80% vs 79.02%)",
+    "high_speed_050_cruise": "Fully preserved (99.8% pass rate, 0.00% saturation over 30s 5 seeds)",
+    "continuous_mission_duration": "Upgraded from 23.4s to 60.0s multi-stage continuous mission (100% survival, 93.75% Joint%)"
+  }
+}

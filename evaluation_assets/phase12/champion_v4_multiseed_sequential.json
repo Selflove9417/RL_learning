@@ -1,0 +1,26 @@
+{
+  "model": "champion_v4_m10",
+  "checkpoint": "evaluation_assets/phase8b/models/phase8b_m10.pt",
+  "seeds": {
+    "42": {
+      "mean_joint": 76.26,
+      "mean_env": 68.36,
+      "survival": 100.0
+    },
+    "100": {
+      "mean_joint": 77.18,
+      "mean_env": 69.14,
+      "survival": 100.0
+    },
+    "2026": {
+      "mean_joint": 76.57,
+      "mean_env": 69.53,
+      "survival": 100.0
+    }
+  },
+  "average": {
+    "mean_joint": 76.67,
+    "mean_env": 69.01,
+    "survival": 100.0
+  }
+}

@@ -1,0 +1,2595 @@
+{
+  "model_path": "legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt",
+  "overall_summary": {
+    "num_seeds": 5,
+    "core_12": {
+      "parking_joint_pct_mean": 92.05187500000001,
+      "parking_joint_pct_std": 0.7910555206845747,
+      "motion_joint_pct_mean": 77.60569852941177,
+      "motion_joint_pct_std": 0.36566433289519873,
+      "actions_completed_mean": 6.0,
+      "squat_parking_joint_pct_mean": 95.48166666666665,
+      "rise_parking_joint_pct_mean": 88.62208333333332,
+      "rise_parking_h_pct_mean": 93.73208333333334,
+      "signed_vy_mps_mean": -0.01629502009600401,
+      "net_displacement_m_mean": -0.08147509867946306
+    },
+    "boundary_analysis": {
+      "squat_030_disp_mean": -0.23086177110671996,
+      "squat_030_signed_vy_mean": -0.04617235461870829,
+      "rise_050_parking_joint_pct_mean": 41.5575
+    }
+  },
+  "per_seed_data": [
+    {
+      "seed_idx": 1,
+      "seed_val": 142,
+      "core_12": {
+        "motion_joint_pct": 77.38664215686275,
+        "parking_joint_pct": 91.80520833333333,
+        "parking_vy_pct": 95.12708333333332,
+        "parking_h_pct": 96.66666666666667,
+        "actions_completed": 6,
+        "signed_vy_mps": -0.016554460550347965,
+        "net_displacement_m": -0.08277230088909467,
+        "squat_parking_joint_pct": 94.85625,
+        "rise_parking_joint_pct": 88.75416666666666,
+        "rise_parking_h_pct": 94.08749999999999,
+        "rise_motion_joint_pct": 96.15196078431374
+      },
+      "boundary_6": {
+        "motion_joint_pct": 56.56862745098039,
+        "parking_joint_pct": 21.647916666666664,
+        "squat_030_signed_vy": -0.04645758494734764,
+        "squat_030_disp": -0.2322879284620285,
+        "rise_050_signed_vy": -0.029417095084985096,
+        "rise_050_disp": -0.14708546797434488,
+        "rise_050_parking_joint_pct": 42.479166666666664
+      },
+      "case_results": {
+        "1. fwd_straight_squat": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3281947076320648,
+            "mean_err_h_cm": 0.8194698020815849,
+            "mean_err_vy": 0.025503957644104958,
+            "mean_err_wz": 0.003977200016379356,
+            "joint_pass_pct": 64.52205882352942,
+            "env_pass_pct": 53.125
+          },
+          "parking": {
+            "joint_pass_pct": 94.9125,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.275,
+            "lin_vel_pass_pct": 95.6,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5761322099715471,
+            "signed_mean_vy_mps": -0.01596568152308464,
+            "std_vy_mps": 0.00854844506829977,
+            "net_displacement_m": -0.07982839643955231,
+            "total_distance_m": 0.08037671446800232
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "2. fwd_straight_rise": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4752699136734009,
+            "mean_err_h_cm": 0.4731064196676016,
+            "mean_err_vy": 0.020140724256634712,
+            "mean_err_wz": 0.007064622361212969,
+            "joint_pass_pct": 98.4375,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 88.91250000000001,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 94.025,
+            "lin_vel_pass_pct": 94.89999999999999,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5567920859903097,
+            "signed_mean_vy_mps": -0.0169792789965868,
+            "std_vy_mps": 0.008391031064093113,
+            "net_displacement_m": -0.08489640057086945,
+            "total_distance_m": 0.08523184061050415
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "3. bwd_straight_squat": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32443052530288696,
+            "mean_err_h_cm": 0.4465922247618437,
+            "mean_err_vy": 0.04550408199429512,
+            "mean_err_wz": 0.005412191618233919,
+            "joint_pass_pct": 71.6360294117647,
+            "env_pass_pct": 21.875
+          },
+          "parking": {
+            "joint_pass_pct": 94.7625,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.225,
+            "lin_vel_pass_pct": 95.4875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5763824097812176,
+            "signed_mean_vy_mps": -0.016009246930480003,
+            "std_vy_mps": 0.008548450656235218,
+            "net_displacement_m": -0.08004622161388397,
+            "total_distance_m": 0.08058415353298187
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "4. bwd_straight_rise": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4754689037799835,
+            "mean_err_h_cm": 0.45452662743628025,
+            "mean_err_vy": 0.011489210650324821,
+            "mean_err_wz": 0.007684192154556513,
+            "joint_pass_pct": 96.93014705882354,
+            "env_pass_pct": 84.375
+          },
+          "parking": {
+            "joint_pass_pct": 88.55,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 94.22500000000001,
+            "lin_vel_pass_pct": 94.33749999999999,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5534637253731489,
+            "signed_mean_vy_mps": -0.017303479835391045,
+            "std_vy_mps": 0.00838574767112732,
+            "net_displacement_m": -0.08651739358901978,
+            "total_distance_m": 0.08679620921611786
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "5. fwd_left_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.33238494396209717,
+            "mean_err_h_cm": 1.2384946458041668,
+            "mean_err_vy": 0.022590214386582375,
+            "mean_err_wz": 0.023419249802827835,
+            "joint_pass_pct": 25.238970588235293,
+            "env_pass_pct": 18.75
+          },
+          "parking": {
+            "joint_pass_pct": 94.9375,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.2625,
+            "lin_vel_pass_pct": 95.6375,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5761086009442806,
+            "signed_mean_vy_mps": -0.015956275165081024,
+            "std_vy_mps": 0.00854538194835186,
+            "net_displacement_m": -0.07978136837482452,
+            "total_distance_m": 0.08033241331577301
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "6. fwd_right_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3254297375679016,
+            "mean_err_h_cm": 0.5439143162220716,
+            "mean_err_vy": 0.02852230705320835,
+            "mean_err_wz": 0.02123114839196205,
+            "joint_pass_pct": 99.59558823529412,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 94.9125,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.275,
+            "lin_vel_pass_pct": 95.6,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5761414300650358,
+            "signed_mean_vy_mps": -0.01596769690513611,
+            "std_vy_mps": 0.008548983372747898,
+            "net_displacement_m": -0.07983848452568054,
+            "total_distance_m": 0.08038796484470367
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "7. fwd_left_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.477022647857666,
+            "mean_err_h_cm": 0.31887826044112444,
+            "mean_err_vy": 0.019069015979766846,
+            "mean_err_wz": 0.031142128631472588,
+            "joint_pass_pct": 99.28308823529412,
+            "env_pass_pct": 84.375
+          },
+          "parking": {
+            "joint_pass_pct": 88.8625,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 94.025,
+            "lin_vel_pass_pct": 94.85,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.556326238438487,
+            "signed_mean_vy_mps": -0.017019376158714294,
+            "std_vy_mps": 0.00838258396834135,
+            "net_displacement_m": -0.08509688824415207,
+            "total_distance_m": 0.08542147278785706
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "8. fwd_right_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4765458106994629,
+            "mean_err_h_cm": 0.35942825488746166,
+            "mean_err_vy": 0.03191547840833664,
+            "mean_err_wz": 0.04085897281765938,
+            "joint_pass_pct": 95.82720588235294,
+            "env_pass_pct": 50.0
+          },
+          "parking": {
+            "joint_pass_pct": 88.875,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 94.0125,
+            "lin_vel_pass_pct": 94.89999999999999,
+            "yaw_rate_pass_pct": 99.9625,
+            "mean_err_h_cm": 0.5563534330576658,
+            "signed_mean_vy_mps": -0.01698921248316765,
+            "std_vy_mps": 0.008396091870963573,
+            "net_displacement_m": -0.08494605869054794,
+            "total_distance_m": 0.08528709411621094
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "9. bwd_left_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32933878898620605,
+            "mean_err_h_cm": 0.9338816627860069,
+            "mean_err_vy": 0.03173603117465973,
+            "mean_err_wz": 0.021158579736948013,
+            "joint_pass_pct": 54.17279411764706,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 94.78750000000001,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.2125,
+            "lin_vel_pass_pct": 95.525,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5762935616075993,
+            "signed_mean_vy_mps": -0.015990454703569412,
+            "std_vy_mps": 0.00854668952524662,
+            "net_displacement_m": -0.07995227724313736,
+            "total_distance_m": 0.08049345761537552
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "10. bwd_right_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32082056999206543,
+            "mean_err_h_cm": 0.2651372691616416,
+            "mean_err_vy": 0.052311189472675323,
+            "mean_err_wz": 0.03357766941189766,
+            "joint_pass_pct": 36.5625,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 94.825,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.225,
+            "lin_vel_pass_pct": 95.55,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5763296037912369,
+            "signed_mean_vy_mps": -0.016000600531697273,
+            "std_vy_mps": 0.008548310957849026,
+            "net_displacement_m": -0.08000299334526062,
+            "total_distance_m": 0.08054623007774353
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "11. bwd_left_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4753998816013336,
+            "mean_err_h_cm": 0.46124421060085297,
+            "mean_err_vy": 0.007999146357178688,
+            "mean_err_wz": 0.03212813287973404,
+            "joint_pass_pct": 97.72058823529412,
+            "env_pass_pct": 59.375
+          },
+          "parking": {
+            "joint_pass_pct": 88.6625,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 94.1125,
+            "lin_vel_pass_pct": 94.575,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5540908314287663,
+            "signed_mean_vy_mps": -0.01724419556558132,
+            "std_vy_mps": 0.0083621209487319,
+            "net_displacement_m": -0.08622098714113235,
+            "total_distance_m": 0.08650064468383789
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "12. bwd_right_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47647935152053833,
+            "mean_err_h_cm": 0.3686504438519478,
+            "mean_err_vy": 0.01233720500022173,
+            "mean_err_wz": 0.05393100157380104,
+            "joint_pass_pct": 88.71323529411764,
+            "env_pass_pct": 43.75
+          },
+          "parking": {
+            "joint_pass_pct": 88.6625,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 94.125,
+            "lin_vel_pass_pct": 94.5625,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5541909951716661,
+            "signed_mean_vy_mps": -0.017228027805685997,
+            "std_vy_mps": 0.008371490053832531,
+            "net_displacement_m": -0.08614014089107513,
+            "total_distance_m": 0.08642400801181793
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "13. fwd_straight_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.30795055627822876,
+            "mean_err_h_cm": 0.7950536906719208,
+            "mean_err_vy": 0.04309617727994919,
+            "mean_err_wz": 0.005834190174937248,
+            "joint_pass_pct": 63.658088235294116,
+            "env_pass_pct": 18.75
+          },
+          "parking": {
+            "joint_pass_pct": 0.8125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.5625,
+            "lin_vel_pass_pct": 0.8125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6683692336082458,
+            "signed_mean_vy_mps": -0.046456024050712585,
+            "std_vy_mps": 0.007533466909080744,
+            "net_displacement_m": -0.23228012025356293,
+            "total_distance_m": 0.23228012025356293
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "14. bwd_straight_squat_030m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3061397671699524,
+            "mean_err_h_cm": 0.6139752455055714,
+            "mean_err_vy": 0.07325094193220139,
+            "mean_err_wz": 0.004417920019477606,
+            "joint_pass_pct": 6.323529411764706,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 0.8125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.5125,
+            "lin_vel_pass_pct": 0.8125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.668407091870904,
+            "signed_mean_vy_mps": -0.046469878405332565,
+            "std_vy_mps": 0.00752489548176527,
+            "net_displacement_m": -0.23234939575195312,
+            "total_distance_m": 0.23234939575195312
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "15. fwd_turn_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.15,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3107171058654785,
+            "mean_err_h_cm": 1.0717087425291538,
+            "mean_err_vy": 0.04134697839617729,
+            "mean_err_wz": 0.04195980727672577,
+            "joint_pass_pct": 35.77205882352941,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 0.8250000000000001,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.5375,
+            "lin_vel_pass_pct": 0.8250000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6683315616101027,
+            "signed_mean_vy_mps": -0.04644685238599777,
+            "std_vy_mps": 0.0075253755785524845,
+            "net_displacement_m": -0.23223426938056946,
+            "total_distance_m": 0.23223426938056946
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "16. fwd_straight_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49402689933776855,
+            "mean_err_h_cm": 0.5973095539957285,
+            "mean_err_vy": 0.037515461444854736,
+            "mean_err_wz": 0.01022045873105526,
+            "joint_pass_pct": 82.22426470588235,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 42.6125,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 91.175,
+            "lin_vel_pass_pct": 51.275000000000006,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5870719905942678,
+            "signed_mean_vy_mps": -0.02937212958931923,
+            "std_vy_mps": 0.008158911019563675,
+            "net_displacement_m": -0.14686064422130585,
+            "total_distance_m": 0.14686064422130585
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "17. bwd_straight_rise_050m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4940048158168793,
+            "mean_err_h_cm": 0.5995230749249458,
+            "mean_err_vy": 0.024274352937936783,
+            "mean_err_wz": 0.00761755695566535,
+            "joint_pass_pct": 87.29779411764706,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 42.262499999999996,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 91.21249999999999,
+            "lin_vel_pass_pct": 50.8625,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5856010597199202,
+            "signed_mean_vy_mps": -0.029512615874409676,
+            "std_vy_mps": 0.008143394254148006,
+            "net_displacement_m": -0.14756307005882263,
+            "total_distance_m": 0.14756307005882263
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "18. fwd_turn_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": -0.15,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4955040514469147,
+            "mean_err_h_cm": 0.45296275056898594,
+            "mean_err_vy": 0.03777775540947914,
+            "mean_err_wz": 0.06694296002388,
+            "joint_pass_pct": 64.13602941176471,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 42.5625,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 91.1125,
+            "lin_vel_pass_pct": 51.287499999999994,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5871414206922054,
+            "signed_mean_vy_mps": -0.029366539791226387,
+            "std_vy_mps": 0.00815995130687952,
+            "net_displacement_m": -0.1468326896429062,
+            "total_distance_m": 0.1468326896429062
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        }
+      }
+    },
+    {
+      "seed_idx": 2,
+      "seed_val": 242,
+      "core_12": {
+        "motion_joint_pct": 78.08363970588235,
+        "parking_joint_pct": 90.79895833333335,
+        "parking_vy_pct": 94.24479166666667,
+        "parking_h_pct": 96.41875,
+        "actions_completed": 6,
+        "signed_vy_mps": -0.016969666971514624,
+        "net_displacement_m": -0.08484833252926667,
+        "squat_parking_joint_pct": 94.69375000000001,
+        "rise_parking_joint_pct": 86.90416666666665,
+        "rise_parking_h_pct": 93.79166666666667,
+        "rise_motion_joint_pct": 97.08946078431372
+      },
+      "boundary_6": {
+        "motion_joint_pct": 56.51960784313726,
+        "parking_joint_pct": 19.752083333333335,
+        "squat_030_signed_vy": -0.046826167653004326,
+        "squat_030_disp": -0.23413083453973135,
+        "rise_050_signed_vy": -0.029908619200189907,
+        "rise_050_disp": -0.1495430866877238,
+        "rise_050_parking_joint_pct": 37.4875
+      },
+      "case_results": {
+        "1. fwd_straight_squat": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32821789383888245,
+            "mean_err_h_cm": 0.8217898197472095,
+            "mean_err_vy": 0.025101374834775925,
+            "mean_err_wz": 0.003961887210607529,
+            "joint_pass_pct": 64.15441176470588,
+            "env_pass_pct": 56.25
+          },
+          "parking": {
+            "joint_pass_pct": 94.77499999999999,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.0625,
+            "lin_vel_pass_pct": 95.45,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5780629813671112,
+            "signed_mean_vy_mps": -0.016325702890753746,
+            "std_vy_mps": 0.008735314942896366,
+            "net_displacement_m": -0.08162850886583328,
+            "total_distance_m": 0.0824783518910408
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "2. fwd_straight_rise": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4752734899520874,
+            "mean_err_h_cm": 0.4727153107523918,
+            "mean_err_vy": 0.01944529078900814,
+            "mean_err_wz": 0.007004573941230774,
+            "joint_pass_pct": 99.00735294117648,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 87.175,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 93.625,
+            "lin_vel_pass_pct": 93.55,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5533673334866762,
+            "signed_mean_vy_mps": -0.017445998266339302,
+            "std_vy_mps": 0.008640071377158165,
+            "net_displacement_m": -0.08722999691963196,
+            "total_distance_m": 0.08786067366600037
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "3. bwd_straight_squat": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.324466347694397,
+            "mean_err_h_cm": 0.44869459234178066,
+            "mean_err_vy": 0.045001693069934845,
+            "mean_err_wz": 0.005480371415615082,
+            "joint_pass_pct": 73.40073529411765,
+            "env_pass_pct": 28.125
+          },
+          "parking": {
+            "joint_pass_pct": 94.575,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.0375,
+            "lin_vel_pass_pct": 95.2625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5782948341220617,
+            "signed_mean_vy_mps": -0.016370266675949097,
+            "std_vy_mps": 0.008746212348341942,
+            "net_displacement_m": -0.08185133337974548,
+            "total_distance_m": 0.08269287645816803
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "4. bwd_straight_rise": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47548970580101013,
+            "mean_err_h_cm": 0.45192562974989414,
+            "mean_err_vy": 0.011737038381397724,
+            "mean_err_wz": 0.007698526605963707,
+            "joint_pass_pct": 97.88602941176471,
+            "env_pass_pct": 84.375
+          },
+          "parking": {
+            "joint_pass_pct": 86.575,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.9125,
+            "lin_vel_pass_pct": 92.66250000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5500886123627424,
+            "signed_mean_vy_mps": -0.01776905730366707,
+            "std_vy_mps": 0.008707944303750992,
+            "net_displacement_m": -0.08884529024362564,
+            "total_distance_m": 0.08943153917789459
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "5. fwd_left_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3325257897377014,
+            "mean_err_h_cm": 1.2525794096291065,
+            "mean_err_vy": 0.023797878995537758,
+            "mean_err_wz": 0.026463842019438744,
+            "joint_pass_pct": 24.375,
+            "env_pass_pct": 12.5
+          },
+          "parking": {
+            "joint_pass_pct": 94.77499999999999,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.05000000000001,
+            "lin_vel_pass_pct": 95.45,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.578046590089798,
+            "signed_mean_vy_mps": -0.016320597380399704,
+            "std_vy_mps": 0.008735292591154575,
+            "net_displacement_m": -0.08160297572612762,
+            "total_distance_m": 0.08245627582073212
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "6. fwd_right_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32541772723197937,
+            "mean_err_h_cm": 0.5424304865300655,
+            "mean_err_vy": 0.027536829933524132,
+            "mean_err_wz": 0.020996447652578354,
+            "joint_pass_pct": 99.59558823529412,
+            "env_pass_pct": 84.375
+          },
+          "parking": {
+            "joint_pass_pct": 94.7125,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.05000000000001,
+            "lin_vel_pass_pct": 95.3875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5780660547316074,
+            "signed_mean_vy_mps": -0.016333235427737236,
+            "std_vy_mps": 0.008738466538488865,
+            "net_displacement_m": -0.08166617155075073,
+            "total_distance_m": 0.08251839876174927
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "7. fwd_left_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4771389365196228,
+            "mean_err_h_cm": 0.30610000248998404,
+            "mean_err_vy": 0.019204886630177498,
+            "mean_err_wz": 0.0330602265894413,
+            "joint_pass_pct": 99.43014705882352,
+            "env_pass_pct": 81.25
+          },
+          "parking": {
+            "joint_pass_pct": 87.2125,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.72500000000001,
+            "lin_vel_pass_pct": 93.4875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5529259797185659,
+            "signed_mean_vy_mps": -0.01747930608689785,
+            "std_vy_mps": 0.00863524992018938,
+            "net_displacement_m": -0.0873965248465538,
+            "total_distance_m": 0.0880080908536911
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "8. fwd_right_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4765556752681732,
+            "mean_err_h_cm": 0.35796104930341244,
+            "mean_err_vy": 0.031549714505672455,
+            "mean_err_wz": 0.04053420573472977,
+            "joint_pass_pct": 96.47058823529412,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 87.1875,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.7,
+            "lin_vel_pass_pct": 93.4875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5529489833861589,
+            "signed_mean_vy_mps": -0.01745983399450779,
+            "std_vy_mps": 0.008646742440760136,
+            "net_displacement_m": -0.0872991606593132,
+            "total_distance_m": 0.08791229128837585
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "9. bwd_left_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3293866515159607,
+            "mean_err_h_cm": 0.9386680088937283,
+            "mean_err_vy": 0.031371526420116425,
+            "mean_err_wz": 0.020610526204109192,
+            "joint_pass_pct": 54.632352941176464,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 94.6875,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.0375,
+            "lin_vel_pass_pct": 95.375,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5782010965049267,
+            "signed_mean_vy_mps": -0.016351304948329926,
+            "std_vy_mps": 0.008745267055928707,
+            "net_displacement_m": -0.08175652474164963,
+            "total_distance_m": 0.08260635286569595
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "10. bwd_right_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32078224420547485,
+            "mean_err_h_cm": 0.2483697608113289,
+            "mean_err_vy": 0.051375679671764374,
+            "mean_err_wz": 0.032450009137392044,
+            "joint_pass_pct": 38.30882352941177,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 94.6375,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.0375,
+            "lin_vel_pass_pct": 95.325,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5782503169029951,
+            "signed_mean_vy_mps": -0.016363242641091347,
+            "std_vy_mps": 0.00874373596161604,
+            "net_displacement_m": -0.08181621134281158,
+            "total_distance_m": 0.08266357332468033
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "11. bwd_left_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4754491448402405,
+            "mean_err_h_cm": 0.4554246086627245,
+            "mean_err_vy": 0.008297918364405632,
+            "mean_err_wz": 0.032675743103027344,
+            "joint_pass_pct": 98.45588235294119,
+            "env_pass_pct": 62.5
+          },
+          "parking": {
+            "joint_pass_pct": 86.65,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.89999999999999,
+            "lin_vel_pass_pct": 92.75,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5505185574293137,
+            "signed_mean_vy_mps": -0.017717747017741203,
+            "std_vy_mps": 0.00867860671132803,
+            "net_displacement_m": -0.08858872950077057,
+            "total_distance_m": 0.08916027098894119
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "12. bwd_right_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47648370265960693,
+            "mean_err_h_cm": 0.3823354607447982,
+            "mean_err_vy": 0.01210961863398552,
+            "mean_err_wz": 0.052319031208753586,
+            "joint_pass_pct": 91.28676470588235,
+            "env_pass_pct": 40.625
+          },
+          "parking": {
+            "joint_pass_pct": 86.625,
+            "env_pass_pct": 34.375,
+            "height_pass_pct": 93.8875,
+            "lin_vel_pass_pct": 92.75,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.550690246745944,
+            "signed_mean_vy_mps": -0.0176997110247612,
+            "std_vy_mps": 0.00868550781160593,
+            "net_displacement_m": -0.0884985625743866,
+            "total_distance_m": 0.089084193110466
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "13. fwd_straight_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.30797097086906433,
+            "mean_err_h_cm": 0.7970944978296757,
+            "mean_err_vy": 0.04262722656130791,
+            "mean_err_wz": 0.005912104621529579,
+            "joint_pass_pct": 63.86029411764705,
+            "env_pass_pct": 25.0
+          },
+          "parking": {
+            "joint_pass_pct": 2.0125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.4875,
+            "lin_vel_pass_pct": 2.0125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6699556019157171,
+            "signed_mean_vy_mps": -0.046819642186164856,
+            "std_vy_mps": 0.007708888966590166,
+            "net_displacement_m": -0.23409821093082428,
+            "total_distance_m": 0.23409821093082428
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "14. bwd_straight_squat_030m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3061741590499878,
+            "mean_err_h_cm": 0.6174135021865368,
+            "mean_err_vy": 0.07257997989654541,
+            "mean_err_wz": 0.004377018194645643,
+            "joint_pass_pct": 6.470588235294119,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 2.0375,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.5125,
+            "lin_vel_pass_pct": 2.0375,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6699432153254747,
+            "signed_mean_vy_mps": -0.046840500086545944,
+            "std_vy_mps": 0.007716748397797346,
+            "net_displacement_m": -0.23420250415802002,
+            "total_distance_m": 0.23420250415802002
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "15. fwd_turn_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.15,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3107492923736572,
+            "mean_err_h_cm": 1.074928231537342,
+            "mean_err_vy": 0.040893133729696274,
+            "mean_err_wz": 0.04189036414027214,
+            "joint_pass_pct": 35.606617647058826,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 2.0,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.45,
+            "lin_vel_pass_pct": 2.0,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6698454730212688,
+            "signed_mean_vy_mps": -0.046818360686302185,
+            "std_vy_mps": 0.007704771123826504,
+            "net_displacement_m": -0.23409178853034973,
+            "total_distance_m": 0.23409178853034973
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "16. fwd_straight_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.494039922952652,
+            "mean_err_h_cm": 0.5960066337138414,
+            "mean_err_vy": 0.036957304924726486,
+            "mean_err_wz": 0.010046837851405144,
+            "joint_pass_pct": 81.25,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 37.762499999999996,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 90.03750000000001,
+            "lin_vel_pass_pct": 47.625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5830320529639721,
+            "signed_mean_vy_mps": -0.029863551259040833,
+            "std_vy_mps": 0.00840657390654087,
+            "net_displacement_m": -0.14931775629520416,
+            "total_distance_m": 0.14931775629520416
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "17. bwd_straight_rise_050m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49401819705963135,
+            "mean_err_h_cm": 0.5981807131320238,
+            "mean_err_vy": 0.02371205762028694,
+            "mean_err_wz": 0.007480719592422247,
+            "joint_pass_pct": 87.16911764705883,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 37.15,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 90.25,
+            "lin_vel_pass_pct": 46.775,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.581673439592123,
+            "signed_mean_vy_mps": -0.030000649392604828,
+            "std_vy_mps": 0.00842981692403555,
+            "net_displacement_m": -0.15000323951244354,
+            "total_distance_m": 0.15000323951244354
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "18. fwd_turn_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": -0.15,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49551069736480713,
+            "mean_err_h_cm": 0.45146397314965725,
+            "mean_err_vy": 0.03723646700382233,
+            "mean_err_wz": 0.0673091858625412,
+            "joint_pass_pct": 64.76102941176471,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 37.55,
+            "env_pass_pct": 3.125,
+            "height_pass_pct": 89.95,
+            "lin_vel_pass_pct": 47.5125,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5831105634570122,
+            "signed_mean_vy_mps": -0.029861656948924065,
+            "std_vy_mps": 0.008396070450544357,
+            "net_displacement_m": -0.14930826425552368,
+            "total_distance_m": 0.14930826425552368
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        }
+      }
+    },
+    {
+      "seed_idx": 3,
+      "seed_val": 342,
+      "core_12": {
+        "motion_joint_pct": 77.53829656862744,
+        "parking_joint_pct": 92.41666666666667,
+        "parking_vy_pct": 96.16458333333334,
+        "parking_h_pct": 95.99270833333333,
+        "actions_completed": 6,
+        "signed_vy_mps": -0.016220482997596264,
+        "net_displacement_m": -0.08110241281489532,
+        "squat_parking_joint_pct": 95.91875,
+        "rise_parking_joint_pct": 88.91458333333334,
+        "rise_parking_h_pct": 93.38124999999998,
+        "rise_motion_joint_pct": 96.23468137254902
+      },
+      "boundary_6": {
+        "motion_joint_pct": 57.693014705882355,
+        "parking_joint_pct": 21.40625,
+        "squat_030_signed_vy": -0.04607343549529711,
+        "squat_030_disp": -0.230367178718249,
+        "rise_050_signed_vy": -0.02912481998403867,
+        "rise_050_disp": -0.14562409619490305,
+        "rise_050_parking_joint_pct": 40.699999999999996
+      },
+      "case_results": {
+        "1. fwd_straight_squat": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32821184396743774,
+            "mean_err_h_cm": 0.821185577660799,
+            "mean_err_vy": 0.024862539023160934,
+            "mean_err_wz": 0.0038752106484025717,
+            "joint_pass_pct": 64.66911764705883,
+            "env_pass_pct": 53.125
+          },
+          "parking": {
+            "joint_pass_pct": 95.92500000000001,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.6125,
+            "lin_vel_pass_pct": 96.78750000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5780211184173822,
+            "signed_mean_vy_mps": -0.015602254308760166,
+            "std_vy_mps": 0.008477077819406986,
+            "net_displacement_m": -0.07801127433776855,
+            "total_distance_m": 0.07911625504493713
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "2. fwd_straight_rise": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47527018189430237,
+            "mean_err_h_cm": 0.473023671656847,
+            "mean_err_vy": 0.019331645220518112,
+            "mean_err_wz": 0.006996768992394209,
+            "joint_pass_pct": 99.02573529411765,
+            "env_pass_pct": 96.875
+          },
+          "parking": {
+            "joint_pass_pct": 89.2625,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.3125,
+            "lin_vel_pass_pct": 95.96249999999999,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5549935158342123,
+            "signed_mean_vy_mps": -0.016677165403962135,
+            "std_vy_mps": 0.008409593254327774,
+            "net_displacement_m": -0.08338582515716553,
+            "total_distance_m": 0.08422854542732239
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "3. bwd_straight_squat": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3244638442993164,
+            "mean_err_h_cm": 0.4485257435590029,
+            "mean_err_vy": 0.04480995237827301,
+            "mean_err_wz": 0.00541937118396163,
+            "joint_pass_pct": 74.81617647058823,
+            "env_pass_pct": 25.0
+          },
+          "parking": {
+            "joint_pass_pct": 95.8625,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.6,
+            "lin_vel_pass_pct": 96.7375,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5782513413578272,
+            "signed_mean_vy_mps": -0.0156483743339777,
+            "std_vy_mps": 0.008490066975355148,
+            "net_displacement_m": -0.07824186980724335,
+            "total_distance_m": 0.07933703809976578
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "4. bwd_straight_rise": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47547516226768494,
+            "mean_err_h_cm": 0.45370073057711124,
+            "mean_err_vy": 0.011050348170101643,
+            "mean_err_wz": 0.007656501140445471,
+            "joint_pass_pct": 98.38235294117646,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 88.4375,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.475,
+            "lin_vel_pass_pct": 94.9625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5516949575394392,
+            "signed_mean_vy_mps": -0.01699492707848549,
+            "std_vy_mps": 0.008470541797578335,
+            "net_displacement_m": -0.08497463166713715,
+            "total_distance_m": 0.08579801023006439
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "5. fwd_left_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.33252274990081787,
+            "mean_err_h_cm": 1.252278033643961,
+            "mean_err_vy": 0.023682722821831703,
+            "mean_err_wz": 0.026143180206418037,
+            "joint_pass_pct": 24.779411764705884,
+            "env_pass_pct": 15.625
+          },
+          "parking": {
+            "joint_pass_pct": 95.975,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.6,
+            "lin_vel_pass_pct": 96.85000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5780244711786509,
+            "signed_mean_vy_mps": -0.015597513876855373,
+            "std_vy_mps": 0.00847697164863348,
+            "net_displacement_m": -0.07798756659030914,
+            "total_distance_m": 0.07909657061100006
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "6. fwd_right_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32543525099754333,
+            "mean_err_h_cm": 0.5439055152237415,
+            "mean_err_vy": 0.02762538753449917,
+            "mean_err_wz": 0.0210532546043396,
+            "joint_pass_pct": 99.35661764705883,
+            "env_pass_pct": 87.5
+          },
+          "parking": {
+            "joint_pass_pct": 95.89999999999999,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.58749999999999,
+            "lin_vel_pass_pct": 96.78750000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5780422128736973,
+            "signed_mean_vy_mps": -0.015604720450937748,
+            "std_vy_mps": 0.008479542098939419,
+            "net_displacement_m": -0.07802358269691467,
+            "total_distance_m": 0.07912968099117279
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "7. fwd_left_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4772179424762726,
+            "mean_err_h_cm": 0.29876327607780695,
+            "mean_err_vy": 0.019960351288318634,
+            "mean_err_wz": 0.035096537321805954,
+            "joint_pass_pct": 99.2095588235294,
+            "env_pass_pct": 71.875
+          },
+          "parking": {
+            "joint_pass_pct": 89.25,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.33749999999999,
+            "lin_vel_pass_pct": 95.92500000000001,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.554519658908248,
+            "signed_mean_vy_mps": -0.016710693016648293,
+            "std_vy_mps": 0.008405704982578754,
+            "net_displacement_m": -0.08355346322059631,
+            "total_distance_m": 0.08438467979431152
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "8. fwd_right_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.476572185754776,
+            "mean_err_h_cm": 0.3590569831430912,
+            "mean_err_vy": 0.0313912034034729,
+            "mean_err_wz": 0.04017744958400726,
+            "joint_pass_pct": 96.61764705882354,
+            "env_pass_pct": 50.0
+          },
+          "parking": {
+            "joint_pass_pct": 89.3375,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.33749999999999,
+            "lin_vel_pass_pct": 96.0,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5546111147850752,
+            "signed_mean_vy_mps": -0.016682030633091927,
+            "std_vy_mps": 0.008407644927501678,
+            "net_displacement_m": -0.08341014385223389,
+            "total_distance_m": 0.08424625545740128
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "9. bwd_left_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3293721377849579,
+            "mean_err_h_cm": 0.937215331941843,
+            "mean_err_vy": 0.031131014227867126,
+            "mean_err_wz": 0.02092769369482994,
+            "joint_pass_pct": 53.805147058823536,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 95.9375,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.625,
+            "lin_vel_pass_pct": 96.78750000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5781923420727253,
+            "signed_mean_vy_mps": -0.015624874271452427,
+            "std_vy_mps": 0.008486107923090458,
+            "net_displacement_m": -0.07812436670064926,
+            "total_distance_m": 0.0792289525270462
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "10. bwd_right_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32089436054229736,
+            "mean_err_h_cm": 0.25941901840269566,
+            "mean_err_vy": 0.05208485946059227,
+            "mean_err_wz": 0.034258343279361725,
+            "joint_pass_pct": 35.625,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 95.9125,
+            "env_pass_pct": 71.875,
+            "height_pass_pct": 98.6,
+            "lin_vel_pass_pct": 96.78750000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5782434716820717,
+            "signed_mean_vy_mps": -0.015641769394278526,
+            "std_vy_mps": 0.008483154699206352,
+            "net_displacement_m": -0.07820886373519897,
+            "total_distance_m": 0.07930591702461243
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "11. bwd_left_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47541871666908264,
+            "mean_err_h_cm": 0.45872130431234837,
+            "mean_err_vy": 0.007741072680801153,
+            "mean_err_wz": 0.03254048153758049,
+            "joint_pass_pct": 98.06985294117648,
+            "env_pass_pct": 65.625
+          },
+          "parking": {
+            "joint_pass_pct": 88.6,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.4,
+            "lin_vel_pass_pct": 95.19999999999999,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5523268599063158,
+            "signed_mean_vy_mps": -0.016935767605900764,
+            "std_vy_mps": 0.00844282004982233,
+            "net_displacement_m": -0.08467884361743927,
+            "total_distance_m": 0.0854882225394249
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "12. bwd_right_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47639474272727966,
+            "mean_err_h_cm": 0.39076730608940125,
+            "mean_err_vy": 0.012012237682938576,
+            "mean_err_wz": 0.055644690990448,
+            "joint_pass_pct": 86.1029411764706,
+            "env_pass_pct": 34.375
+          },
+          "parking": {
+            "joint_pass_pct": 88.6,
+            "env_pass_pct": 43.75,
+            "height_pass_pct": 93.425,
+            "lin_vel_pass_pct": 95.1875,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5523244384676218,
+            "signed_mean_vy_mps": -0.01692570559680462,
+            "std_vy_mps": 0.008444125764071941,
+            "net_displacement_m": -0.08462852239608765,
+            "total_distance_m": 0.0854499563574791
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "13. fwd_straight_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.30796822905540466,
+            "mean_err_h_cm": 0.7968195714056492,
+            "mean_err_vy": 0.04239792376756668,
+            "mean_err_wz": 0.005780107341706753,
+            "joint_pass_pct": 66.32352941176471,
+            "env_pass_pct": 25.0
+          },
+          "parking": {
+            "joint_pass_pct": 2.1125000000000003,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 92.27499999999999,
+            "lin_vel_pass_pct": 2.1125000000000003,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6703299470245838,
+            "signed_mean_vy_mps": -0.04607351869344711,
+            "std_vy_mps": 0.007447386160492897,
+            "net_displacement_m": -0.23036755621433258,
+            "total_distance_m": 0.23036755621433258
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "14. bwd_straight_squat_030m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.306174099445343,
+            "mean_err_h_cm": 0.6174096837639809,
+            "mean_err_vy": 0.07240419834852219,
+            "mean_err_wz": 0.00444495165720582,
+            "joint_pass_pct": 6.452205882352942,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 2.1,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 92.2375,
+            "lin_vel_pass_pct": 2.1,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6703848019242287,
+            "signed_mean_vy_mps": -0.04608415067195892,
+            "std_vy_mps": 0.0074505736120045185,
+            "net_displacement_m": -0.2304207682609558,
+            "total_distance_m": 0.2304207682609558
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "15. fwd_turn_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.15,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.31073373556137085,
+            "mean_err_h_cm": 1.073372084647417,
+            "mean_err_vy": 0.04055491462349892,
+            "mean_err_wz": 0.04187243804335594,
+            "joint_pass_pct": 35.38602941176471,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 2.125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 92.25,
+            "lin_vel_pass_pct": 2.125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6702223792672157,
+            "signed_mean_vy_mps": -0.046062637120485306,
+            "std_vy_mps": 0.007447362411767244,
+            "net_displacement_m": -0.23031321167945862,
+            "total_distance_m": 0.23031321167945862
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "16. fwd_straight_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4940347969532013,
+            "mean_err_h_cm": 0.5965232849121094,
+            "mean_err_vy": 0.036762114614248276,
+            "mean_err_wz": 0.010004743002355099,
+            "joint_pass_pct": 84.59558823529412,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 40.8,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.6375,
+            "lin_vel_pass_pct": 51.075,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5854165181517601,
+            "signed_mean_vy_mps": -0.029082706198096275,
+            "std_vy_mps": 0.008183714002370834,
+            "net_displacement_m": -0.14541353285312653,
+            "total_distance_m": 0.14541353285312653
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "17. bwd_straight_rise_050m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49400877952575684,
+            "mean_err_h_cm": 0.5991188809275627,
+            "mean_err_vy": 0.023433992639183998,
+            "mean_err_wz": 0.007469788659363985,
+            "joint_pass_pct": 87.51838235294119,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 40.4375,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.95,
+            "lin_vel_pass_pct": 50.387499999999996,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5841007456183434,
+            "signed_mean_vy_mps": -0.029218383133411407,
+            "std_vy_mps": 0.008207294158637524,
+            "net_displacement_m": -0.14609192311763763,
+            "total_distance_m": 0.14609192311763763
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "18. fwd_turn_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": -0.15,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4955064654350281,
+            "mean_err_h_cm": 0.4526082891970873,
+            "mean_err_vy": 0.03699760511517525,
+            "mean_err_wz": 0.06742854416370392,
+            "joint_pass_pct": 65.88235294117646,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 40.862500000000004,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.6125,
+            "lin_vel_pass_pct": 51.175000000000004,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5855503957718611,
+            "signed_mean_vy_mps": -0.02907337062060833,
+            "std_vy_mps": 0.00818179827183485,
+            "net_displacement_m": -0.145366832613945,
+            "total_distance_m": 0.145366832613945
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        }
+      }
+    },
+    {
+      "seed_idx": 4,
+      "seed_val": 442,
+      "core_12": {
+        "motion_joint_pct": 77.93964460784314,
+        "parking_joint_pct": 93.21979166666665,
+        "parking_vy_pct": 96.59791666666666,
+        "parking_h_pct": 96.54895833333335,
+        "actions_completed": 6,
+        "signed_vy_mps": -0.016027120407670736,
+        "net_displacement_m": -0.08013560188313325,
+        "squat_parking_joint_pct": 96.93541666666665,
+        "rise_parking_joint_pct": 89.50416666666666,
+        "rise_parking_h_pct": 93.74166666666667,
+        "rise_motion_joint_pct": 95.80269607843138
+      },
+      "boundary_6": {
+        "motion_joint_pct": 56.80453431372549,
+        "parking_joint_pct": 20.90625,
+        "squat_030_signed_vy": -0.04589371134837469,
+        "squat_030_disp": -0.22946855425834656,
+        "rise_050_signed_vy": -0.028942202528317768,
+        "rise_050_disp": -0.14471101760864258,
+        "rise_050_parking_joint_pct": 40.96666666666667
+      },
+      "case_results": {
+        "1. fwd_straight_squat": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32819393277168274,
+            "mean_err_h_cm": 0.8193940855562687,
+            "mean_err_vy": 0.025007840245962143,
+            "mean_err_wz": 0.003920622635632753,
+            "joint_pass_pct": 65.01838235294117,
+            "env_pass_pct": 56.25
+          },
+          "parking": {
+            "joint_pass_pct": 96.96249999999999,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.3625,
+            "lin_vel_pass_pct": 97.45,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5765133071690798,
+            "signed_mean_vy_mps": -0.015414011664688587,
+            "std_vy_mps": 0.008293086662888527,
+            "net_displacement_m": -0.07707006484270096,
+            "total_distance_m": 0.0775749534368515
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "2. fwd_straight_rise": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47524917125701904,
+            "mean_err_h_cm": 0.4750915803015232,
+            "mean_err_vy": 0.019450027495622635,
+            "mean_err_wz": 0.007021836005151272,
+            "joint_pass_pct": 98.34558823529412,
+            "env_pass_pct": 87.5
+          },
+          "parking": {
+            "joint_pass_pct": 89.60000000000001,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.5,
+            "lin_vel_pass_pct": 96.1125,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5574751179665327,
+            "signed_mean_vy_mps": -0.01647600345313549,
+            "std_vy_mps": 0.008262601681053638,
+            "net_displacement_m": -0.0823800191283226,
+            "total_distance_m": 0.08277548849582672
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "3. bwd_straight_squat": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32443588972091675,
+            "mean_err_h_cm": 0.4464241676032543,
+            "mean_err_vy": 0.04488102346658707,
+            "mean_err_wz": 0.0054738144390285015,
+            "joint_pass_pct": 75.64338235294117,
+            "env_pass_pct": 28.125
+          },
+          "parking": {
+            "joint_pass_pct": 96.8875,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.35000000000001,
+            "lin_vel_pass_pct": 97.3625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.576712004840374,
+            "signed_mean_vy_mps": -0.015456405468285084,
+            "std_vy_mps": 0.008304312825202942,
+            "net_displacement_m": -0.07728202641010284,
+            "total_distance_m": 0.07778316736221313
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "4. bwd_straight_rise": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4754575788974762,
+            "mean_err_h_cm": 0.45512053184211254,
+            "mean_err_vy": 0.010900110006332397,
+            "mean_err_wz": 0.0077359676361083984,
+            "joint_pass_pct": 97.26102941176471,
+            "env_pass_pct": 84.375
+          },
+          "parking": {
+            "joint_pass_pct": 89.375,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 93.9875,
+            "lin_vel_pass_pct": 95.39999999999999,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5541457328945398,
+            "signed_mean_vy_mps": -0.016802627593278885,
+            "std_vy_mps": 0.008310985751450062,
+            "net_displacement_m": -0.08401313424110413,
+            "total_distance_m": 0.08438093960285187
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "5. fwd_left_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.33239686489105225,
+            "mean_err_h_cm": 1.2396881356835365,
+            "mean_err_vy": 0.021824073046445847,
+            "mean_err_wz": 0.021944262087345123,
+            "joint_pass_pct": 26.341911764705884,
+            "env_pass_pct": 12.5
+          },
+          "parking": {
+            "joint_pass_pct": 96.96249999999999,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.3625,
+            "lin_vel_pass_pct": 97.45,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5764713510870934,
+            "signed_mean_vy_mps": -0.015405342914164066,
+            "std_vy_mps": 0.0082932747900486,
+            "net_displacement_m": -0.07702671736478806,
+            "total_distance_m": 0.07753756642341614
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "6. fwd_right_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3254183530807495,
+            "mean_err_h_cm": 0.5426567979156971,
+            "mean_err_vy": 0.027633167803287506,
+            "mean_err_wz": 0.021189523860812187,
+            "joint_pass_pct": 99.44852941176471,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 96.98750000000001,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.3625,
+            "lin_vel_pass_pct": 97.475,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5765199661254883,
+            "signed_mean_vy_mps": -0.015413912944495678,
+            "std_vy_mps": 0.008294794708490372,
+            "net_displacement_m": -0.07706955820322037,
+            "total_distance_m": 0.07757730782032013
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "7. fwd_left_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4772540330886841,
+            "mean_err_h_cm": 0.29971508774906397,
+            "mean_err_vy": 0.02063845656812191,
+            "mean_err_wz": 0.035481490194797516,
+            "joint_pass_pct": 99.41176470588235,
+            "env_pass_pct": 78.125
+          },
+          "parking": {
+            "joint_pass_pct": 89.6125,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 93.5875,
+            "lin_vel_pass_pct": 96.0375,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5570478271692991,
+            "signed_mean_vy_mps": -0.0165087953209877,
+            "std_vy_mps": 0.008254778571426868,
+            "net_displacement_m": -0.08254396915435791,
+            "total_distance_m": 0.08292095363140106
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "8. fwd_right_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47656214237213135,
+            "mean_err_h_cm": 0.359271583147347,
+            "mean_err_vy": 0.0316225029528141,
+            "mean_err_wz": 0.040565766394138336,
+            "joint_pass_pct": 95.34926470588235,
+            "env_pass_pct": 59.375
+          },
+          "parking": {
+            "joint_pass_pct": 89.60000000000001,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.575,
+            "lin_vel_pass_pct": 96.0375,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5570684559643269,
+            "signed_mean_vy_mps": -0.016488738358020782,
+            "std_vy_mps": 0.008259355090558529,
+            "net_displacement_m": -0.08244369179010391,
+            "total_distance_m": 0.08282877504825592
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "9. bwd_left_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32934561371803284,
+            "mean_err_h_cm": 0.9345632046461105,
+            "mean_err_vy": 0.03125328570604324,
+            "mean_err_wz": 0.020810566842556,
+            "joint_pass_pct": 54.632352941176464,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 96.89999999999999,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.35000000000001,
+            "lin_vel_pass_pct": 97.375,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5766114220023155,
+            "signed_mean_vy_mps": -0.015437796711921692,
+            "std_vy_mps": 0.008303326554596424,
+            "net_displacement_m": -0.07718898355960846,
+            "total_distance_m": 0.07769722491502762
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "10. bwd_right_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3208162188529968,
+            "mean_err_h_cm": 0.26081129908561707,
+            "mean_err_vy": 0.0518193319439888,
+            "mean_err_wz": 0.03297862410545349,
+            "joint_pass_pct": 39.375,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 96.9125,
+            "env_pass_pct": 62.5,
+            "height_pass_pct": 99.35000000000001,
+            "lin_vel_pass_pct": 97.3875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5766811314970255,
+            "signed_mean_vy_mps": -0.0154497679322958,
+            "std_vy_mps": 0.008302628062665462,
+            "net_displacement_m": -0.07724884152412415,
+            "total_distance_m": 0.07775094360113144
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "11. bwd_left_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4753973186016083,
+            "mean_err_h_cm": 0.46084728091955185,
+            "mean_err_vy": 0.007578787859529257,
+            "mean_err_wz": 0.032919660210609436,
+            "joint_pass_pct": 97.1139705882353,
+            "env_pass_pct": 62.5
+          },
+          "parking": {
+            "joint_pass_pct": 89.4125,
+            "env_pass_pct": 40.625,
+            "height_pass_pct": 93.8875,
+            "lin_vel_pass_pct": 95.5375,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5546950735151768,
+            "signed_mean_vy_mps": -0.016744766384363174,
+            "std_vy_mps": 0.008276551030576229,
+            "net_displacement_m": -0.08372382819652557,
+            "total_distance_m": 0.08408358693122864
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "12. bwd_right_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47643837332725525,
+            "mean_err_h_cm": 0.3888732520863414,
+            "mean_err_vy": 0.012240811251103878,
+            "mean_err_wz": 0.05450724437832832,
+            "joint_pass_pct": 87.3345588235294,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 89.425,
+            "env_pass_pct": 37.5,
+            "height_pass_pct": 93.9125,
+            "lin_vel_pass_pct": 95.55,
+            "yaw_rate_pass_pct": 99.95,
+            "mean_err_h_cm": 0.5548150278627872,
+            "signed_mean_vy_mps": -0.016727276146411896,
+            "std_vy_mps": 0.008279550820589066,
+            "net_displacement_m": -0.08363638818264008,
+            "total_distance_m": 0.08400033414363861
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "13. fwd_straight_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3079507648944855,
+            "mean_err_h_cm": 0.7950747385621071,
+            "mean_err_vy": 0.04256373643875122,
+            "mean_err_wz": 0.005737087223678827,
+            "joint_pass_pct": 64.59558823529412,
+            "env_pass_pct": 21.875
+          },
+          "parking": {
+            "joint_pass_pct": 0.8625,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.13749999999999,
+            "lin_vel_pass_pct": 0.8625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6689453031867743,
+            "signed_mean_vy_mps": -0.04589059576392174,
+            "std_vy_mps": 0.007300245109945536,
+            "net_displacement_m": -0.2294529378414154,
+            "total_distance_m": 0.2294529378414154
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "14. bwd_straight_squat_030m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.30614668130874634,
+            "mean_err_h_cm": 0.6146665196865797,
+            "mean_err_vy": 0.07255517691373825,
+            "mean_err_wz": 0.004447957966476679,
+            "joint_pass_pct": 6.323529411764706,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 0.8250000000000001,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.13749999999999,
+            "lin_vel_pass_pct": 0.8250000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6689535453915596,
+            "signed_mean_vy_mps": -0.04590689390897751,
+            "std_vy_mps": 0.007301179226487875,
+            "net_displacement_m": -0.22953447699546814,
+            "total_distance_m": 0.22953447699546814
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "15. fwd_turn_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.15,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.31072375178337097,
+            "mean_err_h_cm": 1.0723711922764778,
+            "mean_err_vy": 0.04090019688010216,
+            "mean_err_wz": 0.041989438235759735,
+            "joint_pass_pct": 35.294117647058826,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 0.8500000000000001,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.125,
+            "lin_vel_pass_pct": 0.8500000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6688412744551897,
+            "signed_mean_vy_mps": -0.04588364437222481,
+            "std_vy_mps": 0.0073010120540857315,
+            "net_displacement_m": -0.22941824793815613,
+            "total_distance_m": 0.22941824793815613
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "16. fwd_straight_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49401554465293884,
+            "mean_err_h_cm": 0.5984470248222351,
+            "mean_err_vy": 0.036863572895526886,
+            "mean_err_wz": 0.00996437482535839,
+            "joint_pass_pct": 82.46323529411764,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 41.125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.55,
+            "lin_vel_pass_pct": 51.525,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5878461990505457,
+            "signed_mean_vy_mps": -0.028901515528559685,
+            "std_vy_mps": 0.008051669225096703,
+            "net_displacement_m": -0.14450758695602417,
+            "total_distance_m": 0.14450758695602417
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "17. bwd_straight_rise_050m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4939931035041809,
+            "mean_err_h_cm": 0.6006915587931871,
+            "mean_err_vy": 0.023581361398100853,
+            "mean_err_wz": 0.00750946206972003,
+            "joint_pass_pct": 87.68382352941177,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 40.6625,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.7375,
+            "lin_vel_pass_pct": 50.875,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5864354316145182,
+            "signed_mean_vy_mps": -0.029037369415163994,
+            "std_vy_mps": 0.008068477734923363,
+            "net_displacement_m": -0.14518684148788452,
+            "total_distance_m": 0.14518684148788452
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "18. fwd_turn_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": -0.15,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.4954895079135895,
+            "mean_err_h_cm": 0.45366897247731686,
+            "mean_err_vy": 0.03715653344988823,
+            "mean_err_wz": 0.06723238527774811,
+            "joint_pass_pct": 64.46691176470588,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 41.112500000000004,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.55,
+            "lin_vel_pass_pct": 51.5125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5880795419216156,
+            "signed_mean_vy_mps": -0.02888772264122963,
+            "std_vy_mps": 0.008052045479416847,
+            "net_displacement_m": -0.14443862438201904,
+            "total_distance_m": 0.14443862438201904
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        }
+      }
+    },
+    {
+      "seed_idx": 5,
+      "seed_val": 542,
+      "core_12": {
+        "motion_joint_pct": 77.08026960784314,
+        "parking_joint_pct": 92.01875,
+        "parking_vy_pct": 95.54270833333332,
+        "parking_h_pct": 96.38333333333333,
+        "actions_completed": 6,
+        "signed_vy_mps": -0.01570336955289046,
+        "net_displacement_m": -0.07851684528092544,
+        "squat_parking_joint_pct": 95.00416666666666,
+        "rise_parking_joint_pct": 89.03333333333332,
+        "rise_parking_h_pct": 93.65833333333335,
+        "rise_motion_joint_pct": 95.73223039215686
+      },
+      "boundary_6": {
+        "motion_joint_pct": 56.27450980392157,
+        "parking_joint_pct": 23.914583333333336,
+        "squat_030_signed_vy": -0.04561087364951769,
+        "squat_030_disp": -0.22805435955524445,
+        "rise_050_signed_vy": -0.028539052853981655,
+        "rise_050_disp": -0.1426952729622523,
+        "rise_050_parking_joint_pct": 46.15416666666667
+      },
+      "case_results": {
+        "1. fwd_straight_squat": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3281877040863037,
+            "mean_err_h_cm": 0.8187716826796532,
+            "mean_err_vy": 0.025202475488185883,
+            "mean_err_wz": 0.003878045128658414,
+            "joint_pass_pct": 65.7720588235294,
+            "env_pass_pct": 53.125
+          },
+          "parking": {
+            "joint_pass_pct": 94.9875,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.08749999999999,
+            "lin_vel_pass_pct": 95.7,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5755354650318623,
+            "signed_mean_vy_mps": -0.015143917873501778,
+            "std_vy_mps": 0.008672548457980156,
+            "net_displacement_m": -0.07571958750486374,
+            "total_distance_m": 0.07686905562877655
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "2. fwd_straight_rise": {
+          "cmd_vy": 0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4752536416053772,
+            "mean_err_h_cm": 0.4746733233332634,
+            "mean_err_vy": 0.01962788961827755,
+            "mean_err_wz": 0.007236936595290899,
+            "joint_pass_pct": 98.51102941176471,
+            "env_pass_pct": 90.625
+          },
+          "parking": {
+            "joint_pass_pct": 89.0,
+            "env_pass_pct": 50.0,
+            "height_pass_pct": 93.4,
+            "lin_vel_pass_pct": 95.6125,
+            "yaw_rate_pass_pct": 99.9875,
+            "mean_err_h_cm": 0.5595613736659288,
+            "signed_mean_vy_mps": -0.016088884323835373,
+            "std_vy_mps": 0.008633368648588657,
+            "net_displacement_m": -0.08044442534446716,
+            "total_distance_m": 0.08148229122161865
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "3. bwd_straight_squat": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32444557547569275,
+            "mean_err_h_cm": 0.44666375033557415,
+            "mean_err_vy": 0.045267295092344284,
+            "mean_err_wz": 0.005428669508546591,
+            "joint_pass_pct": 72.53676470588235,
+            "env_pass_pct": 28.125
+          },
+          "parking": {
+            "joint_pass_pct": 94.9875,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.1,
+            "lin_vel_pass_pct": 95.6875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.575746176764369,
+            "signed_mean_vy_mps": -0.015186256729066372,
+            "std_vy_mps": 0.008673583157360554,
+            "net_displacement_m": -0.07593126595020294,
+            "total_distance_m": 0.07707962393760681
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "4. bwd_straight_rise": {
+          "cmd_vy": -0.2,
+          "cmd_wz": 0.0,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4754802882671356,
+            "mean_err_h_cm": 0.4532281309366226,
+            "mean_err_vy": 0.01164422370493412,
+            "mean_err_wz": 0.007658334448933601,
+            "joint_pass_pct": 97.53676470588235,
+            "env_pass_pct": 87.5
+          },
+          "parking": {
+            "joint_pass_pct": 88.9625,
+            "env_pass_pct": 46.875,
+            "height_pass_pct": 93.89999999999999,
+            "lin_vel_pass_pct": 95.0875,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5560647696256638,
+            "signed_mean_vy_mps": -0.016430024057626724,
+            "std_vy_mps": 0.008597389794886112,
+            "net_displacement_m": -0.08215010166168213,
+            "total_distance_m": 0.08302473276853561
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "5. fwd_left_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.33249884843826294,
+            "mean_err_h_cm": 1.2498822063207626,
+            "mean_err_vy": 0.023757124319672585,
+            "mean_err_wz": 0.025839490815997124,
+            "joint_pass_pct": 24.65073529411765,
+            "env_pass_pct": 15.625
+          },
+          "parking": {
+            "joint_pass_pct": 95.025,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.125,
+            "lin_vel_pass_pct": 95.7,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5754960235208273,
+            "signed_mean_vy_mps": -0.015136764384806156,
+            "std_vy_mps": 0.008671351708471775,
+            "net_displacement_m": -0.0756838247179985,
+            "total_distance_m": 0.07684016227722168
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "6. fwd_right_squat": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.32540586590766907,
+            "mean_err_h_cm": 0.5413793493062258,
+            "mean_err_vy": 0.027985377237200737,
+            "mean_err_wz": 0.020871976390480995,
+            "joint_pass_pct": 99.46691176470588,
+            "env_pass_pct": 87.5
+          },
+          "parking": {
+            "joint_pass_pct": 95.0,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.1125,
+            "lin_vel_pass_pct": 95.6875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.575515441596508,
+            "signed_mean_vy_mps": -0.01514971349388361,
+            "std_vy_mps": 0.008673139847815037,
+            "net_displacement_m": -0.07574856281280518,
+            "total_distance_m": 0.07690339535474777
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "7. fwd_left_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4772838056087494,
+            "mean_err_h_cm": 0.3073101630434394,
+            "mean_err_vy": 0.020722251385450363,
+            "mean_err_wz": 0.03553421422839165,
+            "joint_pass_pct": 99.28308823529412,
+            "env_pass_pct": 81.25
+          },
+          "parking": {
+            "joint_pass_pct": 88.9875,
+            "env_pass_pct": 46.875,
+            "height_pass_pct": 93.475,
+            "lin_vel_pass_pct": 95.5375,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5591609980911016,
+            "signed_mean_vy_mps": -0.0161275677382946,
+            "std_vy_mps": 0.0086207939311862,
+            "net_displacement_m": -0.08063782751560211,
+            "total_distance_m": 0.08164922147989273
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "8. fwd_right_rise": {
+          "cmd_vy": 0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4765454828739166,
+            "mean_err_h_cm": 0.35773853305727243,
+            "mean_err_vy": 0.031719814985990524,
+            "mean_err_wz": 0.04025976359844208,
+            "joint_pass_pct": 96.25,
+            "env_pass_pct": 50.0
+          },
+          "parking": {
+            "joint_pass_pct": 89.1,
+            "env_pass_pct": 53.125,
+            "height_pass_pct": 93.5375,
+            "lin_vel_pass_pct": 95.5875,
+            "yaw_rate_pass_pct": 99.97500000000001,
+            "mean_err_h_cm": 0.5591840017586946,
+            "signed_mean_vy_mps": -0.016099559143185616,
+            "std_vy_mps": 0.008618523366749287,
+            "net_displacement_m": -0.08049780130386353,
+            "total_distance_m": 0.08151490241289139
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "9. bwd_left_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.3293676972389221,
+            "mean_err_h_cm": 0.9367689490318298,
+            "mean_err_vy": 0.03147681802511215,
+            "mean_err_wz": 0.02055000700056553,
+            "joint_pass_pct": 53.713235294117645,
+            "env_pass_pct": 37.5
+          },
+          "parking": {
+            "joint_pass_pct": 95.025,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.1125,
+            "lin_vel_pass_pct": 95.7125,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5756667349487543,
+            "signed_mean_vy_mps": -0.015165475197136402,
+            "std_vy_mps": 0.008670806884765625,
+            "net_displacement_m": -0.07582737505435944,
+            "total_distance_m": 0.07697972655296326
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "10. bwd_right_squat": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.32,
+          "motion": {
+            "mean_act_h": 0.320828914642334,
+            "mean_err_h_cm": 0.25154605973511934,
+            "mean_err_vy": 0.05222451314330101,
+            "mean_err_wz": 0.03280236944556236,
+            "joint_pass_pct": 34.43014705882353,
+            "env_pass_pct": 3.125
+          },
+          "parking": {
+            "joint_pass_pct": 95.0,
+            "env_pass_pct": 75.0,
+            "height_pass_pct": 99.1125,
+            "lin_vel_pass_pct": 95.6875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5757244303822517,
+            "signed_mean_vy_mps": -0.015180239453911781,
+            "std_vy_mps": 0.008670447394251823,
+            "net_displacement_m": -0.07590119540691376,
+            "total_distance_m": 0.07704685628414154
+          },
+          "survival_rate": 100.0,
+          "action_completed": true
+        },
+        "11. bwd_left_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": 0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.47543013095855713,
+            "mean_err_h_cm": 0.45723612420260906,
+            "mean_err_vy": 0.008315975777804852,
+            "mean_err_wz": 0.032771866768598557,
+            "joint_pass_pct": 97.55514705882354,
+            "env_pass_pct": 62.5
+          },
+          "parking": {
+            "joint_pass_pct": 89.08749999999999,
+            "env_pass_pct": 50.0,
+            "height_pass_pct": 93.825,
+            "lin_vel_pass_pct": 95.2625,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5566517822444439,
+            "signed_mean_vy_mps": -0.016374897211790085,
+            "std_vy_mps": 0.008583183400332928,
+            "net_displacement_m": -0.08187449723482132,
+            "total_distance_m": 0.08275627344846725
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "12. bwd_right_rise": {
+          "cmd_vy": -0.15,
+          "cmd_wz": -0.25,
+          "target_H": 0.48,
+          "motion": {
+            "mean_act_h": 0.4764327108860016,
+            "mean_err_h_cm": 0.3820681478828192,
+            "mean_err_vy": 0.01290232315659523,
+            "mean_err_wz": 0.055405959486961365,
+            "joint_pass_pct": 85.25735294117646,
+            "env_pass_pct": 43.75
+          },
+          "parking": {
+            "joint_pass_pct": 89.0625,
+            "env_pass_pct": 50.0,
+            "height_pass_pct": 93.8125,
+            "lin_vel_pass_pct": 95.25,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5567400250583887,
+            "signed_mean_vy_mps": -0.01635713502764702,
+            "std_vy_mps": 0.008587179705500603,
+            "net_displacement_m": -0.08178567886352539,
+            "total_distance_m": 0.08267460763454437
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "13. fwd_straight_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.30794790387153625,
+            "mean_err_h_cm": 0.7947883568704128,
+            "mean_err_vy": 0.04279521107673645,
+            "mean_err_wz": 0.005852864123880863,
+            "joint_pass_pct": 63.32720588235294,
+            "env_pass_pct": 28.125
+          },
+          "parking": {
+            "joint_pass_pct": 1.675,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.625,
+            "lin_vel_pass_pct": 1.675,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6681622471660376,
+            "signed_mean_vy_mps": -0.04561132192611694,
+            "std_vy_mps": 0.007638642564415932,
+            "net_displacement_m": -0.22805657982826233,
+            "total_distance_m": 0.22805657982826233
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "14. bwd_straight_squat_030m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.3061528205871582,
+            "mean_err_h_cm": 0.6152808666229248,
+            "mean_err_vy": 0.0729660838842392,
+            "mean_err_wz": 0.004410773981362581,
+            "joint_pass_pct": 6.011029411764706,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 1.6500000000000001,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.5875,
+            "lin_vel_pass_pct": 1.6500000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6682009436190128,
+            "signed_mean_vy_mps": -0.045622505247592926,
+            "std_vy_mps": 0.007640942931175232,
+            "net_displacement_m": -0.22811251878738403,
+            "total_distance_m": 0.22811251878738403
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "15. fwd_turn_squat_030m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.15,
+          "target_H": 0.3,
+          "motion": {
+            "mean_act_h": 0.31073203682899475,
+            "mean_err_h_cm": 1.0732038877904415,
+            "mean_err_vy": 0.04106026887893677,
+            "mean_err_wz": 0.04232559725642204,
+            "joint_pass_pct": 35.20220588235294,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 1.7000000000000002,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 93.625,
+            "lin_vel_pass_pct": 1.7000000000000002,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.6680964026600122,
+            "signed_mean_vy_mps": -0.045598793774843216,
+            "std_vy_mps": 0.0076410770416259766,
+            "net_displacement_m": -0.22799398005008698,
+            "total_distance_m": 0.22799398005008698
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "16. fwd_straight_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49401164054870605,
+            "mean_err_h_cm": 0.5988366436213255,
+            "mean_err_vy": 0.037040825933218,
+            "mean_err_wz": 0.010322040878236294,
+            "joint_pass_pct": 81.26838235294119,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 46.25,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.9625,
+            "lin_vel_pass_pct": 56.0875,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.590124586597085,
+            "signed_mean_vy_mps": -0.02849520929157734,
+            "std_vy_mps": 0.008357042446732521,
+            "net_displacement_m": -0.14247605204582214,
+            "total_distance_m": 0.1424822360277176
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "17. bwd_straight_rise_050m": {
+          "cmd_vy": -0.1,
+          "cmd_wz": 0.0,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49400851130485535,
+            "mean_err_h_cm": 0.5991493817418814,
+            "mean_err_vy": 0.02403220348060131,
+            "mean_err_wz": 0.007667360361665487,
+            "joint_pass_pct": 87.46323529411765,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 45.9125,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 90.0625,
+            "lin_vel_pass_pct": 55.637499999999996,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5887969862669706,
+            "signed_mean_vy_mps": -0.02863083779811859,
+            "std_vy_mps": 0.008341814391314983,
+            "net_displacement_m": -0.14315420389175415,
+            "total_distance_m": 0.14315420389175415
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        },
+        "18. fwd_turn_rise_050m": {
+          "cmd_vy": 0.1,
+          "cmd_wz": -0.15,
+          "target_H": 0.5,
+          "motion": {
+            "mean_act_h": 0.49549633264541626,
+            "mean_err_h_cm": 0.452297693118453,
+            "mean_err_vy": 0.03737534210085869,
+            "mean_err_wz": 0.06708194315433502,
+            "joint_pass_pct": 64.375,
+            "env_pass_pct": 0.0
+          },
+          "parking": {
+            "joint_pass_pct": 46.300000000000004,
+            "env_pass_pct": 0.0,
+            "height_pass_pct": 89.9875,
+            "lin_vel_pass_pct": 56.10000000000001,
+            "yaw_rate_pass_pct": 100.0,
+            "mean_err_h_cm": 0.5902165547013283,
+            "signed_mean_vy_mps": -0.02849111147224903,
+            "std_vy_mps": 0.008352642878890038,
+            "net_displacement_m": -0.1424555629491806,
+            "total_distance_m": 0.14246198534965515
+          },
+          "survival_rate": 100.0,
+          "action_completed": false
+        }
+      }
+    }
+  ]
+}

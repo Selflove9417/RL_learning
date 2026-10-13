@@ -1,0 +1,20 @@
+{
+  "model_name": "phase8b_m10_candidate",
+  "checkpoint_path": "evaluation_assets/phase8b/models/phase8b_m10.pt",
+  "sha256": "b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9",
+  "parent_warmstart": "phase8a_m1.pt (resumed from phase7c_champion_v3)",
+  "reference_policy_sha256": "ca3df2f9587ba60d3c3a1b490e727f8cac72227e04cfe0189a4b0135947f4b7b",
+  "cumulative_iterations": 10,
+  "learning_rate": 7.59375e-05,
+  "height_deadzone": 0.005,
+  "ref_kl_coef": 0.20,
+  "global_joint_pass_rate": 66.52,
+  "global_env_pass_rate": 63.24,
+  "global_height_pass_rate": 77.70,
+  "g3_inplace_squat_joint_pass_rate": 88.8,
+  "g3_inplace_squat_env_pass_rate": 90.6,
+  "survival_rate": 99.85,
+  "regressed_scenarios_count": 0,
+  "improved_scenarios_count": 14,
+  "status": "candidate_for_champion_v4"
+}
