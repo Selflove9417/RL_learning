@@ -44,12 +44,21 @@ def parse_args():
         if sys.argv[i] == "--model_path" and i + 1 < len(sys.argv):
             model_path = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i].startswith("--model_path="):
+            model_path = sys.argv[i].split("=", 1)[1]
+            i += 1
         elif sys.argv[i] == "--output_path" and i + 1 < len(sys.argv):
             output_path = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i].startswith("--output_path="):
+            output_path = sys.argv[i].split("=", 1)[1]
+            i += 1
         elif sys.argv[i] == "--num_seeds" and i + 1 < len(sys.argv):
             num_seeds = int(sys.argv[i + 1])
             i += 2
+        elif sys.argv[i].startswith("--num_seeds="):
+            num_seeds = int(sys.argv[i].split("=", 1)[1])
+            i += 1
         elif sys.argv[i] == "--no_compensation":
             enable_compensation = False
             i += 1

@@ -30,9 +30,15 @@ def parse_custom_args():
         if sys.argv[i] == "--model_path" and i + 1 < len(sys.argv):
             model_path = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i].startswith("--model_path="):
+            model_path = sys.argv[i].split("=", 1)[1]
+            i += 1
         elif sys.argv[i] == "--output_path" and i + 1 < len(sys.argv):
             output_path = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i].startswith("--output_path="):
+            output_path = sys.argv[i].split("=", 1)[1]
+            i += 1
         else:
             cleaned_argv.append(sys.argv[i])
             i += 1

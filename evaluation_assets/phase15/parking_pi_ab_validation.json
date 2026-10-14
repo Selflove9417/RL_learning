@@ -1,0 +1,161 @@
+{
+  "results_baseline_off": {
+    "H_0.340m": {
+      "target_H": 0.34,
+      "disp_20s_y_m": -0.6434544920921326,
+      "steady_vy_mps": -0.0319054014980793,
+      "steady_vy_std": 0.008669493719935417,
+      "pitch_mean_deg": 0.3462064564228058,
+      "pitch_std_deg": 0.3635028302669525,
+      "mean_wheel_tau_Nm": 0.21338380873203278,
+      "max_wheel_tau_Nm": 0.8646658658981323,
+      "mean_trim_mps": 0.0
+    },
+    "H_0.380m": {
+      "target_H": 0.38,
+      "disp_20s_y_m": -0.07494793832302094,
+      "steady_vy_mps": -0.003620645496994257,
+      "steady_vy_std": 0.009193277917802334,
+      "pitch_mean_deg": 1.0563654899597168,
+      "pitch_std_deg": 0.3661099970340729,
+      "mean_wheel_tau_Nm": 0.23084908723831177,
+      "max_wheel_tau_Nm": 0.8621615171432495,
+      "mean_trim_mps": 0.0
+    },
+    "H_0.420m": {
+      "target_H": 0.42,
+      "disp_20s_y_m": 0.10470612347126007,
+      "steady_vy_mps": 0.005396449007093906,
+      "steady_vy_std": 0.008723112754523754,
+      "pitch_mean_deg": 1.2533808946609497,
+      "pitch_std_deg": 0.375457763671875,
+      "mean_wheel_tau_Nm": 0.25073790550231934,
+      "max_wheel_tau_Nm": 0.88034588098526,
+      "mean_trim_mps": 0.0
+    },
+    "H_0.460m": {
+      "target_H": 0.46,
+      "disp_20s_y_m": 0.022752247750759125,
+      "steady_vy_mps": 0.0013141105882823467,
+      "steady_vy_std": 0.008039177395403385,
+      "pitch_mean_deg": 1.016929268836975,
+      "pitch_std_deg": 0.3852124512195587,
+      "mean_wheel_tau_Nm": 0.2823754549026489,
+      "max_wheel_tau_Nm": 0.8597031831741333,
+      "mean_trim_mps": 0.0
+    },
+    "H_0.500m": {
+      "target_H": 0.5,
+      "disp_20s_y_m": -0.22332680225372314,
+      "steady_vy_mps": -0.010862335562705994,
+      "steady_vy_std": 0.00740880286321044,
+      "pitch_mean_deg": 0.36174872517585754,
+      "pitch_std_deg": 0.40422260761260986,
+      "mean_wheel_tau_Nm": 0.3191465735435486,
+      "max_wheel_tau_Nm": 0.7933738231658936,
+      "mean_trim_mps": 0.0
+    },
+    "H_0.520m": {
+      "target_H": 0.52,
+      "disp_20s_y_m": -0.39480477571487427,
+      "steady_vy_mps": -0.01944046840071678,
+      "steady_vy_std": 0.00730352196842432,
+      "pitch_mean_deg": -0.16391094028949738,
+      "pitch_std_deg": 0.41344889998435974,
+      "mean_wheel_tau_Nm": 0.3318825960159302,
+      "max_wheel_tau_Nm": 0.7147536277770996,
+      "mean_trim_mps": 0.0
+    }
+  },
+  "results_pi_on": {
+    "H_0.340m": {
+      "target_H": 0.34,
+      "disp_20s_y_m": -0.05075370520353317,
+      "steady_vy_mps": 2.2123385861050338e-05,
+      "steady_vy_std": 0.00464831804856658,
+      "pitch_mean_deg": 0.3251893222332001,
+      "pitch_std_deg": 0.37128952145576477,
+      "mean_wheel_tau_Nm": 0.2116851806640625,
+      "max_wheel_tau_Nm": 0.8475853204727173,
+      "mean_trim_mps": 0.026016827672719955
+    },
+    "H_0.380m": {
+      "target_H": 0.38,
+      "disp_20s_y_m": -0.007168720476329327,
+      "steady_vy_mps": 4.405355502967723e-05,
+      "steady_vy_std": 0.004847757052630186,
+      "pitch_mean_deg": 1.054151177406311,
+      "pitch_std_deg": 0.3667830228805542,
+      "mean_wheel_tau_Nm": 0.23093333840370178,
+      "max_wheel_tau_Nm": 0.8633673191070557,
+      "mean_trim_mps": 0.0033012470230460167
+    },
+    "H_0.420m": {
+      "target_H": 0.42,
+      "disp_20s_y_m": 0.009151306003332138,
+      "steady_vy_mps": 6.490573287010193e-05,
+      "steady_vy_std": 0.004929905757308006,
+      "pitch_mean_deg": 1.248777151107788,
+      "pitch_std_deg": 0.3709139823913574,
+      "mean_wheel_tau_Nm": 0.25309792160987854,
+      "max_wheel_tau_Nm": 0.8787985444068909,
+      "mean_trim_mps": -0.00532502168789506
+    },
+    "H_0.460m": {
+      "target_H": 0.46,
+      "disp_20s_y_m": 0.001162967411801219,
+      "steady_vy_mps": 6.496795685961843e-05,
+      "steady_vy_std": 0.005066317971795797,
+      "pitch_mean_deg": 1.0142050981521606,
+      "pitch_std_deg": 0.37654784321784973,
+      "mean_wheel_tau_Nm": 0.2838057279586792,
+      "max_wheel_tau_Nm": 0.8591159582138062,
+      "mean_trim_mps": -0.001346568576991558
+    },
+    "H_0.500m": {
+      "target_H": 0.5,
+      "disp_20s_y_m": -0.0236353762447834,
+      "steady_vy_mps": 6.366805610014126e-05,
+      "steady_vy_std": 0.005360717419534922,
+      "pitch_mean_deg": 0.3869921863079071,
+      "pitch_std_deg": 0.39272400736808777,
+      "mean_wheel_tau_Nm": 0.3195576071739197,
+      "max_wheel_tau_Nm": 0.7923628091812134,
+      "mean_trim_mps": 0.011495841667056084
+    },
+    "H_0.520m": {
+      "target_H": 0.52,
+      "disp_20s_y_m": -0.036571141332387924,
+      "steady_vy_mps": 8.805425750324503e-05,
+      "steady_vy_std": 0.0057657938450574875,
+      "pitch_mean_deg": -0.10732578486204147,
+      "pitch_std_deg": 0.4011218249797821,
+      "mean_wheel_tau_Nm": 0.33586302399635315,
+      "max_wheel_tau_Nm": 0.7225096225738525,
+      "mean_trim_mps": 0.019283032044768333
+    }
+  },
+  "transition_test": {
+    "Phase 1: 5s Initial Stop (PI Active)": {
+      "target_vy": 0.0,
+      "actual_steady_vy": -0.0030093074310570955,
+      "mean_trim": 0.02387329563498497,
+      "max_wheel_tau": 0.7568740844726562,
+      "pitch_rms_deg": 0.35951662063598633
+    },
+    "Phase 2: 4s Forward Cruise (+0.30 m/s, PI Inactive)": {
+      "target_vy": 0.3,
+      "actual_steady_vy": 0.2777312994003296,
+      "mean_trim": 0.0,
+      "max_wheel_tau": 4.134756565093994,
+      "pitch_rms_deg": 0.8119553923606873
+    },
+    "Phase 3: 5s Final Stop & Re-lock (PI Active)": {
+      "target_vy": 0.0,
+      "actual_steady_vy": -0.0030744103714823723,
+      "mean_trim": 0.024151278659701347,
+      "max_wheel_tau": 6.4610137939453125,
+      "pitch_rms_deg": 0.6353206634521484
+    }
+  }
+}

@@ -1,0 +1,491 @@
+{
+  "part1_5seed_steady_parking": {
+    "OFF": {
+      "H_0.340m": {
+        "height": 0.34,
+        "disp_20s_mean_m": -0.6324093341827393,
+        "disp_20s_std_m": 0.004916006233543158,
+        "steady_vy_mean_mps": -0.03144839406013489,
+        "steady_vy_std_mps": 0.0004259767883922905,
+        "instantaneous_vy_jitter_mps": 0.008699702098965645,
+        "pitch_mean_deg": 0.3821090757846832,
+        "pitch_std_deg": 0.3626801371574402,
+        "single_motor_peak_L_Nm": 1.0399267673492432,
+        "single_motor_peak_R_Nm": 1.0466973781585693,
+        "overall_single_motor_peak_Nm": 1.0466973781585693,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      },
+      "H_0.400m": {
+        "height": 0.4,
+        "disp_20s_mean_m": 0.0613132007420063,
+        "disp_20s_std_m": 0.004855114966630936,
+        "steady_vy_mean_mps": 0.003121443558484316,
+        "steady_vy_std_mps": 0.0004244692681822926,
+        "instantaneous_vy_jitter_mps": 0.009007582440972328,
+        "pitch_mean_deg": 1.1992545127868652,
+        "pitch_std_deg": 0.368877649307251,
+        "single_motor_peak_L_Nm": 1.109779715538025,
+        "single_motor_peak_R_Nm": 1.179447889328003,
+        "overall_single_motor_peak_Nm": 1.179447889328003,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      },
+      "H_0.520m": {
+        "height": 0.52,
+        "disp_20s_mean_m": -0.37275853753089905,
+        "disp_20s_std_m": 0.005636131390929222,
+        "steady_vy_mean_mps": -0.01848878338932991,
+        "steady_vy_std_mps": 0.00047382927732542157,
+        "instantaneous_vy_jitter_mps": 0.007482250686734915,
+        "pitch_mean_deg": -0.14985525608062744,
+        "pitch_std_deg": 0.41218048334121704,
+        "single_motor_peak_L_Nm": 1.1537964344024658,
+        "single_motor_peak_R_Nm": 1.0517208576202393,
+        "overall_single_motor_peak_Nm": 1.1537964344024658,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      }
+    },
+    "ON": {
+      "H_0.340m": {
+        "height": 0.34,
+        "disp_20s_mean_m": -0.04988586902618408,
+        "disp_20s_std_m": 0.00020391335419844836,
+        "steady_vy_mean_mps": -4.933373929816298e-05,
+        "steady_vy_std_mps": 6.360968109220266e-05,
+        "instantaneous_vy_jitter_mps": 0.005000339355319738,
+        "pitch_mean_deg": 0.3625074326992035,
+        "pitch_std_deg": 0.37014639377593994,
+        "single_motor_peak_L_Nm": 1.0043021440505981,
+        "single_motor_peak_R_Nm": 1.0400793552398682,
+        "overall_single_motor_peak_Nm": 1.0400793552398682,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      },
+      "H_0.400m": {
+        "height": 0.4,
+        "disp_20s_mean_m": 0.004188535735011101,
+        "disp_20s_std_m": 0.0002678802702575922,
+        "steady_vy_mean_mps": -4.054362216265872e-05,
+        "steady_vy_std_mps": 7.889463449828327e-05,
+        "instantaneous_vy_jitter_mps": 0.005272275768220425,
+        "pitch_mean_deg": 1.1972994804382324,
+        "pitch_std_deg": 0.3674190640449524,
+        "single_motor_peak_L_Nm": 1.1046788692474365,
+        "single_motor_peak_R_Nm": 1.1725083589553833,
+        "overall_single_motor_peak_Nm": 1.1725083589553833,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      },
+      "H_0.520m": {
+        "height": 0.52,
+        "disp_20s_mean_m": -0.03561335429549217,
+        "disp_20s_std_m": 0.00029144034488126636,
+        "steady_vy_mean_mps": -7.96807580627501e-05,
+        "steady_vy_std_mps": 0.0001039135895553045,
+        "instantaneous_vy_jitter_mps": 0.006208234000951052,
+        "pitch_mean_deg": -0.09672010689973831,
+        "pitch_std_deg": 0.4000622630119324,
+        "single_motor_peak_L_Nm": 1.1629972457885742,
+        "single_motor_peak_R_Nm": 1.0974102020263672,
+        "overall_single_motor_peak_Nm": 1.1629972457885742,
+        "wheel_torque_sat_rate": 0.0,
+        "survival_rate": 1.0
+      }
+    }
+  },
+  "part2_60s_continuous_mission": {
+    "survival_rate": 1.0,
+    "total_resets": 0,
+    "phase_summaries": {
+      "Phase 1: Squat to 0.34m & Park Hold": {
+        "steady_vy_mean": -0.0006506309000542387,
+        "steady_vy_std": 0.0002624874070431975,
+        "instantaneous_jitter": 0.004947027005255222,
+        "peak_single_motor_Nm": 7.0,
+        "peak_motor_L_Nm": 6.928426265716553,
+        "peak_motor_R_Nm": 7.0,
+        "total_sat_steps": 64,
+        "sat_rate": 0.0008
+      },
+      "Phase 2: Forward Cruise @ +0.35 m/s": {
+        "steady_vy_mean": 0.3311525583267212,
+        "steady_vy_std": 0.00027565981414949433,
+        "instantaneous_jitter": 0.007959801517426968,
+        "peak_single_motor_Nm": 1.843238353729248,
+        "peak_motor_L_Nm": 1.5197436809539795,
+        "peak_motor_R_Nm": 1.843238353729248,
+        "total_sat_steps": 0,
+        "sat_rate": 0.0
+      },
+      "Phase 3: Brake & Elevate to 0.52m & Park": {
+        "steady_vy_mean": -0.0033745982218533754,
+        "steady_vy_std": 0.00028306938605837596,
+        "instantaneous_jitter": 0.006572334375232458,
+        "peak_single_motor_Nm": 2.5932369232177734,
+        "peak_motor_L_Nm": 2.164140224456787,
+        "peak_motor_R_Nm": 2.5932369232177734,
+        "total_sat_steps": 0,
+        "sat_rate": 0.0
+      },
+      "Phase 4: Backward Reverse @ -0.20 m/s": {
+        "steady_vy_mean": -0.26566919684410095,
+        "steady_vy_std": 0.00025242780568549667,
+        "instantaneous_jitter": 0.010886134207248687,
+        "peak_single_motor_Nm": 4.392990589141846,
+        "peak_motor_L_Nm": 3.403554677963257,
+        "peak_motor_R_Nm": 4.392990589141846,
+        "total_sat_steps": 0,
+        "sat_rate": 0.0
+      },
+      "Phase 5: Brake to 0.40m Nominal & Park": {
+        "steady_vy_mean": 0.00020245855771463538,
+        "steady_vy_std": 0.0001406046737787275,
+        "instantaneous_jitter": 0.005395145434886217,
+        "peak_single_motor_Nm": 4.660863399505615,
+        "peak_motor_L_Nm": 3.696834087371826,
+        "peak_motor_R_Nm": 4.660863399505615,
+        "total_sat_steps": 0,
+        "sat_rate": 0.0
+      },
+      "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+        "steady_vy_mean": 0.0009098935872316361,
+        "steady_vy_std": 0.00024817858386021077,
+        "instantaneous_jitter": 0.005692016612738371,
+        "peak_single_motor_Nm": 2.307572841644287,
+        "peak_motor_L_Nm": 2.307572841644287,
+        "peak_motor_R_Nm": 2.2095224857330322,
+        "total_sat_steps": 0,
+        "sat_rate": 0.0
+      }
+    },
+    "per_seed_records": {
+      "seed_42": {
+        "resets": 0,
+        "phases": {
+          "Phase 1: Squat to 0.34m & Park Hold": {
+            "steady_vy": -0.0008619502186775208,
+            "steady_vy_jitter": 0.004751015454530716,
+            "pitch_mean": 0.358123242855072,
+            "pitch_std": 0.3732505142688751,
+            "peak_L_Nm": 6.928426265716553,
+            "peak_R_Nm": 7.0,
+            "peak_single_motor_Nm": 7.0,
+            "sat_count": 8
+          },
+          "Phase 2: Forward Cruise @ +0.35 m/s": {
+            "steady_vy": 0.33125486969947815,
+            "steady_vy_jitter": 0.008130485191941261,
+            "pitch_mean": -1.8239212036132812,
+            "pitch_std": 0.3893086910247803,
+            "peak_L_Nm": 1.445075511932373,
+            "peak_R_Nm": 1.8420121669769287,
+            "peak_single_motor_Nm": 1.8420121669769287,
+            "sat_count": 0
+          },
+          "Phase 3: Brake & Elevate to 0.52m & Park": {
+            "steady_vy": -0.003873981535434723,
+            "steady_vy_jitter": 0.006599066313356161,
+            "pitch_mean": -0.10378199815750122,
+            "pitch_std": 0.40004587173461914,
+            "peak_L_Nm": 2.164140224456787,
+            "peak_R_Nm": 2.5870089530944824,
+            "peak_single_motor_Nm": 2.5870089530944824,
+            "sat_count": 0
+          },
+          "Phase 4: Backward Reverse @ -0.20 m/s": {
+            "steady_vy": -0.2653017044067383,
+            "steady_vy_jitter": 0.011631356552243233,
+            "pitch_mean": -1.6971060037612915,
+            "pitch_std": 0.454478919506073,
+            "peak_L_Nm": 2.836458921432495,
+            "peak_R_Nm": 3.3963303565979004,
+            "peak_single_motor_Nm": 3.3963303565979004,
+            "sat_count": 0
+          },
+          "Phase 5: Brake to 0.40m Nominal & Park": {
+            "steady_vy": 0.00011780241766246036,
+            "steady_vy_jitter": 0.005871647968888283,
+            "pitch_mean": 1.2049763202667236,
+            "pitch_std": 0.3621422350406647,
+            "peak_L_Nm": 3.219266176223755,
+            "peak_R_Nm": 3.6718499660491943,
+            "peak_single_motor_Nm": 3.6718499660491943,
+            "sat_count": 0
+          },
+          "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+            "steady_vy": 0.0013250276679173112,
+            "steady_vy_jitter": 0.005556406918913126,
+            "pitch_mean": 1.205979585647583,
+            "pitch_std": 0.36132535338401794,
+            "peak_L_Nm": 2.1227917671203613,
+            "peak_R_Nm": 2.1772191524505615,
+            "peak_single_motor_Nm": 2.1772191524505615,
+            "sat_count": 0
+          }
+        }
+      },
+      "seed_43": {
+        "resets": 0,
+        "phases": {
+          "Phase 1: Squat to 0.34m & Park Hold": {
+            "steady_vy": -0.00018156161240767688,
+            "steady_vy_jitter": 0.005006557796150446,
+            "pitch_mean": 0.3675215244293213,
+            "pitch_std": 0.37226569652557373,
+            "peak_L_Nm": 6.362357139587402,
+            "peak_R_Nm": 7.0,
+            "peak_single_motor_Nm": 7.0,
+            "sat_count": 18
+          },
+          "Phase 2: Forward Cruise @ +0.35 m/s": {
+            "steady_vy": 0.3312152028083801,
+            "steady_vy_jitter": 0.00809280015528202,
+            "pitch_mean": -1.817633032798767,
+            "pitch_std": 0.3894392251968384,
+            "peak_L_Nm": 1.281389594078064,
+            "peak_R_Nm": 1.843238353729248,
+            "peak_single_motor_Nm": 1.843238353729248,
+            "sat_count": 0
+          },
+          "Phase 3: Brake & Elevate to 0.52m & Park": {
+            "steady_vy": -0.003455618629232049,
+            "steady_vy_jitter": 0.006551444996148348,
+            "pitch_mean": -0.10112394392490387,
+            "pitch_std": 0.41067585349082947,
+            "peak_L_Nm": 1.8584709167480469,
+            "peak_R_Nm": 2.5932369232177734,
+            "peak_single_motor_Nm": 2.5932369232177734,
+            "sat_count": 0
+          },
+          "Phase 4: Backward Reverse @ -0.20 m/s": {
+            "steady_vy": -0.2660125494003296,
+            "steady_vy_jitter": 0.010527720674872398,
+            "pitch_mean": -1.700656771659851,
+            "pitch_std": 0.440796434879303,
+            "peak_L_Nm": 2.9944958686828613,
+            "peak_R_Nm": 3.5810580253601074,
+            "peak_single_motor_Nm": 3.5810580253601074,
+            "sat_count": 0
+          },
+          "Phase 5: Brake to 0.40m Nominal & Park": {
+            "steady_vy": 0.00019311252981424332,
+            "steady_vy_jitter": 0.005602757912129164,
+            "pitch_mean": 1.1970808506011963,
+            "pitch_std": 0.36810553073883057,
+            "peak_L_Nm": 3.296104669570923,
+            "peak_R_Nm": 3.7338414192199707,
+            "peak_single_motor_Nm": 3.7338414192199707,
+            "sat_count": 0
+          },
+          "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+            "steady_vy": 0.0006401900900527835,
+            "steady_vy_jitter": 0.0059536597691476345,
+            "pitch_mean": 1.1894503831863403,
+            "pitch_std": 0.3722938597202301,
+            "peak_L_Nm": 2.2436628341674805,
+            "peak_R_Nm": 2.0396666526794434,
+            "peak_single_motor_Nm": 2.2436628341674805,
+            "sat_count": 0
+          }
+        }
+      },
+      "seed_44": {
+        "resets": 0,
+        "phases": {
+          "Phase 1: Squat to 0.34m & Park Hold": {
+            "steady_vy": -0.0008604414178989828,
+            "steady_vy_jitter": 0.005179670639336109,
+            "pitch_mean": 0.36703500151634216,
+            "pitch_std": 0.37207093834877014,
+            "peak_L_Nm": 6.686043739318848,
+            "peak_R_Nm": 7.0,
+            "peak_single_motor_Nm": 7.0,
+            "sat_count": 17
+          },
+          "Phase 2: Forward Cruise @ +0.35 m/s": {
+            "steady_vy": 0.3307124674320221,
+            "steady_vy_jitter": 0.007697395980358124,
+            "pitch_mean": -1.8248169422149658,
+            "pitch_std": 0.3838411271572113,
+            "peak_L_Nm": 1.4516757726669312,
+            "peak_R_Nm": 1.8050469160079956,
+            "peak_single_motor_Nm": 1.8050469160079956,
+            "sat_count": 0
+          },
+          "Phase 3: Brake & Elevate to 0.52m & Park": {
+            "steady_vy": -0.0030366636347025633,
+            "steady_vy_jitter": 0.006713065784424543,
+            "pitch_mean": -0.09223884344100952,
+            "pitch_std": 0.403940886259079,
+            "peak_L_Nm": 2.067305326461792,
+            "peak_R_Nm": 2.419112205505371,
+            "peak_single_motor_Nm": 2.419112205505371,
+            "sat_count": 0
+          },
+          "Phase 4: Backward Reverse @ -0.20 m/s": {
+            "steady_vy": -0.26583483815193176,
+            "steady_vy_jitter": 0.010433265008032322,
+            "pitch_mean": -1.6999629735946655,
+            "pitch_std": 0.4416927397251129,
+            "peak_L_Nm": 2.7775001525878906,
+            "peak_R_Nm": 3.6590259075164795,
+            "peak_single_motor_Nm": 3.6590259075164795,
+            "sat_count": 0
+          },
+          "Phase 5: Brake to 0.40m Nominal & Park": {
+            "steady_vy": 0.00039793900214135647,
+            "steady_vy_jitter": 0.005144323222339153,
+            "pitch_mean": 1.1953407526016235,
+            "pitch_std": 0.360858678817749,
+            "peak_L_Nm": 2.9672069549560547,
+            "peak_R_Nm": 3.863353729248047,
+            "peak_single_motor_Nm": 3.863353729248047,
+            "sat_count": 0
+          },
+          "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+            "steady_vy": 0.0008821689407341182,
+            "steady_vy_jitter": 0.005595162510871887,
+            "pitch_mean": 1.1862244606018066,
+            "pitch_std": 0.36104103922843933,
+            "peak_L_Nm": 2.162241220474243,
+            "peak_R_Nm": 2.1485981941223145,
+            "peak_single_motor_Nm": 2.162241220474243,
+            "sat_count": 0
+          }
+        }
+      },
+      "seed_45": {
+        "resets": 0,
+        "phases": {
+          "Phase 1: Squat to 0.34m & Park Hold": {
+            "steady_vy": -0.0005429822485893965,
+            "steady_vy_jitter": 0.0047917719930410385,
+            "pitch_mean": 0.37226948142051697,
+            "pitch_std": 0.37495025992393494,
+            "peak_L_Nm": 6.55135440826416,
+            "peak_R_Nm": 7.0,
+            "peak_single_motor_Nm": 7.0,
+            "sat_count": 12
+          },
+          "Phase 2: Forward Cruise @ +0.35 m/s": {
+            "steady_vy": 0.33103126287460327,
+            "steady_vy_jitter": 0.007847027853131294,
+            "pitch_mean": -1.823044776916504,
+            "pitch_std": 0.3870806396007538,
+            "peak_L_Nm": 1.5197436809539795,
+            "peak_R_Nm": 1.767720341682434,
+            "peak_single_motor_Nm": 1.767720341682434,
+            "sat_count": 0
+          },
+          "Phase 3: Brake & Elevate to 0.52m & Park": {
+            "steady_vy": -0.003229933325201273,
+            "steady_vy_jitter": 0.006273857783526182,
+            "pitch_mean": -0.09489522874355316,
+            "pitch_std": 0.39325985312461853,
+            "peak_L_Nm": 1.8766200542449951,
+            "peak_R_Nm": 2.3522226810455322,
+            "peak_single_motor_Nm": 2.3522226810455322,
+            "sat_count": 0
+          },
+          "Phase 4: Backward Reverse @ -0.20 m/s": {
+            "steady_vy": -0.26571720838546753,
+            "steady_vy_jitter": 0.0109635628759861,
+            "pitch_mean": -1.7002050876617432,
+            "pitch_std": 0.43889951705932617,
+            "peak_L_Nm": 3.403554677963257,
+            "peak_R_Nm": 4.392990589141846,
+            "peak_single_motor_Nm": 4.392990589141846,
+            "sat_count": 0
+          },
+          "Phase 5: Brake to 0.40m Nominal & Park": {
+            "steady_vy": -3.5751984341914067e-06,
+            "steady_vy_jitter": 0.0050119091756641865,
+            "pitch_mean": 1.1964267492294312,
+            "pitch_std": 0.3686912953853607,
+            "peak_L_Nm": 3.6283509731292725,
+            "peak_R_Nm": 4.008810520172119,
+            "peak_single_motor_Nm": 4.008810520172119,
+            "sat_count": 0
+          },
+          "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+            "steady_vy": 0.0010171592002734542,
+            "steady_vy_jitter": 0.005757563281804323,
+            "pitch_mean": 1.194370150566101,
+            "pitch_std": 0.36498087644577026,
+            "peak_L_Nm": 2.307572841644287,
+            "peak_R_Nm": 2.2095224857330322,
+            "peak_single_motor_Nm": 2.307572841644287,
+            "sat_count": 0
+          }
+        }
+      },
+      "seed_46": {
+        "resets": 0,
+        "phases": {
+          "Phase 1: Squat to 0.34m & Park Hold": {
+            "steady_vy": -0.0008062190026976168,
+            "steady_vy_jitter": 0.005006119143217802,
+            "pitch_mean": 0.3649541437625885,
+            "pitch_std": 0.3763643801212311,
+            "peak_L_Nm": 6.703107833862305,
+            "peak_R_Nm": 7.0,
+            "peak_single_motor_Nm": 7.0,
+            "sat_count": 9
+          },
+          "Phase 2: Forward Cruise @ +0.35 m/s": {
+            "steady_vy": 0.3315489888191223,
+            "steady_vy_jitter": 0.008031298406422138,
+            "pitch_mean": -1.8117352724075317,
+            "pitch_std": 0.38495874404907227,
+            "peak_L_Nm": 1.2931479215621948,
+            "peak_R_Nm": 1.7430388927459717,
+            "peak_single_motor_Nm": 1.7430388927459717,
+            "sat_count": 0
+          },
+          "Phase 3: Brake & Elevate to 0.52m & Park": {
+            "steady_vy": -0.003276793984696269,
+            "steady_vy_jitter": 0.006724236998707056,
+            "pitch_mean": -0.09813901782035828,
+            "pitch_std": 0.39861220121383667,
+            "peak_L_Nm": 1.673781394958496,
+            "peak_R_Nm": 2.300706386566162,
+            "peak_single_motor_Nm": 2.300706386566162,
+            "sat_count": 0
+          },
+          "Phase 4: Backward Reverse @ -0.20 m/s": {
+            "steady_vy": -0.2654796838760376,
+            "steady_vy_jitter": 0.010874765925109386,
+            "pitch_mean": -1.6973276138305664,
+            "pitch_std": 0.4435311257839203,
+            "peak_L_Nm": 2.9844789505004883,
+            "peak_R_Nm": 3.943979263305664,
+            "peak_single_motor_Nm": 3.943979263305664,
+            "sat_count": 0
+          },
+          "Phase 5: Brake to 0.40m Nominal & Park": {
+            "steady_vy": 0.0003070140373893082,
+            "steady_vy_jitter": 0.005345088895410299,
+            "pitch_mean": 1.2035490274429321,
+            "pitch_std": 0.35530346632003784,
+            "peak_L_Nm": 3.696834087371826,
+            "peak_R_Nm": 4.660863399505615,
+            "peak_single_motor_Nm": 4.660863399505615,
+            "sat_count": 0
+          },
+          "Phase 6: Turn @ +0.25 rad/s & Final Park": {
+            "steady_vy": 0.0006849220371805131,
+            "steady_vy_jitter": 0.005597290582954884,
+            "pitch_mean": 1.1985161304473877,
+            "pitch_std": 0.37091514468193054,
+            "peak_L_Nm": 2.176769971847534,
+            "peak_R_Nm": 2.207479476928711,
+            "peak_single_motor_Nm": 2.207479476928711,
+            "sat_count": 0
+          }
+        }
+      }
+    }
+  }
+}

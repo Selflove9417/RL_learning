@@ -762,8 +762,8 @@ class MyRobot(LeggedRobot):
         h_nom = torch.tensor(self.nominal_height, device=self.device)
         fwd_speed_max = getattr(self.cfg.commands, 'fwd_speed_max', 0.50)
         bwd_speed_max = getattr(self.cfg.commands, 'bwd_speed_max', 0.35)
-        min_h = 0.30
-        max_h = 0.50
+        min_h = 0.34
+        max_h = 0.52
 
         # 1. 任务 1 (30%): 原有高速巡航与倒车 (保持 Champion v5 0.50 m/s 巡航与倒车)
         if task_cruise_v5.any():
@@ -832,24 +832,24 @@ class MyRobot(LeggedRobot):
                     self.commands[ids_trn[m_bt], 2] = (y_t * w_t)[m_bt]
                     self.command_mode[ids_trn[m_bt]] = 5
 
-        # 2. 任务 2 (35%): 不同高度下零速驻车 (重点覆盖 0.30, 0.32, 0.48, 0.50 m)
+        # 2. 任务 2 (35%): 不同高度下零速驻车 (固化安全区间 0.34m ~ 0.52m)
         if task_stand_h.any():
             ids_sh = env_ids[task_stand_h]
             n_sh = len(ids_sh)
             r_sub_h = torch.rand(n_sh, device=self.device)
 
-            # 25% 0.30m, 25% 0.32m, 25% 0.48m, 25% 0.50m
-            h_030 = 0.300 + 0.005 * torch.rand(n_sh, device=self.device)
-            h_032 = 0.320 + 0.005 * torch.rand(n_sh, device=self.device)
-            h_048 = 0.480 - 0.005 * torch.rand(n_sh, device=self.device)
-            h_050 = 0.500 - 0.005 * torch.rand(n_sh, device=self.device)
+            # 25% 0.34m(安全低位), 25% 0.40m(标称位), 25% 0.48m(高位), 25% 0.52m(固化高位)
+            h_034 = 0.340 + 0.005 * torch.rand(n_sh, device=self.device)
+            h_040 = 0.395 + 0.010 * torch.rand(n_sh, device=self.device)
+            h_048 = 0.475 + 0.010 * torch.rand(n_sh, device=self.device)
+            h_052 = 0.515 + 0.005 * torch.rand(n_sh, device=self.device)
             h_sampled = torch.where(
-                r_sub_h < 0.25, h_030,
-                torch.where(r_sub_h < 0.50, h_032,
-                torch.where(r_sub_h < 0.75, h_048, h_050))
+                r_sub_h < 0.25, h_034,
+                torch.where(r_sub_h < 0.50, h_040,
+                torch.where(r_sub_h < 0.75, h_048, h_052))
             )
 
-            # 应用与遥控一致的补偿规则
+            # 应用与高度前馈补偿 (区间内保持精细 +-0.010m)
             delta_h = torch.clamp(0.08 * (h_sampled - 0.39774), min=-0.010, max=0.010)
             self.target_height_buf[ids_sh] = h_sampled + delta_h
 
@@ -864,17 +864,15 @@ class MyRobot(LeggedRobot):
             n_bh = len(ids_bh)
             r_sub_bh = torch.rand(n_bh, device=self.device)
 
-            # 高度分布: 20% 0.30m, 25% 0.32m, 10% 0.398m, 25% 0.48m, 20% 0.50m
-            h_030_b = 0.300 + 0.005 * torch.rand(n_bh, device=self.device)
-            h_032_b = 0.320 + 0.005 * torch.rand(n_bh, device=self.device)
+            # 高度分布: 25% 0.34m, 25% 0.398m, 25% 0.48m, 25% 0.52m
+            h_034_b = 0.340 + 0.005 * torch.rand(n_bh, device=self.device)
             h_nom_b = torch.full((n_bh,), self.nominal_height, device=self.device)
-            h_048_b = 0.480 - 0.005 * torch.rand(n_bh, device=self.device)
-            h_050_b = 0.500 - 0.005 * torch.rand(n_bh, device=self.device)
+            h_048_b = 0.475 + 0.010 * torch.rand(n_bh, device=self.device)
+            h_052_b = 0.515 + 0.005 * torch.rand(n_bh, device=self.device)
             h_bh = torch.where(
-                r_sub_bh < 0.20, h_030_b,
-                torch.where(r_sub_bh < 0.45, h_032_b,
-                torch.where(r_sub_bh < 0.55, h_nom_b,
-                torch.where(r_sub_bh < 0.80, h_048_b, h_050_b)))
+                r_sub_bh < 0.25, h_034_b,
+                torch.where(r_sub_bh < 0.50, h_nom_b,
+                torch.where(r_sub_bh < 0.75, h_048_b, h_052_b))
             )
 
             delta_h_b = torch.clamp(0.08 * (h_bh - 0.39774), min=-0.010, max=0.010)
@@ -892,9 +890,9 @@ class MyRobot(LeggedRobot):
             n_mh = len(ids_mh)
             is_turn_mh = (torch.rand(n_mh, device=self.device) < 0.50)
 
-            # 高度分布: 0.32m ~ 0.48m
-            h_low_mh = 0.320 + 0.020 * torch.rand(n_mh, device=self.device)
-            h_high_mh = 0.480 - 0.020 * torch.rand(n_mh, device=self.device)
+            # 高度分布: 0.34m ~ 0.52m
+            h_low_mh = 0.340 + 0.030 * torch.rand(n_mh, device=self.device)
+            h_high_mh = 0.480 + 0.040 * torch.rand(n_mh, device=self.device)
             h_mh = torch.where(torch.rand(n_mh, device=self.device) < 0.50, h_low_mh, h_high_mh)
             delta_h_mh = torch.clamp(0.08 * (h_mh - 0.39774), min=-0.010, max=0.010)
             self.target_height_buf[ids_mh] = h_mh + delta_h_mh
@@ -930,9 +928,9 @@ class MyRobot(LeggedRobot):
         if task_boundary_hold.any():
             ids_b = env_ids[task_boundary_hold]
             n_b = len(ids_b)
-            # 50% 下界极值 0.30m, 50% 上界极值 0.50m
+            # 50% 下界极值 0.34m, 50% 上界极值 0.52m
             is_lower_b = (torch.rand(n_b, device=self.device) < 0.50)
-            target_h_b = torch.where(is_lower_b, torch.tensor(0.300, device=self.device), torch.tensor(0.500, device=self.device))
+            target_h_b = torch.where(is_lower_b, torch.tensor(0.340, device=self.device), torch.tensor(0.520, device=self.device))
             delta_h_b = torch.clamp(0.08 * (target_h_b - 0.39774), min=-0.010, max=0.010)
 
             # 70% 静止平衡保持, 30% 缓速直行保持

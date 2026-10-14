@@ -218,6 +218,8 @@ def get_args():
         {"name": "--eval_duration", "type": float, "default": 20.0, "help": "Evaluation duration in seconds."},
         {"name": "--eval_warmup", "type": float, "default": 2.0, "help": "Warm-up excluded from steady-state statistics."},
         {"name": "--eval_output", "type": str, "help": "Optional JSON path for evaluation metrics."},
+        {"name": "--output_path", "type": str, "help": "Path to output JSON evaluation file."},
+        {"name": "--model_path", "type": str, "help": "Path to checkpoint model file for evaluation or teleop."},
     ]
     # parse arguments
     args = gymutil.parse_arguments(

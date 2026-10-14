@@ -22,7 +22,7 @@ from legged_gym.utils import get_args, export_policy_as_jit, task_registry, Logg
 # 用户在低蹲仿真中观察到机械干涉；先收紧用户目标高度，间隙仍需实测确认。
 # 这些是补偿前的用户高度边界，内部 IK 高度继续使用既有柔性补偿。
 TELEOP_MIN_HEIGHT = 0.340
-TELEOP_MAX_HEIGHT = 0.500
+TELEOP_MAX_HEIGHT = 0.520
 
 
 class KeyboardReader:
@@ -66,6 +66,82 @@ class KeyboardReader:
                 pass
 
 
+class ParkingPIController:
+    """
+    驻车速度闭环 PI 补偿器:
+    - 仅在用户目标零速驻车时生效，通过小幅速度指令修正消除稳态漂移。
+    - 包含平滑模式切换、积分防饱和与接地保护。
+    """
+    def __init__(self, dt=0.02, Kp=0.35, Ki=0.60, trim_max=0.045, deadband=0.003):
+        self.dt = dt
+        self.Kp = Kp
+        self.Ki = Ki
+        self.trim_max = trim_max
+        self.deadband = deadband
+        self.integral = None
+        self.filtered_vy = None
+        self.park_settle_counter = None
+        self.alpha_lpf = 0.15
+        self.i_max = self.trim_max / max(1e-4, self.Ki)
+
+    def init_buffers(self, num_envs, device):
+        self.integral = torch.zeros(num_envs, device=device, dtype=torch.float)
+        self.filtered_vy = torch.zeros(num_envs, device=device, dtype=torch.float)
+        self.park_settle_counter = torch.zeros(num_envs, device=device, dtype=torch.long)
+
+    def reset_env(self, env_ids=None):
+        if self.integral is None:
+            return
+        if env_ids is None:
+            self.integral.zero_()
+            self.filtered_vy.zero_()
+            self.park_settle_counter.zero_()
+        else:
+            self.integral[env_ids] = 0.0
+            self.filtered_vy[env_ids] = 0.0
+            self.park_settle_counter[env_ids] = 0
+
+    def compute_trim(self, actual_vy, user_cmd_vy, user_cmd_yaw, is_elevating=False, is_grounded=True):
+        self.filtered_vy = (1.0 - self.alpha_lpf) * self.filtered_vy + self.alpha_lpf * actual_vy
+        is_zero_cmd = (torch.abs(user_cmd_vy) < 0.005) & (torch.abs(user_cmd_yaw) < 0.010)
+        is_slow = torch.abs(self.filtered_vy) < 0.12
+
+        can_engage = is_zero_cmd & is_slow
+        if isinstance(is_elevating, torch.Tensor):
+            can_engage = can_engage & (~is_elevating)
+        elif is_elevating:
+            can_engage = torch.zeros_like(can_engage)
+
+        if isinstance(is_grounded, torch.Tensor):
+            can_engage = can_engage & is_grounded
+        elif not is_grounded:
+            can_engage = torch.zeros_like(can_engage)
+
+        can_engage = can_engage.bool()
+
+        self.park_settle_counter = torch.where(
+            can_engage,
+            self.park_settle_counter + 1,
+            torch.zeros_like(self.park_settle_counter)
+        )
+        is_active = (self.park_settle_counter >= 15).bool()
+
+        err_v = -self.filtered_vy
+        in_deadband = torch.abs(err_v) < self.deadband
+        err_int = torch.where(in_deadband, torch.zeros_like(err_v), err_v)
+
+        new_integral = torch.clamp(self.integral + err_int * self.dt, -self.i_max, self.i_max)
+        self.integral = torch.where(is_active, new_integral, torch.zeros_like(self.integral))
+
+        p_term = self.Kp * err_v
+        i_term = self.Ki * self.integral
+        trim_raw = p_term + i_term
+        trim_clamped = torch.clamp(trim_raw, -self.trim_max, self.trim_max)
+
+        delta_v_trim = torch.where(is_active, trim_clamped, torch.zeros_like(trim_clamped))
+        return delta_v_trim, is_active
+
+
 def teleop(args):
     print("\n" + "=" * 72)
     print("🎮 双足轮足机器人实时键盘遥控系统 (Champion v6 运动与高度全态遥控)")
@@ -81,6 +157,7 @@ def teleop(args):
     print("    [Z] 或 [N]   : 恢复标称高度 (0.398 m)")
     print("  【辅助控制】:")
     print("    [Space]      : 刹车驻车 (速度清零，保持当前高度平衡)")
+    print("    [P]          : 驻车闭环 PI 补偿开关 (消除稳态漂移，默认开启)")
     print("    [R]          : 重置机器人到初始状态")
     print("    [Q] 或 [ESC] : 退出遥控系统")
     print("=" * 72)
@@ -134,6 +211,7 @@ def teleop(args):
             (gymapi.KEY_Z, "NOMINAL_H"),
             (gymapi.KEY_N, "NOMINAL_H"),
             (gymapi.KEY_SPACE, "BRAKE"),
+            (gymapi.KEY_P, "TOGGLE_PI"),
             (gymapi.KEY_R, "RESET"),
             (gymapi.KEY_Q, "QUIT"),
         ]
@@ -146,8 +224,11 @@ def teleop(args):
         if not os.path.exists(custom_model):
             raise FileNotFoundError(f"指定的模型文件不存在: {custom_model}")
     elif not getattr(args, 'load_run', None):
+        default_phase15 = 'evaluation_assets/phase15/models/phase15_m130.pt'
         default_champ = 'evaluation_assets/champion_v6/models/champion_v6_m115.pt'
-        if os.path.exists(default_champ):
+        if os.path.exists(default_phase15):
+            custom_model = default_phase15
+        elif os.path.exists(default_champ):
             custom_model = default_champ
 
     if custom_model:
@@ -161,6 +242,13 @@ def teleop(args):
     else:
         ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
         policy = ppo_runner.get_inference_policy(device=env.device)
+
+    # 驻车闭环 PI 控制器初始化
+    enable_parking_pi = [True]
+    pi_controller = ParkingPIController(dt=env.dt, Kp=0.35, Ki=0.60, trim_max=0.045, deadband=0.003)
+    pi_controller.init_buffers(1, env.device)
+    current_trim = 0.0
+    pi_is_active = False
 
     # 目标控制值与平滑过渡指令 (Ramp Limiter)
     target_ctrl = {'vel_y': 0.0, 'ang': 0.0, 'height': 0.398}
@@ -192,6 +280,10 @@ def teleop(args):
         elif act in [' ', 'BRAKE']:
             target_ctrl['vel_y'] = 0.0
             target_ctrl['ang'] = 0.0
+        elif act in ['P', 'TOGGLE_PI']:
+            enable_parking_pi[0] = not enable_parking_pi[0]
+            if not enable_parking_pi[0]:
+                pi_controller.reset_env()
         elif act in ['R', 'RESET']:
             target_ctrl['vel_y'] = 0.0
             target_ctrl['ang'] = 0.0
@@ -199,6 +291,7 @@ def teleop(args):
             actual_cmd['vel_y'] = 0.0
             actual_cmd['ang'] = 0.0
             actual_cmd['height'] = 0.398
+            pi_controller.reset_env()
             env.reset()
         elif act in ['Q', 'QUIT', '\x03']:
             return 'quit'
@@ -209,7 +302,12 @@ def teleop(args):
     def print_hud():
         status_items = []
         if abs(actual_vy) < 0.03 and abs(actual_yaw) < 0.03:
-            status_items.append("🛑 驻车静止")
+            if pi_is_active:
+                status_items.append(f"🛑 闭环驻车(trim:{current_trim:+.3f})")
+            elif enable_parking_pi[0]:
+                status_items.append("🛑 驻车平息中")
+            else:
+                status_items.append("🛑 开环驻车")
         elif actual_vy > 0.03:
             status_items.append("🏎️ 前进巡航")
         else:
@@ -308,9 +406,29 @@ def teleop(args):
             else:
                 actual_cmd['height'] += math.copysign(step_max_h, delta_h)
 
-            # 注入平滑指令到仿真环境
+            # 驻车闭环 PI 速度补偿
+            fn_L = env.contact_forces[0, env.feet_indices[0], 2]
+            fn_R = env.contact_forces[0, env.feet_indices[1], 2]
+            is_grounded = (fn_L > 10.0) & (fn_R > 10.0)
+            is_elevating = abs(actual_cmd['height'] - target_ctrl['height']) > 0.003
+
+            if enable_parking_pi[0]:
+                v_trim_t, is_act_t = pi_controller.compute_trim(
+                    actual_vy=env.base_lin_vel[:, 1],
+                    user_cmd_vy=torch.tensor([actual_cmd['vel_y']], device=env.device),
+                    user_cmd_yaw=torch.tensor([actual_cmd['ang']], device=env.device),
+                    is_elevating=is_elevating,
+                    is_grounded=is_grounded
+                )
+                current_trim = v_trim_t.item()
+                pi_is_active = is_act_t.item()
+            else:
+                current_trim = 0.0
+                pi_is_active = False
+
+            # 注入平滑指令与驻车修整到仿真环境
             env.commands[:, 0] = 0.0
-            env.commands[:, 1] = actual_cmd['vel_y']
+            env.commands[:, 1] = actual_cmd['vel_y'] + current_trim
             env.commands[:, 2] = actual_cmd['ang']
             # 前馈柔性软补偿: 保证物理实际高度精准对齐用户目标高度 (消除有限 PD 刚度下的重力下沉)
             h_smooth = actual_cmd['height']
@@ -327,6 +445,13 @@ def teleop(args):
             # 推理并步进
             actions = policy(obs.detach())
             obs, _, rews, dones, infos = env.step(actions.detach())
+
+            # 仿真环境自动重置时清空 PI 状态，并将平滑指令置为零速与标称高度重新平滑过渡
+            if dones[0]:
+                pi_controller.reset_env()
+                actual_cmd['vel_y'] = 0.0
+                actual_cmd['ang'] = 0.0
+                actual_cmd['height'] = 0.398
 
             actual_vy = env.base_lin_vel[0, 1].item()
             actual_yaw = env.base_ang_vel[0, 2].item()
@@ -354,7 +479,14 @@ if __name__ == '__main__':
         if sys.argv[i] == "--model_path" and i + 1 < len(sys.argv):
             custom_model_path = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i].startswith("--model_path="):
+            custom_model_path = sys.argv[i].split("=", 1)[1]
+            i += 1
         elif sys.argv[i] == "--task":
+            has_explicit_task = True
+            cleaned_argv.append(sys.argv[i])
+            i += 1
+        elif sys.argv[i].startswith("--task="):
             has_explicit_task = True
             cleaned_argv.append(sys.argv[i])
             i += 1
@@ -370,4 +502,7 @@ if __name__ == '__main__':
         if not os.path.exists(custom_model_path):
             raise FileNotFoundError(f"指定的模型文件不存在: {custom_model_path}")
         args.model_path = custom_model_path
+    elif getattr(args, 'model_path', None):
+        if not os.path.exists(args.model_path):
+            raise FileNotFoundError(f"指定的模型文件不存在: {args.model_path}")
     teleop(args)

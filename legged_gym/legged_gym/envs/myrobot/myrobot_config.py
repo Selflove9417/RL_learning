@@ -45,8 +45,8 @@ class MyRobotCfg(LeggedRobotCfg):
         heading_command = False
         fwd_speed_max = 0.50  # Champion v5 0.50 m/s 巡航上限
         bwd_speed_max = 0.35  # Champion v5 0.35 m/s 后退上限
-        min_height = 0.32     # Phase 2a 升降下界 (Phase 2b 将扩至 0.30)
-        max_height = 0.48     # Phase 2a 升降上界 (Phase 2b 将扩至 0.50)
+        min_height = 0.34     # 抬高升降下界至 0.34m，杜绝机械自干涉与磕地
+        max_height = 0.52     # 固化高动态稳定上界至 0.52m，确保毫米级稳态精度与低晃动
         elevation_speed = 0.04 # 4 cm/s 平滑变高速度
         class ranges:
             lin_vel_x = [0.0, 0.0]
@@ -248,9 +248,9 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         schedule = 'fixed'         # Phase 6A-S: 禁用自适应学习率调度，保持恒定步长
         enable_early_stopping = False # 禁用 KL Early Stopping
         early_stop_kl = 0.02
-        enable_ref_kl = True           # 启用 Reference-Policy KL 正则化以 Champion v5 为锚点防遗忘
+        enable_ref_kl = True           # 启用 Reference-Policy KL 正则化以 Champion v6 为锚点防遗忘
         ref_kl_coef = 0.02             # 正则化惩罚系数 beta=0.02
-        ref_policy_path = 'evaluation_assets/champion_v5/models/champion_v5_m100.pt'
+        ref_policy_path = 'evaluation_assets/champion_v6/models/champion_v6_m115.pt'
         enable_sym_reg = False         # Phase 9A: Actor 镜像一致性正则化 (默认关闭)
         sym_reg_coef = 0.0             # 镜像正则化惩罚系数 lambda_sym
         enable_mirrored_augmentation = False  # Phase 10: On-policy 镜像视角在线增强 (默认关闭)
@@ -260,14 +260,14 @@ class MyRobotCfgPPO(LeggedRobotCfgPPO):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 24
-        max_iterations = 10        # Phase 14 Exp 3: 驻车针对性续训完成 (峰值模型 model_125)
+        max_iterations = 15        # Phase 15: 0.34m ~ 0.60m 探索性短轮续训
         save_interval = 1          # 每迭代保存 checkpoint
-        run_name = 'phase14_exp3_parking_focus_resume10iter'
+        run_name = 'phase15_height_034_060_exploration'
         experiment_name = 'myrobot'
-        resume = True              # 最佳模型来自 Exp 3 m125
+        resume = True              # 恢复 Champion v6 权重与 Adam 动量
         warm_start = False
         warm_start_optimizer = False
-        load_run = 'Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter'
-        checkpoint = 125
+        load_run = 'Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter'
+        checkpoint = 115
         enable_mirrored_augmentation = False
         mirror_ratio = 0.5

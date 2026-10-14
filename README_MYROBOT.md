@@ -17,7 +17,7 @@
 - [第八章：如何加载不同模型与历史 Checkpoint](#第八章如何加载不同模型与历史-checkpoint)
 - [第九章：项目目录与核心代码架构讲解](#第九章项目目录与核心代码架构讲解)
 - [第十章：强化学习基础概念与机器人接口（31 维观测与 6 维动作）](#第十章强化学习基础概念与机器人接口31-维观测与-6-维动作)
-- [第十一章：模型训练效果、版本演进与能力边界（含 Champion v6 与 Phase 14 对比）](#第十一章模型训练效果版本演进与能力边界含-champion-v6-与-phase-14-对比)
+- [第十一章：模型训练效果、版本演进与能力边界（含 Champion v6 与 Phase 15 闭环基准固化）](#第十一章模型训练效果版本演进与能力边界含-champion-v6-与-phase-15-闭环基准固化)
 - [第十二章：常见问题 FAQ 与故障排查](#第十二章常见问题-faq-与故障排查)
 
 ---
@@ -30,16 +30,17 @@
 | :--- | :--- | :--- | :--- |
 | **1. 激活运行环境** | `source /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/activate_rl.sh` | 任意目录 | 终端导入 Python 3.8、CUDA 11.3 与 Isaac Gym 环境变量 |
 | **2. 进入工程根目录** | `cd /home/xy/IsaacTu` | 任意目录 | 进入强化学习工作空间主目录 |
-| **3a. 【推荐·驻车特化候选】启动 Phase 14 Exp 3 驻车特化模型 (model_125)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，加载最新驻车特化候选模型（常规驻车达标率92.05%，下蹲驻车全达标，0.50m/s巡航100%） |
-| **3b. 【推荐·综合官方基准】启动 Champion v6 全能基线模型 (m115)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt` | `IsaacTu/` | 弹出 3D 视窗，加载 Champion v6 官方基准模型（21工况达标率87.96%，移动阶段Joint% 88.61%，综合机动能力最强） |
-| **3c. 【历史里程碑】启动 Champion v4 基线模型 (m10)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter --checkpoint 10` | `IsaacTu/` | 弹出 3D 视窗，加载 Phase 8B 历史基准 Champion v4 模型 |
-| **4a. 【推荐】启动多机器人集群演示 (model_125 驻车特化)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter --checkpoint 125` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（最新 model_125） |
+| **3a. 【当前最新·正式固化基准】启动 Phase 15 闭环驻车模型 (model_130 + PI 补偿)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/phase15/models/phase15_m130.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，默认启用驻车速度闭环 PI 补偿（0.34m深蹲20s后退由63cm压制至5cm，5种子60s连续任务0重置，支持[P]键热切换与[0.34m, 0.52m]升降行程） |
+| **3b. 【官方综合机动基准】启动 Champion v6 全能基线模型 (m115)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt` | `IsaacTu/` | 弹出 3D 视窗，加载 Champion v6 官方基准模型（21工况达标率87.96%，移动阶段Joint% 88.61%，综合机动能力最强） |
+| **3c. 【Phase 14 历史候选】启动 Phase 14 Exp 3 驻车特化模型 (model_125)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，加载 Phase 14 阶段驻车特化候选模型（常规驻车达标率92.05%，下蹲驻车全达标） |
+| **3d. 【历史里程碑】启动 Champion v4 基线模型 (m10)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter --checkpoint 10` | `IsaacTu/` | 弹出 3D 视窗，加载 Phase 8B 历史基准 Champion v4 模型 |
+| **4a. 【推荐】启动多机器人集群演示 (Phase 15 model_130)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（最新 model_130） |
 | **4b. 【推荐】启动多机器人集群演示 (Champion v6 综合基准)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter --checkpoint 115` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（Champion v6） |
 | **5. 启动 PPO 强化学习训练** | `python legged_gym/legged_gym/scripts/train.py --task=myrobot --headless --num_envs=512 --max_iterations=50 --run_name=my_first_train` | `IsaacTu/` | 在后台使用 GPU 启动 512 个环境并行训练，终端打印 Loss 与 Reward |
 | **6. 查看训练曲线 (TensorBoard)** | `tensorboard --logdir=legged_gym/logs/myrobot --port=6006` | `IsaacTu/` | 启动 Web 服务，浏览器访问 `http://localhost:6006` 查看收敛图表 |
-| **7a. 运行 21 工况全局基准评测** | `python scripts/eval_21_scenarios.py --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 自动化评测标准 21 复合工况，输出全局 Joint% / Env% 及深蹲保持率并生成 JSON |
-| **7b. 运行 18 工况变高与驻车评测** | `python scripts/eval_motion_elevation.py --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 自动化评测 12 组核心移动变高+制动驻车及 6 组边界极值，输出位移与有符号漂移速度 |
-| **8. 查看最新模型与评测资产** | `ls -lh legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/` | `IsaacTu/` | 列出 Phase 14 Exp 3 训练目录中的 `model_125.pt` 及配置快照 |
+| **7a. 运行 21 工况全局基准评测** | `python scripts/eval_21_scenarios.py --model_path legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/model_130.pt` | `IsaacTu/` | 自动化评测标准 21 复合工况，输出全局 Joint% / Env% 及深蹲保持率并生成 JSON |
+| **7b. 运行五种子稳态驻车与 60s 长时复合评测** | `python scripts/eval_parking_pi_5seeds_long.py` | `IsaacTu/` | 自动化执行五随机种子（42~46）在 0.34m/0.40m/0.52m 下的稳态驻车与 60s 全流程连续多工况评测 |
+| **8. 查看最新模型与评测资产** | `ls -lh legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/` | `IsaacTu/` | 列出 Phase 15 训练目录中的 `model_130.pt` 及配置快照 |
 
 ---
 
@@ -201,7 +202,7 @@ print('✓ MyRobot 任务注册核查通过!')
 
 打开终端，执行以下命令：
 
-#### 方案 A（推荐·驻车特化）：启动 Phase 14 Exp 3 驻车特化模型 (model_125)
+#### 方案 A（推荐·当前最新固化基准）：启动 Phase 15 闭环驻车模型 (model_130 + PI 补偿)
 ```bash
 # 第 1 步：进入工程根目录
 cd /home/xy/IsaacTu
@@ -209,13 +210,13 @@ cd /home/xy/IsaacTu
 # 第 2 步：激活环境
 source /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/activate_rl.sh
 
-# 第 3 步：启动实时键盘交互遥控器，加载 model_125 驻车特化改进候选模型
+# 第 3 步：启动实时键盘交互遥控器，加载 Phase 15 固化基准模型（默认开启驻车 PI 闭环）
 python legged_gym/legged_gym/scripts/teleop.py \
   --task=myrobot \
-  --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt
+  --model_path evaluation_assets/phase15/models/phase15_m130.pt
 ```
 
-#### 方案 B（推荐·综合基线）：启动 Champion v6 官方基准模型 (m115)
+#### 方案 B（推荐·官方综合基线）：启动 Champion v6 官方基准模型 (m115)
 ```bash
 # 第 1 步：进入工程根目录
 cd /home/xy/IsaacTu
@@ -229,13 +230,13 @@ python legged_gym/legged_gym/scripts/teleop.py \
   --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt
 ```
 
-#### 方案 C（历史保留）：启动 Champion v4 / Phase 5.3 早期模型
+#### 方案 C（历史候选与早期模型）：启动 Phase 14 Exp 3 / Champion v4
 ```bash
+# 启动 Phase 14 Exp 3 驻车特化模型 (model_125)
+python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt
+
 # 启动 Phase 8B Champion v4 基线模型
 python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter --checkpoint 10
-
-# 启动 Phase 5.3 早期封版模型
-python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run=Oct10_15-48-32_turning_height_stage5_3_formal --checkpoint=25
 ```
 
 ### 5.2 预期看到的现象
@@ -249,9 +250,10 @@ python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run=Oct10_1
 - 按 **`S` / `↓`**：减速 / 倒车（单次 $-0.04\text{ m/s}$，平滑下限 $-0.30\text{ m/s}$）；
 - 按 **`A` / `←`**：向左旋转（逆时针自旋掉头）；
 - 按 **`D` / `→`**：向右旋转（顺时针自旋掉头）；
-- 按 **`C` / `J`**：**下蹲（机身平滑下降，极限可至 0.32m / 0.30m）**；
-- 按 **`E` / `U`**：**升高（机身平滑上升，极限可至 0.48m / 0.50m）**；
+- 按 **`C` / `J`**：**下蹲（机身平滑下降，安全工作空间下限为 0.34m，避免连杆物理干涉）**；
+- 按 **`E` / `U`**：**升高（机身平滑上升，安全工作空间上限为 0.52m）**；
 - 按 **`Z` / `N`**：**一键恢复标称站立高度 (0.398m)**；
+- 按 **`P`**：**热切换驻车速度闭环 PI 补偿**（HUD 实时显示 `[ON]` / `[OFF]`，默认开启，抑制驻车慢速漂移）；
 - 按 **`Space`（空格键）**：**紧急刹车驻车**（速度指令归零，就地保持平衡与制动）；
 - 按 **`R`**：重置机器人回到原点；
 - 按 **`Q`**：正常退出程序。
@@ -259,13 +261,17 @@ python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run=Oct10_1
 ### 5.4 另一种演示模式：多机器人集群演示 (`play.py`)
 如果您想查看没有键盘输入时，策略网络在 50 台并行机器人上的随机巡航效果：
 
-- **【推荐·驻车特化】最新 model_125**：
+- **【推荐·当前最新固化基准】Phase 15 model_130**：
   ```bash
-  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter --checkpoint 125
+  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130
   ```
-- **【推荐·综合基准】Champion v6**：
+- **【推荐·综合基准】Champion v6 (m115)**：
   ```bash
   python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter --checkpoint 115
+  ```
+- **【历史候选·驻车特化】Phase 14 Exp 3 (model_125)**：
+  ```bash
+  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter --checkpoint 125
   ```
 - **【经典保留】Champion v4**：
   ```bash
@@ -298,35 +304,35 @@ struct RobotCommand {
    - $< 0$：向右转弯（顺时针自旋）。
 3. **机身目标高度 $H_{\text{cmd}}$ (`height_cmd`)**：
    - 标称平衡高度：**$0.398\text{ m}$**；
-   - 最低下蹲极限：**$0.360\text{ m}$**；
-   - 最高伸展极限：**$0.440\text{ m}$**。
+   - 最低下蹲极限：**$0.340\text{ m}$**（低于此界限会产生机械连杆物理干涉）；
+   - 最高抬高极限：**$0.520\text{ m}$**（高于此界限重力刚度偏差加大；固化工作空间行程达 18 cm）。
 
 ### 6.2 典型工况与控制量对照表
 
 | 目标运动行为 | 纵向速度 $v_y$ (m/s) | 偏航角速度 $\omega_z$ (rad/s) | 目标高度 $H_{\text{cmd}}$ (m) | 说明 |
 | :--- | :---: | :---: | :---: | :--- |
-| **1. 原地静止平衡** | `0.0` | `0.0` | `0.398` | 双轮微调，保持标称高度静态站立 |
+| **1. 原地静止平衡** | `0.0` | `0.0` | `0.398` | 双轮微调，保持标称高度静态站立（默认激活驻车闭环 PI 补偿） |
 | **2. 匀速向前行驶** | `+0.25` | `0.0` | `0.398` | 机身轻微前倾以提供牵引力，平稳巡航 |
-| **3. 匀速倒车后退** | `-0.20` | `0.0` | `0.398` | 机身后仰提供制动力，向后平稳倒退 |
+| **3. 匀速倒车后退** | `-0.20` | `0.0` | `0.398` | 机身后仰提供制动力，向后平稳倒退（实测存在约 33% 稳态超调） |
 | **4. 原地向左旋转** | `0.0` | `+0.30` | `0.398` | 左右轮反向旋转，机身就地掉头 |
-| **5. 原地低趴下蹲** | `0.0` | `0.0` | `0.360` | 双腿后折下蹲，机身平稳下降约 3.8 cm |
-| **6. 原地高位站立** | `0.0` | `0.0` | `0.440` | 双腿伸展挺拔，离地间隙显著增加 |
-| **7. 行进中下蹲巡航** | `+0.20` | `0.0` | `0.360` | 前进同时保持低重心，抗颠簸稳定性高 |
-| **8. 复合左转升降** | `+0.15` | `+0.25` | `0.420` | 边向前边转弯，同时抬高机身通过障碍 |
+| **5. 原地低趴深蹲** | `0.0` | `0.0` | `0.340` | 双腿后折深蹲，机身平稳下降至 0.34m 下限 |
+| **6. 原地高位站立** | `0.0` | `0.0` | `0.520` | 双腿大幅伸展挺拔，离地间隙显著增加至 0.52m 上限 |
+| **7. 行进中下蹲巡航** | `+0.20` | `0.0` | `0.340` | 前进同时保持低重心，抗颠簸稳定性高 |
+| **8. 复合左转升降** | `+0.15` | `+0.25` | `0.480` | 边向前边转弯，同时抬高机身通过障碍 |
 
 ### 6.3 这些控制指令在源码中由哪里决定？
 根据您的使用场景，指令来源不同：
-1. **交互遥控时**：在 [`teleop.py`](file:///home/xy/IsaacTu/legged_gym/legged_gym/scripts/teleop.py#L132) 的 `target_ctrl` 字典中实时修改，经过内部的 Ramp 加速度斜坡平滑器后，写入 `env.commands[:, 1]` 与 `env.height_cmd_buf[:]`；
+1. **交互遥控时**：在 [`teleop.py`](file:///home/xy/IsaacTu/legged_gym/legged_gym/scripts/teleop.py#L244) 的 `target_ctrl` 字典中实时修改，经过内部的 Ramp 加速度斜坡平滑器并叠加驻车闭环 PI 补偿后，写入 `env.commands[:, 1]` 与 `env.height_cmd_buf[:]`；
 2. **强化学习训练时**：在 [`myrobot_config.py`](file:///home/xy/IsaacTu/legged_gym/legged_gym/envs/myrobot/myrobot_config.py#L46-L51) 的 `class commands.ranges` 中配置均匀分布采样范围；
-3. **离线独立评估时**：在 [`evaluation_assets/phase5_3/scripts/eval_phase5_3_stage1_comprehensive.py`](file:///home/xy/IsaacTu/evaluation_assets/phase5_3/scripts/eval_phase5_3_stage1_comprehensive.py) 中的场景列表中固定给入。
+3. **离线独立评估时**：在评测脚本中的场景列表中固定给入。
 
 ### 6.4 已验证的控制能力范围
 
 | 控制维度 | 训练覆盖范围 (Training Range) | 已验证扩展测试范围 (Test Range) | 边界警示 |
 | :--- | :---: | :---: | :--- |
-| **纵向速度 $v_y$** | $[-0.30, +0.30]\text{ m/s}$ | $[-0.60, +0.80]\text{ m/s}$ | 超过 $\pm 0.8\text{ m/s}$ 时可能触发轮端饱和 |
-| **偏航角速度 $\omega_z$** | $[-0.50, +0.50]\text{ rad/s}$ | $[-1.00, +1.00]\text{ rad/s}$ | 超过 $\pm 1.0\text{ rad/s}$ 时离心力会导致单轮离地 |
-| **机身目标高度 $H$** | $[0.360, 0.440]\text{ m}$ | $[0.355, 0.445]\text{ m}$ | 低于 $0.355\text{ m}$ 会触碰机械臂物理死点 |
+| **纵向速度 $v_y$** | $[-0.30, +0.30]\text{ m/s}$ | $[-0.30, +0.50]\text{ m/s}$ (测试达 $0.80\text{ m/s}$) | 倒车指令 $-0.20\text{ m/s}$ 实测约为 $-0.266\text{ m/s}$（存在超调，为已知限制） |
+| **偏航角速度 $\omega_z$** | $[-0.50, +0.50]\text{ rad/s}$ | $[-0.50, +0.50]\text{ rad/s}$ | 超过 $\pm 1.0\text{ rad/s}$ 时离心力会导致单轮离地 |
+| **机身目标高度 $H$** | $[0.340, 0.600]\text{ m}$ (Phase 15 探索) | $[0.340, 0.520]\text{ m}$ (Phase 15 固化工作空间) | 低于 $0.340\text{ m}$ 会产生机械连杆物理干涉，高于 $0.520\text{ m}$ 刚度偏差加大 |
 
 ---
 
@@ -408,25 +414,25 @@ tensorboard --logdir=legged_gym/logs/myrobot --port=6006
 
 ### 8.2 核心模型版本体系与绝对路径
 
-项目当前采用**双模型并行架构**（Champion v6 作为综合能力基线，Phase 14 Exp 3 `model_125` 作为驻车特化改进候选），并完整保留历史里程碑版本以供对比审计：
+项目当前确立了**以 Phase 15（model_130 + 驻车速度闭环 PI 补偿）为最新正式固化基准**，以 Champion v6 作为官方综合机动基线，以 Phase 14 Exp 3 `model_125` 作为历史探索候选，并完整保留历史里程碑版本以供对比审计：
 
-#### 1. 【当前最新·驻车特化改进候选】Phase 14 Exp 3 model_125 (推荐体验驻车与高动态控制)
-- **训练阶段**：Phase 14 Exp 3 针对性驻车短轮续训（10 轮自平衡强化，基于 Champion v6 分叉）
+#### 1. 【当前最新·正式固化基准】Phase 15 model_130 (推荐用于最新仿真基准与驻车闭环控制)
+- **训练阶段**：Phase 15 探索高度空间扩展续训（15 轮，基于 Champion v6 续训，采样高度扩展至 $[0.34\text{m}, 0.60\text{m}]$）
 - **模型绝对路径**：
-  [`legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt`](file:///home/xy/IsaacTu/legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt)  
-  *(仓库固化副本：[`evaluation_assets/phase14/models/phase14_exp3_m125.pt`](file:///home/xy/IsaacTu/evaluation_assets/phase14/models/phase14_exp3_m125.pt))*
-- **SHA256 校验码**：`400a9c861a0422bd665720e37c4f9d6ee4af257b950c0322f7c77501976a183a`
-- **文件大小**：约 $4.16\text{ MB}$ (4,360,524 字节)
-- **核心控制能力（5 随机种子独立复验）**：
-  - **常规高度驻车联合合格率**：跨 5 种子达 **$92.05\% \pm 0.79\%$**（较基线 66.21% 大幅跃升，方差 $<1\%$）；
-  - **下蹲驻车动作**：6 项下蹲组合**全部达成 $\ge 90\%$**，跨种子均值高达 **95.48%**；
-  - **升高驻车动作**：6 项升高组合在 8.0mm 前馈补偿下达成 **93.55%**（5 种子全项达标）；
-  - **长程巡航不退化**：30s 持续 $0.50\text{ m/s}$ 高速巡航保持率 **100.0%**，生存率 **100.0%**，轮端饱和率 **0.0%**；
-  - **长时连续运动**：60s 复合八阶段连续序列在 5 个随机种子下保持 **100% 存活率**且全部通过；
-  - **全高度覆盖**：0.30m~0.50m 11 点扫描中所有点跟踪合格率均 $\ge 90.45\%$（全域均值 97.72%）。
+  [`evaluation_assets/phase15/models/phase15_m130.pt`](file:///home/xy/IsaacTu/evaluation_assets/phase15/models/phase15_m130.pt)  
+  *(训练原目录：[`legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/model_130.pt`](file:///home/xy/IsaacTu/legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/model_130.pt))*
+- **模型状态**：**正式固化冻结，不再进行盲目 PPO 续训**
+- **核心控制能力与闭环增强（5 随机种子 42~46 严格独立复验）**：
+  - **驻车定向漂移基本抑制**：外环集成驻车闭环 PI 补偿器（$K_p=0.35, K_i=0.60, trim_{\max}=0.045\text{ m/s}$），稳态平均线速度收敛至 $|\bar{v}_y| < 0.0001\text{ m/s}$；
+  - **全高度位移压制 89%～95%**：$0.34\text{m}$ 深蹲 20 秒位移由 $-63.2\text{ cm}$ 降至 **$-5.0\text{ cm}$**；$0.40\text{m}$ 标称高度由 $+6.1\text{ cm}$ 降至 **$+0.4\text{ cm}$**；$0.52\text{m}$ 由 $-37.3\text{ cm}$ 降至 **$-3.6\text{ cm}$**；
+  - **安全高度工作空间**：固化为 **$[0.340\text{m}, 0.520\text{m}]$**，下限杜绝连杆干涉，上限高度偏差在已测可接受范围内；
+  - **单电机独立峰值力矩**：左右驱动轮稳态力矩 $< 1.18\text{ N}\cdot\text{m}$，饱和率（$7.0\text{ N}\cdot\text{m}$ 限幅）严格为 $0.00\%$，俯仰晃动 Std 稳定在 $0.37^\circ \sim 0.40^\circ$；
+  - **60 秒长程复合多工况**：跨 5 种子 **100% 跑通，环境重置次数严格为 0**；
+  - **状态机与平滑保护**：遥控器支持 `[P]` 键热切换；自动重置（`dones[0]`）清空积分并将平滑指令归零重置标称高度，杜绝启动突跳。
 - **客观已知边界与当前短板**：
-  - **仍存在慢速定向漂移**：常规高度驻车 5 秒内持续单向后退约 $8.1\text{ cm}$（速度约 $-0.016\text{ m/s}$）；0.30 m 边界后退约 $23.1\text{ cm}$（速度约 $-0.046\text{ m/s}$）；
-  - **移动阶段能力折损**：移动阶段 Joint% 下降至 $77.61\%$（前进左转下蹲高度失准，后退右转下蹲倒车欠速）。
+  - **倒车速度超调**：倒车指令 $-0.20\text{ m/s}$ 实测约为 $-0.266\text{ m/s}$（存在约 33% 超调，底层策略非对称动力学固有特性，保留为已知限制）；
+  - **轮足自平衡微摆**：瞬时线速度存在约 $0.005\text{ m/s}$ 的物理自平衡微摆，非机械死锁；
+  - **适用边界**：当前为 Isaac Gym 物理仿真基准，实机部署须另行实车辨识与延迟补偿。
 
 #### 2. 【当前官方综合基准】Champion v6 (Phase 14 m115，综合机动能力最强)
 - **训练阶段**：Phase 14 Exp 1 原地与移动变高强化迭代第 15 轮
@@ -439,7 +445,17 @@ tensorboard --logdir=legged_gym/logs/myrobot --port=6006
   - 移动阶段 Joint% 保持在 **88.61%** 的高水准；
   - 是目前移动机动性最强、全局工况适应面最平衡的官方综合基线。
 
-#### 3. 【历史里程碑对照】Champion v4 与 Phase 5.3
+#### 3. 【历史探索候选·驻车特化】Phase 14 Exp 3 model_125
+- **训练阶段**：Phase 14 Exp 3 针对性驻车短轮续训（10 轮自平衡强化，基于 Champion v6 分叉）
+- **模型绝对路径**：
+  [`legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt`](file:///home/xy/IsaacTu/legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt)  
+  *(仓库固化副本：[`evaluation_assets/phase14/models/phase14_exp3_m125.pt`](file:///home/xy/IsaacTu/evaluation_assets/phase14/models/phase14_exp3_m125.pt))*
+- **SHA256 校验码**：`400a9c861a0422bd665720e37c4f9d6ee4af257b950c0322f7c77501976a183a`
+- **核心控制能力**：
+  - 常规高度驻车联合合格率达 $92.05\% \pm 0.79\%$，6 项下蹲组合全达标；
+  - 但仍存单向慢速漂移（5 秒后退 8.1cm），且移动阶段 Joint% 下降至 77.61%。
+
+#### 4. 【历史里程碑对照】Champion v4 与 Phase 5.3
 - **Champion v4 (Phase 8B m10)**：
   - 路径：[`evaluation_assets/phase8b/models/phase8b_m10.pt`](file:///home/xy/IsaacTu/evaluation_assets/phase8b/models/phase8b_m10.pt)
   - SHA256: `b92fba14e73e803d8b9a736cdb7213eb3b217c5c87122aa2d1935751f940e9e9`
@@ -452,7 +468,8 @@ tensorboard --logdir=legged_gym/logs/myrobot --port=6006
 历史运行目录均存放在 `legged_gym/logs/myrobot/` 下，命名格式统一为：
 `MonthDay_Hour-Minute-Second_任务标识`
 例如：
-- `Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/`：★ Phase 14 Exp 3 驻车特化模型目录 (含 model_125) ★；
+- `Oct14_00-28-55_phase15_height_034_060_exploration/`：★ Phase 15 固化基准目录 (含 model_130) ★；
+- `Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/`：Phase 14 Exp 3 驻车特化模型目录 (含 model_125)；
 - `Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter/`：★ Champion v6 官方综合基线目录 (含 model_115) ★；
 - `Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter/`：Champion v4 历史基线目录 (含 model_10)；
 - `Oct10_15-48-32_turning_height_stage5_3_formal/`：Phase 5.3 Stage 1 正式 50 轮训练目录。
@@ -460,13 +477,17 @@ tensorboard --logdir=legged_gym/logs/myrobot --port=6006
 ### 8.4 如何切换不同 Checkpoint 进行对比测试？
 在运行 `teleop.py` 或 `play.py` 时，直接通过命令行参数指定 `--model_path` 或 `--load_run`：
 ```bash
-# 【推荐】加载最新驻车特化改进候选模型 model_125
+# 【当前最新·正式固化基准】加载 Phase 15 model_130 (默认启用外环驻车 PI 补偿)
 python legged_gym/legged_gym/scripts/teleop.py --task=myrobot \
-  --model_path=legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt
+  --model_path=legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/model_130.pt
 
-# 【推荐】加载 Champion v6 官方综合基准模型 (m115)
+# 【官方综合基线】加载 Champion v6 官方综合基准模型 (m115)
 python legged_gym/legged_gym/scripts/teleop.py --task=myrobot \
   --model_path=evaluation_assets/champion_v6/models/champion_v6_m115.pt
+
+# 【历史探索候选】加载 Phase 14 Exp 3 model_125
+python legged_gym/legged_gym/scripts/teleop.py --task=myrobot \
+  --model_path=legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt
 
 # 加载 Champion v4 (Phase 8B m10)
 python legged_gym/legged_gym/scripts/play.py --task=myrobot \
@@ -640,9 +661,9 @@ flowchart LR
 
 ---
 
-## 第十一章：模型训练效果、版本演进与能力边界（含 Champion v6 与 Phase 14 对比）
+## 第十一章：模型训练效果、版本演进与能力边界（含 Champion v6 与 Phase 15 闭环基准固化）
 
-本项目经过系统性测试与阶段演进，形成了**双模型并行体系**（以 Champion v6 作为官方综合机动基准，以 Phase 14 Exp 3 `model_125` 作为驻车特化改进候选），并完整保留了各阶段历史里程碑数据以供工程比对。
+本项目经过系统性测试与阶段演进，形成了以 **Phase 15（model_130 + 驻车速度闭环 PI 补偿）为最新正式固化基准**、以 Champion v6 作为官方综合机动基线、以 Phase 14 Exp 3 `model_125` 作为驻车特化历史探索候选的模型演进体系，并完整保留了各阶段历史里程碑数据以供工程比对。
 
 ### 11.1 名义工况测试表现 (Phase 5.3 Stage 1 Formal 历史回顾)
 在标准平地、标称速度范围内的闭环测试中：
@@ -737,6 +758,79 @@ $$\mathbf{①\ 抑制定向漂移} \longrightarrow \mathbf{②\ 协调升高高�
   1. **第一步（抑制定向漂移）**：先针对 0.30m 边界与常规高度的定向后退漂移单独试验，暂不同时混合加入积分控制、重位置惩罚与姿态约束，隔离变量定位漂移根因；
   2. **第二步（协调升高高度保持）**：在 8.0~10.0mm 甜点区间内对 0.48m/0.50m 高度补偿展开多随机种子协同验证，观测速度恶化边界；
   3. **第三步（恢复移动变高能力）**：恢复下蹲移动样本采样权重，分别实施高度自适应增强与倒车驱动力矩补偿，消除前进左转欠高与后退右转欠速。
+
+### 11.5 最新基准固化：Phase 15 (model_130 + 驻车速度闭环 PI 补偿 + 0.34~0.52m 高度空间)
+
+在 Phase 14 发现驻车定向漂移与高度牵制机制后，项目放弃了盲目扩大样本重训 PPO 的高成本路线，转而采取**“显式控制外环补偿微小漂移、几何干涉硬约束边界、跨随机种子多模态长程固化”**的高效工程方案。
+
+经过两阶段对照实验与 5 随机种子全流程评测，正式将 **Phase 15 `model_130.pt` 权重 + 外环驻车速度闭环 PI 补偿器 + $[0.34\text{m}, 0.52\text{m}]$ 高度工作空间** 固化为当前仿真基准版本，不再进行无针对性的 PPO 续训。
+
+#### 11.5.1 驻车定向后退机理量化与微指令灵敏度扫描
+
+在 32 并行环境中，对未加补偿的 `model_130.pt` 进行零速指令 20 秒稳态驻车，测得各高度下的真实后退漂移：
+- **深蹲下限 0.34m**：20 秒后退位移高达 **$-64.3\text{ cm}$**（稳态后退速度 $\bar{v}_y = -0.032\text{ m/s}$，俯仰角 $+0.35^\circ$）；
+- **标称中位 0.38m ~ 0.46m**：天然漂移极微弱（20 秒位移在厘米级，$|\bar{v}_y| < 0.005\text{ m/s}$）；
+- **抬高上限 0.52m**：20 秒后退位移为 **$-39.5\text{ cm}$**（稳态后退速度 $\bar{v}_y = -0.019\text{ m/s}$）。
+
+为探明策略网络是否存在输入死区，在 0.34m 下输入微小正向阶跃指令进行灵敏度扫描：
+$$\frac{\partial v_y}{\partial v_{\text{cmd}}} \approx 1.15\quad (\text{高度线性响应，无静摩擦死区})$$
+在 $cmd\_v_y = +0.026\text{ m/s}$ 时，机器人稳态实际速度精确过零。这确证了：**漂移源于策略网络在极端姿态下的动力学稳态偏置，而非机械死锁；只需施加细微的速度指令偏置修正，即可完全消除持续漂移**。
+
+#### 11.5.2 驻车速度闭环 PI 控制器架构与保护状态机
+
+在遥控与控制接口层设计了独立驻车外环补偿器 `ParkingPIController`：
+
+```mermaid
+flowchart TD
+    StateCheck{"是否处于驻车自平衡?<br/>(cmd_v == 0 且 |cmd_ang| < 0.05 且 机器人触地)"}
+    StateCheck -->|"否 (行驶/转向/抬升/离地)"| Reset["积分项立即清零 (I = 0)<br/>补偿量 trim = 0<br/>退出外环补偿"]
+    StateCheck -->|"是 (刹车驻车)"| SettleCheck{"制动平息已达 0.3s?"}
+    SettleCheck -->|"否 (惯性过渡期)"| Hold["保持平息等待，不积累积分"]
+    SettleCheck -->|"是 (稳态停驻)"| PI["速度一阶低通滤波 (alpha=0.15)<br/>误差 e = 0 - v_filt<br/>死区过滤 (|e| > 0.003 m/s)<br/>PI 闭环: trim = clamp(Kp*e + Ki*∫e dt, ±0.045 m/s)"]
+    PI --> Output["策略实际线速输入:<br/>actual_cmd_v = target_v + trim"]
+```
+
+- **固化控制参数**：$K_p = 0.35,\; K_i = 0.60,\; trim_{\max} = 0.045\text{ m/s},\; \alpha_{\text{LPF}} = 0.15,\; \text{deadband} = 0.003\text{ m/s}$，积分抗饱和限幅 $|I| \le 0.075$；
+- **状态切换零冲击**：用户按下前进/后退/转向/升降时，积分项立即清零，杜绝起步爆发前冲；
+- **重置平滑过渡衔接**：在环境自动重置（`dones[0]`）发生时，清空 PI 积分，**将平滑指令归零并重置到标称高度（0.398m）**，交由 Ramp 加速度斜坡发生器平滑过渡，杜绝突跳冲击；
+- **交互热切换支持**：[`teleop.py`](file:///home/xy/IsaacTu/legged_gym/legged_gym/scripts/teleop.py) 默认开启闭环驻车，键盘支持 **`[P]`** 键随时切换开闭环，HUD 实时呈现闭环状态与积分偏置。
+
+#### 11.5.3 五随机种子（Seeds 42~46）20 秒稳态驻车对照复验
+
+在 5 个随机种子（`seed=42, 43, 44, 45, 46`）下对 **[OFF] 开环基准** 与 **[ON] 闭环 PI** 执行 20 秒稳态驻车评测（每高度 1000 步）。测试原始数据见 [`evaluation_assets/phase15/parking_pi_5seeds_long_validation.json`](file:///home/xy/IsaacTu/evaluation_assets/phase15/parking_pi_5seeds_long_validation.json)：
+
+| 目标高度 $H$ | 模式 | 20s 纵向位移 (Mean±Std) | 位移压制幅度 | 稳态线速 $\bar{v}_y$ (Mean±Std) | 瞬时摆动 Std | 左轮峰值 $\tau_L$ | 右轮峰值 $\tau_R$ | 饱和率 | 存活率 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **0.340 m (深蹲下限)** | **OFF** | -0.6324 ± 0.0049 m | — | -0.0314 ± 0.0004 m/s | 0.0087 m/s | 1.04 Nm | 1.05 Nm | 0.00% | 100% |
+| **0.340 m (深蹲下限)** | **ON** | **-0.0499 ± 0.0002 m** | **92.1%** | **-0.0000 ± 0.0001 m/s** | **0.0050 m/s** | 1.00 Nm | 1.04 Nm | 0.00% | 100% |
+| **0.400 m (标称高度)** | **OFF** | +0.0613 ± 0.0049 m | — | +0.0031 ± 0.0004 m/s | 0.0090 m/s | 1.11 Nm | 1.18 Nm | 0.00% | 100% |
+| **0.400 m (标称高度)** | **ON** | **+0.0042 ± 0.0003 m** | **93.1%** | **-0.0000 ± 0.0001 m/s** | **0.0053 m/s** | 1.10 Nm | 1.17 Nm | 0.00% | 100% |
+| **0.520 m (抬高上限)** | **OFF** | -0.3728 ± 0.0056 m | — | -0.0185 ± 0.0005 m/s | 0.0075 m/s | 1.15 Nm | 1.05 Nm | 0.00% | 100% |
+| **0.520 m (抬高上限)** | **ON** | **-0.0356 ± 0.0003 m** | **90.5%** | **-0.0001 ± 0.0001 m/s** | **0.0062 m/s** | 1.16 Nm | 1.10 Nm | 0.00% | 100% |
+
+- **持续后退漂移基本抑制**：稳态平均线速度严格收敛到 $|\bar{v}_y| < 0.0001\text{ m/s}$；
+- **位移减少幅度约 89%～95%**：深蹲 0.34m 下 20 秒位移由 63.2cm 缩减至 5.0cm（残存的数厘米主要由前 1 秒的积分平息建立期产生）；标称高度下 20 秒位移仅 4.2 毫米；
+- **力矩平稳无激化**：左右驱动轮力矩独立统计，稳态峰值均 $< 1.18\text{ N}\cdot\text{m}$，饱和率严格为 $0.00\%$，俯仰晃动标准差保持在 $0.37^\circ \sim 0.40^\circ$。
+
+#### 11.5.4 60 秒长时连续复合工况评测（五随机种子）
+
+在 5 个随机种子（42~46）下执行 60 秒多阶段连续复杂任务（每种子 3000 控制步，总计 15,000 步）：
+`Phase 1: 0.34m 深蹲驻车 (0~10s) -> Phase 2: +0.35m/s 前进巡航 (10~20s) -> Phase 3: 0.52m 抬高驻车 (20~30s) -> Phase 4: -0.20m/s 倒车巡航 (30~40s) -> Phase 5: 0.40m 标称驻车 (40~50s) -> Phase 6: +0.25rad/s 旋转最终驻车 (50~60s)`。
+
+- **全局存活表现**：**跨 5 随机种子 100% 跑通，环境自动重置次数严格为 0**；
+- **阶段表现**：
+  - 深蹲 0.34m 驻车：稳态线速 $-0.0007 \pm 0.0003\text{ m/s}$，峰值力矩仅在落地初态达限幅，其余时刻 $< 1.5\text{ N}\cdot\text{m}$；
+  - 前进 +0.35m/s 巡航：实测稳态速度 $+0.3312 \pm 0.0003\text{ m/s}$，双轮峰值 $1.84\text{ N}\cdot\text{m}$，饱和率 $0.00\%$；
+  - 抬高 0.52m 驻车：实测稳态速度 $-0.0034 \pm 0.0003\text{ m/s}$，高度偏差在已测可接受范围内；
+  - 倒车与标称驻车：各驻车段均平稳收敛至零速，转向结束迅速恢复稳定。
+
+#### 11.5.5 客观已知限制与工程边界声明
+
+为确保科研结论的严谨性，明确记录本版本的客观特性与边界：
+1. **轮足自平衡微摆**：机器人为轮足倒立摆，零速驻车时轮端存在往复微动以平衡机身，瞬时线速度标准差约为 $0.005\text{ m/s}$。这是正常的物理自平衡动力学表现，不可描述为绝对静止锁轮；
+2. **倒车速度跟踪超调**：在倒车指令 $-0.20\text{ m/s}$ 下，实测稳态速度约为 **$-0.266\text{ m/s}$（存在约 33% 超调）**。这是底层网络策略对后退方向动力学的非对称特性，驻车 PI 仅在驻车时生效，并不影响巡航状态。此项保留为已知限制，不再为了单项倒车精度而继续盲目续训；
+3. **安全工作空间界定**：有效控制高度空间严格界定在 **$[0.34\text{m}, 0.52\text{m}]$**，低于 0.34m 会引起机械连杆干涉，高于 0.52m 重力下沉偏差加大；
+4. **仿真适用边界**：当前所有控制与指标均基于 NVIDIA Isaac Gym 刚体物理仿真验证，未计入物理电机热阻、传动齿隙与通信时延，**不可直接宣称已完成实机部署，实车迁移必须单独进行参数辨识与延迟补偿**。
 
 ---
 
