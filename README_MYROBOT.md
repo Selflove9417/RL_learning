@@ -204,13 +204,38 @@ print('✓ MyRobot 任务注册核查通过!')
 
 打开终端，执行以下命令：
 
+#### 方案 0（全新·推荐·双策略连续跳跃融合）：启动连续跳跃 3D 交互视窗 (Phase 15 + Stage 8)
+这是体验轮足机器人**边巡航变高、边无重置连续垂直越障跳跃（$\ge 20\text{ cm}$）**的最快方式！
+
+```bash
+# 【极简一键启动】(自动导入依赖环境并开启 100% 键盘手动遥控)
+cd /home/xy/IsaacTu_jump
+bash run_phase6_viewer.sh
+
+# 也可以使用标准 Python 启动命令：
+# 第 1 步：进入工程根目录
+cd /home/xy/IsaacTu_jump
+
+# 第 2 步：激活环境
+source activate_jump.sh
+
+# 第 3 步：启动双策略连续跳跃正式交互视窗
+python legged_gym/legged_gym/scripts/teleop_dual.py
+```
+
+> 🕹️ **按键速记**：
+> - **`W` / `S` / `A` / `D`**：前进 / 倒车 / 转向巡航；
+> - **`Q` / `E`**：机身高度升降调节（工作空间 $0.340\text{ m} \sim 0.520\text{ m}$）；
+> - **`Space`（空格键）**：**请求跳跃**（随时按下：行进中自动平滑制动 → 深蹲蓄力 → 爆发腾空 $\ge 20\text{ cm}$ → 落地缓冲并平滑重归平衡巡航，无需重置可反复连续起跳）；
+> - **`X`**：驻车刹停并锁止；**`R`**：复位环境与高度；**`ESC`**：退出并自动导出 50 Hz CSV 遥测。
+
 #### 方案 A（推荐·当前最新固化基准）：启动 Phase 15 闭环驻车模型 (model_130 + PI 补偿)
 ```bash
 # 第 1 步：进入工程根目录
-cd /home/xy/IsaacTu
+cd /home/xy/IsaacTu_jump
 
 # 第 2 步：激活环境
-source /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/activate_rl.sh
+source activate_jump.sh
 
 # 第 3 步：启动实时键盘交互遥控器，加载 Phase 15 固化基准模型（默认开启驻车 PI 闭环）
 python legged_gym/legged_gym/scripts/teleop.py \
@@ -221,10 +246,10 @@ python legged_gym/legged_gym/scripts/teleop.py \
 #### 方案 B（推荐·官方综合基线）：启动 Champion v6 官方基准模型 (m115)
 ```bash
 # 第 1 步：进入工程根目录
-cd /home/xy/IsaacTu
+cd /home/xy/IsaacTu_jump
 
 # 第 2 步：激活环境
-source /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/activate_rl.sh
+source activate_jump.sh
 
 # 第 3 步：启动实时键盘交互遥控器，加载 Champion v6 官方基线模型
 python legged_gym/legged_gym/scripts/teleop.py \
