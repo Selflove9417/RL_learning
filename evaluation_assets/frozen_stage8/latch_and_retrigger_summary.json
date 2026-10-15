@@ -1,0 +1,62 @@
+[
+  {
+    "latch_phi": 0.8,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 22.137725830078125,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 20.977624893188477,
+    "jump2_20cm_success_count": 4,
+    "mean_standing_velocity_mps": 0.10450479381093332,
+    "mean_standing_drift_m": 0.33573850989341736
+  },
+  {
+    "latch_phi": 0.85,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 22.791614532470703,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 20.21228790283203,
+    "jump2_20cm_success_count": 2,
+    "mean_standing_velocity_mps": 0.12407918033369987,
+    "mean_standing_drift_m": 0.374521404504776
+  },
+  {
+    "latch_phi": 0.9,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 21.364774703979492,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 21.577741622924805,
+    "jump2_20cm_success_count": 4,
+    "mean_standing_velocity_mps": 0.10642802057554945,
+    "mean_standing_drift_m": 0.2535828948020935
+  },
+  {
+    "latch_phi": 0.92,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 22.64091682434082,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 21.67598533630371,
+    "jump2_20cm_success_count": 4,
+    "mean_standing_velocity_mps": 0.12102922953834587,
+    "mean_standing_drift_m": 0.2534446716308594
+  },
+  {
+    "latch_phi": 0.95,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 22.703948974609375,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 21.82352066040039,
+    "jump2_20cm_success_count": 4,
+    "mean_standing_velocity_mps": 0.11957222168249164,
+    "mean_standing_drift_m": 0.1625823676586151
+  },
+  {
+    "latch_phi": 0.98,
+    "crashes": 4,
+    "jump1_mean_clearance_cm": 22.40196418762207,
+    "jump1_20cm_success_count": 4,
+    "jump2_mean_clearance_cm": 21.845354080200195,
+    "jump2_20cm_success_count": 3,
+    "mean_standing_velocity_mps": 0.13420440955087543,
+    "mean_standing_drift_m": 0.09086275100708008
+  }
+]

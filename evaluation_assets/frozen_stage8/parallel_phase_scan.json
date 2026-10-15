@@ -1,0 +1,122 @@
+[
+  {
+    "phi": 0.0,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.49698883295059204,
+    "final_knee_rad": 0.23013699054718018,
+    "mean_pitch_deg": 78.66063855763889,
+    "mean_speed_mps": 0.33939164876937866,
+    "net_disp_m": 0.8678082227706909,
+    "mean_wheel_torque_Nm": 1.2939378023147583
+  },
+  {
+    "phi": 0.5,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.3443351089954376,
+    "final_knee_rad": 0.1830294281244278,
+    "mean_pitch_deg": 334.7760667715422,
+    "mean_speed_mps": 0.0381881520152092,
+    "net_disp_m": 0.18069839477539062,
+    "mean_wheel_torque_Nm": 1.2028528451919556
+  },
+  {
+    "phi": 0.6,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.32812368869781494,
+    "final_knee_rad": 0.24040290713310242,
+    "mean_pitch_deg": 341.6805957204814,
+    "mean_speed_mps": 0.045168157666921616,
+    "net_disp_m": 0.20557913184165955,
+    "mean_wheel_torque_Nm": 1.2613847255706787
+  },
+  {
+    "phi": 0.7,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.3284713625907898,
+    "final_knee_rad": 0.24178767204284668,
+    "mean_pitch_deg": 339.88237083655713,
+    "mean_speed_mps": 0.09582670778036118,
+    "net_disp_m": 0.5446702241897583,
+    "mean_wheel_torque_Nm": 1.1848416328430176
+  },
+  {
+    "phi": 0.8,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.34124788641929626,
+    "final_knee_rad": 0.19023343920707703,
+    "mean_pitch_deg": 350.9758548034651,
+    "mean_speed_mps": 0.11779838800430298,
+    "net_disp_m": 0.6478016376495361,
+    "mean_wheel_torque_Nm": 1.257952094078064
+  },
+  {
+    "phi": 0.85,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.35099050402641296,
+    "final_knee_rad": 0.1499229371547699,
+    "mean_pitch_deg": 355.16926310477277,
+    "mean_speed_mps": 0.12263990193605423,
+    "net_disp_m": 0.612636923789978,
+    "mean_wheel_torque_Nm": 1.3576377630233765
+  },
+  {
+    "phi": 0.9,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.36505836248397827,
+    "final_knee_rad": 0.10495679080486298,
+    "mean_pitch_deg": 354.868324969942,
+    "mean_speed_mps": 0.11640775203704834,
+    "net_disp_m": 0.49402421712875366,
+    "mean_wheel_torque_Nm": 1.4587315320968628
+  },
+  {
+    "phi": 0.92,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.3677871823310852,
+    "final_knee_rad": 0.0956396609544754,
+    "mean_pitch_deg": 353.3692350509076,
+    "mean_speed_mps": 0.11329884827136993,
+    "net_disp_m": 0.416940301656723,
+    "mean_wheel_torque_Nm": 1.450878620147705
+  },
+  {
+    "phi": 0.95,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.3699266314506531,
+    "final_knee_rad": 0.09566020965576172,
+    "mean_pitch_deg": 337.178818038526,
+    "mean_speed_mps": 0.11306246370077133,
+    "net_disp_m": 0.3189542889595032,
+    "mean_wheel_torque_Nm": 1.6013946533203125
+  },
+  {
+    "phi": 0.98,
+    "crashes": 0,
+    "envs": 4,
+    "crash_rate": 0.0,
+    "final_height_m": 0.36569368839263916,
+    "final_knee_rad": 0.1279233992099762,
+    "mean_pitch_deg": 243.89742190204444,
+    "mean_speed_mps": 0.13923071324825287,
+    "net_disp_m": 0.37092047929763794,
+    "mean_wheel_torque_Nm": 1.6153408288955688
+  }
+]

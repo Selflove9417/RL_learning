@@ -1,0 +1,65 @@
+{
+  "experiment_a": {
+    "hip": {
+      "limit_Nm": 140.0,
+      "max_abs_Nm": 27.908,
+      "saturated_samples": 0,
+      "total_samples": 1300,
+      "saturation_ratio_pct": 0.0,
+      "max_consecutive_steps": 0,
+      "max_continuous_sat_duration_s": 0.0
+    },
+    "knee": {
+      "limit_Nm": 120.0,
+      "max_abs_Nm": 120.0,
+      "saturated_samples": 5,
+      "total_samples": 1300,
+      "saturation_ratio_pct": 0.38461538461538464,
+      "max_consecutive_steps": 3,
+      "max_continuous_sat_duration_s": 0.06
+    },
+    "wheel": {
+      "limit_Nm": 12.0,
+      "max_abs_Nm": 12.0,
+      "saturated_samples": 1,
+      "total_samples": 1300,
+      "saturation_ratio_pct": 0.07692307692307693,
+      "max_consecutive_steps": 1,
+      "max_continuous_sat_duration_s": 0.02
+    }
+  },
+  "experiment_b": {
+    "hip": {
+      "limit_Nm": 140.0,
+      "max_abs_Nm": 24.051,
+      "saturated_samples": 0,
+      "total_samples": 1500,
+      "saturation_ratio_pct": 0.0,
+      "max_consecutive_steps": 0,
+      "max_continuous_sat_duration_s": 0.0
+    },
+    "knee": {
+      "limit_Nm": 120.0,
+      "max_abs_Nm": 120.0,
+      "saturated_samples": 7,
+      "total_samples": 1500,
+      "saturation_ratio_pct": 0.46666666666666673,
+      "max_consecutive_steps": 3,
+      "max_continuous_sat_duration_s": 0.06
+    },
+    "wheel": {
+      "limit_Nm": 12.0,
+      "max_abs_Nm": 12.0,
+      "saturated_samples": 3,
+      "total_samples": 1500,
+      "saturation_ratio_pct": 0.2,
+      "max_consecutive_steps": 1,
+      "max_continuous_sat_duration_s": 0.02
+    }
+  },
+  "limits": {
+    "hip": 140.0,
+    "knee": 120.0,
+    "wheel": 12.0
+  }
+}

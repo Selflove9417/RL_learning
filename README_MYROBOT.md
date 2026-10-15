@@ -19,6 +19,7 @@
 - [第十章：强化学习基础概念与机器人接口（31 维观测与 6 维动作）](#第十章强化学习基础概念与机器人接口31-维观测与-6-维动作)
 - [第十一章：模型训练效果、版本演进与能力边界（含 Champion v6 与 Phase 15 闭环基准固化）](#第十一章模型训练效果版本演进与能力边界含-champion-v6-与-phase-15-闭环基准固化)
 - [第十二章：常见问题 FAQ 与故障排查](#第十二章常见问题-faq-与故障排查)
+- [第十三章：双策略融合与连续跳跃控制 (Phase 15 + Stage 8 融合 FSM)](#第十三章双策略融合与连续跳跃控制-phase-15--stage-8-融合-fsm)
 
 ---
 
@@ -28,8 +29,9 @@
 
 | 操作需求 | 完整终端命令 | 运行目录 | 预期效果 |
 | :--- | :--- | :--- | :--- |
-| **1. 激活运行环境** | `source /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/activate_rl.sh` | 任意目录 | 终端导入 Python 3.8、CUDA 11.3 与 Isaac Gym 环境变量 |
-| **2. 进入工程根目录** | `cd /home/xy/IsaacTu` | 任意目录 | 进入强化学习工作空间主目录 |
+| **0. 【全新·连续跳跃】启动双策略连续跳跃 3D 交互视窗 (Phase 15 + Stage 8 + FSM)** | `bash run_phase6_viewer.sh` | `IsaacTu_jump/` | 弹出 3D 视窗，支持 100% 键盘手动巡航 (W/S/A/D)、变高 (Q/E) 与无重置连续跳跃 (Space)，按键平滑制动并爆发腾空 ($\ge 20\text{cm}$) |
+| **1. 激活运行环境** | `source activate_jump.sh` | `IsaacTu_jump/` | 终端导入 Python 3.8、CUDA 11.3 与 Isaac Gym 环境变量 |
+| **2. 进入工程根目录** | `cd /home/xy/IsaacTu_jump` | 任意目录 | 进入强化学习工作空间主目录 |
 | **3a. 【当前最新·正式固化基准】启动 Phase 15 闭环驻车模型 (model_130 + PI 补偿)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/phase15/models/phase15_m130.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，默认启用驻车速度闭环 PI 补偿（0.34m深蹲20s后退由63cm压制至5cm，5种子60s连续任务0重置，支持[P]键热切换与[0.34m, 0.52m]升降行程） |
 | **3b. 【官方综合机动基准】启动 Champion v6 全能基线模型 (m115)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt` | `IsaacTu/` | 弹出 3D 视窗，加载 Champion v6 官方基准模型（21工况达标率87.96%，移动阶段Joint% 88.61%，综合机动能力最强） |
 | **3c. 【Phase 14 历史候选】启动 Phase 14 Exp 3 驻车特化模型 (model_125)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，加载 Phase 14 阶段驻车特化候选模型（常规驻车达标率92.05%，下蹲驻车全达标） |
@@ -879,3 +881,69 @@ flowchart TD
 ### Q10: 遥控脚本 `teleop.py` 按键无反应
 - **原因**：焦点未位于正确的终端窗口，或者 CapsLock 大写锁定键开启。
 - **解决方法**：确保终端窗口处于当前选中激活状态；关闭大写锁定，使用小写 `w/s/a/d` 输入。
+
+---
+
+## 第十三章：双策略融合与连续跳跃控制 (Phase 15 + Stage 8 融合 FSM)
+
+### 13.1 背景与设计动机
+在双足轮足机器人控制中，“高精度连续自平衡巡航”与“爆发式垂直起跳越障”存在本质上的动力学冲突：
+- **巡航平衡策略 (Phase 15)**：追求极高的柔顺性、平滑的速度追踪与长达数十秒的稳定静止驻车， leg PD 刚度较低（$K_p=40, K_d=2.0$）；
+- **爆发跳跃策略 (Stage 8)**：追求极短推蹬时间内（$\sim 100\text{ ms}$）输出电机极限力矩（$120\text{ Nm} \sim 140\text{ Nm}$），并且在落地撞击时需要极高抗冲阻尼（$K_p=180, K_d=4.5$）。
+
+若采用单网络混合训练，极易出现策略相互拉扯、高频抖颤或巡航漂移。因此本项目采用了**双策略分层有限状态机 (FSM) 融合架构**。
+
+### 13.2 策略职责与观测空间对比
+
+| 策略标识 | 核心职责 | 观测空间维度 | 动作空间 | 冻结权重路径 |
+| :--- | :--- | :---: | :---: | :--- |
+| **Phase 15 平衡网络** | 站立、巡航、转向、升降变高、驻车 PI 零漂移锁止 | **31 维** | 6 维（4关节残差 + 2轮力矩） | `evaluation_assets/phase15/models/phase15_m130.pt` |
+| **Stage 8 跳跃网络** | 深蹲蓄力、爆发推蹬起跳（$\ge 20\text{ cm}$）、空中折叠、抗冲缓冲 | **35 维**（含目标跳高与跳跃相位时钟） | 6 维（4关节残差 + 2轮力矩） | `evaluation_assets/frozen_stage8/model_40.pt` |
+
+### 13.3 五阶段有限状态机 (FSM) 工作流
+
+```text
+[BALANCE] (Kp=40, Kd=2)
+   │
+   │  (用户按下 Space 空格键请求起跳)
+   ▼
+[STOPPING] (Kp=40, Kd=2)
+   │  自动平滑减速，指令归零，等待速度收敛 (<0.06 m/s) 与姿态平伏
+   ▼
+[PREPARE_JUMP] (Kp=40, Kd=2)
+   │  下蹲对齐与着地物理门禁检查 (连续5步双轮着力 Fn>20N, vz<0.1m/s, roll/pitch<3.5°)
+   ▼
+[JUMP] (0.08s 内增益线性爬升至 Kp=180, Kd=4.5)
+   │  爆发推蹬，离地腾空 (净空 >= 20 cm)
+   ▼
+[RECOVER] (保持高刚度 Kp=180, Kd=4.5)
+   │  触地缓冲，吸收冲击 (>0.35s 且 vz 平伏至 > -0.05m/s)
+   ▼
+[平稳交接回 BALANCE] (0.20s 内增益线性平滑回退至 Kp=40, Kd=2)
+   │  保留真实世界位姿与连续状态，无仿真重置
+   ▼
+[可立即再次行进并触发第二次跳跃 (连续双跳)]
+```
+
+### 13.4 纯手动 3D 交互遥控与操作指南
+
+我们为开发者提供了免安装外部手柄的 100% 键盘交互 3D Viewer：
+```bash
+# 进入工程目录并一键启动
+cd /home/xy/IsaacTu_jump
+bash run_phase6_viewer.sh
+```
+
+- **移动控制**：`W`/`S` 加速/减速（$-0.30 \sim +0.50\text{ m/s}$），`A`/`D` 原地或差速转向（$-0.35 \sim +0.35\text{ rad/s}$）；
+- **高度升降**：`Q` 升高机身（最高 $0.520\text{ m}$），`E` 降低机身（最低 $0.340\text{ m}$）；
+- **跳跃越障**：行进或静止中随时按 `Space`（空格），状态机全自动接管平滑制动起跳并回交；
+- **主动驻车**：按 `X` 激活驻车速度 PI 闭环锁止；
+- **仿真重置**：按 `R` 一键重置机器人。
+
+### 13.5 遥测分析与绘图工具
+视窗运行期间以 50 Hz 高频记录机身位姿、双轮最低净空、关节力矩与地面接触力。退出后可随时执行以下命令自动绘图：
+```bash
+python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv
+```
+生成的包含 FSM 状态变迁、速度对比与净空曲线的分析图表将保存在 `evaluation_assets/phase6/viewer_telemetry_plot.png`。
+

@@ -70,3 +70,15 @@ from legged_gym.envs.myrobot.myrobot_config import MyRobotCfg, MyRobotCfgPPO
 # 注册自定义机器人 MyRobot 任务
 task_registry.register("myrobot", MyRobot, MyRobotCfg(), MyRobotCfgPPO())
 
+# 导入与注册 20cm 跳跃专用环境与配置
+from legged_gym.envs.myrobot.myrobot_jump_env import MyRobotJump
+from legged_gym.envs.myrobot.myrobot_jump_config import MyRobotJumpCfg, MyRobotJumpCfgPPO
+
+task_registry.register("myrobot_jump", MyRobotJump, MyRobotJumpCfg(), MyRobotJumpCfgPPO())
+
+# 导入与注册 双策略连续跳跃与巡航正式集成环境
+from legged_gym.envs.myrobot.myrobot_dual_env import MyRobotDualEnv
+from legged_gym.envs.myrobot.myrobot_dual_config import MyRobotDualCfg, MyRobotDualCfgPPO
+
+task_registry.register("myrobot_dual", MyRobotDualEnv, MyRobotDualCfg(), MyRobotDualCfgPPO())
+

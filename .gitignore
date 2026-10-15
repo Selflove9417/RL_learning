@@ -39,6 +39,7 @@ ENV/
 .DS_Store
 
 # Isaac Gym proprietary package (download separately from NVIDIA)
+isaacgym
 isaacgym/
 
 # Training logs, TensorBoard events, checkpoints (multi-gigabyte artifacts)

@@ -313,7 +313,7 @@ class OnPolicyRunner:
     def _eval_fixed_obs_symmetry(self):
         """Phase 10: Evaluates actor mirror error L_sym on evaluation_assets/phase9b/fixed_obs.pt."""
         fixed_obs_path = "evaluation_assets/phase9b/fixed_obs.pt"
-        if not os.path.exists(fixed_obs_path):
+        if not os.path.exists(fixed_obs_path) or self.env.num_obs != 31:
             return None
         if not hasattr(self, "_fixed_obs_data"):
             data = torch.load(fixed_obs_path, map_location=self.device)

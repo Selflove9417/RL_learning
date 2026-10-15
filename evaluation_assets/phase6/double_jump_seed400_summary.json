@@ -1,0 +1,92 @@
+{
+  "seed": 400,
+  "num_envs": 2,
+  "trajectories": [
+    {
+      "env_id": 0,
+      "seed": 400,
+      "success": true,
+      "jump1": {
+        "clearance_cm": 23.75115156173706,
+        "margin_to_20cm_cm": 3.7511515617370605,
+        "reached_20cm": true,
+        "handoff_type": "NORMAL_HANDOFF",
+        "trigger_t_s": 4.019999910145998,
+        "takeoff_t_s": 4.999999888241291,
+        "touchdown_t_s": 5.759999871253967,
+        "handoff_t_s": 6.259999860078096,
+        "liftoff_diff_s": 0.0,
+        "roll_at_release_deg": -0.23934714496135712,
+        "peak_touchdown_fn_N": 270.43548583984375
+      },
+      "re_move": {
+        "distance_m": 0.6383102536201477,
+        "success": true
+      },
+      "jump2": {
+        "clearance_cm": 23.88327866792679,
+        "margin_to_20cm_cm": 3.8832786679267883,
+        "reached_20cm": true,
+        "handoff_type": "NORMAL_HANDOFF",
+        "trigger_t_s": 9.019999798387289,
+        "takeoff_t_s": 9.979999776929617,
+        "touchdown_t_s": 10.759999759495258,
+        "handoff_t_s": 11.219999749213457,
+        "liftoff_diff_s": 0.0,
+        "roll_at_release_deg": -0.2485269457101822,
+        "peak_touchdown_fn_N": 286.7301025390625
+      },
+      "final_standing_duration_s": 3.780000250786543,
+      "total_displacement_m": 1.5394456386566162,
+      "crashed": false,
+      "peak_torques": {
+        "hip_Nm": 27.290842056274414,
+        "knee_Nm": 120.0,
+        "wheel_Nm": 12.0
+      }
+    },
+    {
+      "env_id": 1,
+      "seed": 400,
+      "success": true,
+      "jump1": {
+        "clearance_cm": 22.30646461248398,
+        "margin_to_20cm_cm": 2.3064646124839783,
+        "reached_20cm": true,
+        "handoff_type": "NORMAL_HANDOFF",
+        "trigger_t_s": 4.019999910145998,
+        "takeoff_t_s": 4.979999888688326,
+        "touchdown_t_s": 5.739999871701002,
+        "handoff_t_s": 6.219999860972166,
+        "liftoff_diff_s": 0.0,
+        "roll_at_release_deg": 0.36069628596305847,
+        "peak_touchdown_fn_N": 278.022705078125
+      },
+      "re_move": {
+        "distance_m": 0.6103346943855286,
+        "success": true
+      },
+      "jump2": {
+        "clearance_cm": 23.261713981628418,
+        "margin_to_20cm_cm": 3.261713981628418,
+        "reached_20cm": true,
+        "handoff_type": "NORMAL_HANDOFF",
+        "trigger_t_s": 9.019999798387289,
+        "takeoff_t_s": 9.979999776929617,
+        "touchdown_t_s": 10.739999759942293,
+        "handoff_t_s": 11.179999750107527,
+        "liftoff_diff_s": 0.0,
+        "roll_at_release_deg": 0.38513338565826416,
+        "peak_touchdown_fn_N": 257.4901428222656
+      },
+      "final_standing_duration_s": 3.820000249892473,
+      "total_displacement_m": 1.3497636318206787,
+      "crashed": false,
+      "peak_torques": {
+        "hip_Nm": 30.44546890258789,
+        "knee_Nm": 120.0,
+        "wheel_Nm": 12.0
+      }
+    }
+  ]
+}

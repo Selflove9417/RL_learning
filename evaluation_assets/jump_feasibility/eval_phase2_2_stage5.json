@@ -1,0 +1,52 @@
+{
+  "model_path": "/home/xy/IsaacTu_jump/legged_gym/logs/myrobot_jump/Oct14_15-29-57_jump_20cm_stage5_landing/model_100.pt",
+  "seed": 1,
+  "num_envs": 16,
+  "per_jump_20cm_rate_pct": 43.75,
+  "per_env_session_20cm_rate_pct": 81.25,
+  "per_jump_clr_mean_cm": 19.6982421875,
+  "per_jump_clr_min_cm": 13.292476654052734,
+  "per_jump_clr_max_cm": 23.55385971069336,
+  "session_max_clr_mean_cm": 21.197967529296875,
+  "touchdown_disp_mean_m": 0.2916330397129059,
+  "cumul_disp_6s_mean_m": 2.7899422645568848,
+  "max_hip_torque_Nm": 33.792640686035156,
+  "max_knee_torque_Nm": 120.0,
+  "max_knee_vel_rads": 14.019010543823242,
+  "crashed_envs": 0,
+  "cycles": [
+    {
+      "cycle": 1,
+      "reach_20cm_rate_pct": 43.75,
+      "mean_clr_cm": 19.393898010253906,
+      "min_clr_cm": 13.292476654052734,
+      "max_clr_cm": 23.113859176635742,
+      "mean_flight_time_s": 0.4687500596046448,
+      "mean_td_disp_m": 0.1971934586763382,
+      "mean_td_vx_mps": 0.16617277264595032,
+      "mean_td_vy_mps": 0.12875314056873322
+    },
+    {
+      "cycle": 2,
+      "reach_20cm_rate_pct": 43.75,
+      "mean_clr_cm": 19.7291259765625,
+      "min_clr_cm": 17.014663696289062,
+      "max_clr_cm": 23.55385971069336,
+      "mean_flight_time_s": 0.4425000548362732,
+      "mean_td_disp_m": 0.3161136209964752,
+      "mean_td_vx_mps": 0.013646713458001614,
+      "mean_td_vy_mps": -0.28419986367225647
+    },
+    {
+      "cycle": 3,
+      "reach_20cm_rate_pct": 43.75,
+      "mean_clr_cm": 19.971696853637695,
+      "min_clr_cm": 17.870065689086914,
+      "max_clr_cm": 22.274599075317383,
+      "mean_flight_time_s": 0.4187500476837158,
+      "mean_td_disp_m": 0.36159205436706543,
+      "mean_td_vx_mps": -0.07751399278640747,
+      "mean_td_vy_mps": -0.30690914392471313
+    }
+  ]
+}

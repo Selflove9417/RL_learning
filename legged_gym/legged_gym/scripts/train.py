@@ -85,12 +85,13 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
     for relative_path in (
         "legged_gym/envs/myrobot/myrobot_env.py",
         "legged_gym/envs/myrobot/myrobot_config.py",
+        "legged_gym/envs/myrobot/myrobot_jump_env.py",
+        "legged_gym/envs/myrobot/myrobot_jump_config.py",
         "legged_gym/scripts/train.py",
     ):
-        shutil.copy2(
-            os.path.join(LEGGED_GYM_ROOT_DIR, relative_path),
-            os.path.join(source_dir, os.path.basename(relative_path)),
-        )
+        full_p = os.path.join(LEGGED_GYM_ROOT_DIR, relative_path)
+        if os.path.isfile(full_p):
+            shutil.copy2(full_p, os.path.join(source_dir, os.path.basename(relative_path)))
     runner_source = os.path.abspath(os.path.join(
         LEGGED_GYM_ROOT_DIR, "..", "rsl_rl", "rsl_rl", "runners", "on_policy_runner.py"
     ))

@@ -1,0 +1,14 @@
+{
+  "seed": 42,
+  "num_envs": 4,
+  "trigger_to_takeoff_s": 0.6699999570846558,
+  "exact_clearance_mean_cm": 23.182281494140625,
+  "exact_20cm_success_rate_pct": 100.0,
+  "air_drift_mean_m": 0.21093463897705078,
+  "total_12s_displacement_m": 0.19688627123832703,
+  "transition_max_target_delta_rad": 0.07476945221424103,
+  "transition_max_torque_delta_Nm": 15.429008483886719,
+  "max_target_delta_rad": 1.7204294204711914,
+  "max_torque_delta_Nm": 230.02305603027344,
+  "fatal_crashes": 0
+}
