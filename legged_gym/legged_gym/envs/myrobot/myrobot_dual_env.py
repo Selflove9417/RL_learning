@@ -159,6 +159,59 @@ class MyRobotDualEnv(MyRobotJump):
         self.abort_step = torch.full((self.num_envs,), -1, dtype=torch.long, device=self.device)
         self.last_transition_event = ["INIT_BALANCE"] * self.num_envs
         self.stopping_start_pos = torch.zeros(self.num_envs, 2, device=self.device)
+        self._refresh_physical_state(update_has_taken_off=False)
+
+    def reset_idx(self, env_ids):
+        if len(env_ids) == 0:
+            return
+        super().reset_idx(env_ids)
+
+        if not hasattr(self, 'fsm_state'):
+            return
+
+        if not isinstance(env_ids, torch.Tensor):
+            env_ids = torch.tensor(env_ids, device=self.device, dtype=torch.long)
+
+        # Reset FSM state buffers
+        self.fsm_state[env_ids] = self.STATE_BALANCE
+        self.fsm_state_timer[env_ids] = 0.0
+        self.stopping_stable_steps[env_ids] = 0
+        self.gate_stable_steps[env_ids] = 0
+        self.settle_stable_steps[env_ids] = 0
+
+        # Reset PI integral & balance filter buffers
+        self.bal_filtered_actions[env_ids] = 0.0
+        self.pi_integral[env_ids] = 0.0
+        self.pi_v_filt[env_ids] = 0.0
+
+        # Reset actuator gains & flight trackers
+        self.current_kp[env_ids] = 40.0
+        self.current_kd[env_ids] = 2.0
+        self.has_taken_off[env_ids] = False
+
+        # Reset transition & handoff smoothing caches
+        self.last_fsm_state[env_ids] = self.STATE_BALANCE
+        self.handoff_prev_q_tgt[env_ids] = 0.0
+        self.last_q_tgt[env_ids] = 0.0
+
+        # Reset teleoperation commands & requests
+        self.user_cmd_vy[env_ids] = 0.0
+        self.user_cmd_yaw[env_ids] = 0.0
+        self.user_target_height[env_ids] = 0.39774
+        self.actual_cmd_vy[env_ids] = 0.0
+        self.actual_cmd_yaw[env_ids] = 0.0
+        self.actual_cmd_height[env_ids] = 0.39774
+        self.teleop_jump_requested[env_ids] = False
+
+        # Reset event markers
+        self.takeoff_step[env_ids] = -1
+        self.touchdown_step[env_ids] = -1
+        self.handoff_step[env_ids] = -1
+        self.abort_step[env_ids] = -1
+        self.stopping_start_pos[env_ids] = 0.0
+
+        for eid in env_ids.tolist():
+            self.last_transition_event[eid] = "INIT_BALANCE"
 
     def set_teleop_targets(self, vy=None, yaw=None, height=None):
         """Update teleoperation commands during BALANCE state."""
@@ -551,3 +604,4 @@ class MyRobotDualEnv(MyRobotJump):
 
         self.last_q_tgt = q_target.clone()
         self.post_physics_step()
+        self._refresh_physical_state(update_has_taken_off=False)

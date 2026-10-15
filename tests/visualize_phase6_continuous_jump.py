@@ -264,16 +264,18 @@ def run_phase6_viewer(seed=42, auto_mission=False):
             env.set_teleop_targets(vy=user_vy, yaw=user_yaw, height=user_height)
             env.step_dual_policy()
 
-            # Render graphics
+            # Camera follow behind robot
+            root_pos = env.root_states[0, 0:3].cpu().numpy()
+            cam_target = gymapi.Vec3(root_pos[0], root_pos[1], root_pos[2] + 0.10)
+            cam_eye = gymapi.Vec3(root_pos[0] - 1.5, root_pos[1] - 1.8, root_pos[2] + 0.70)
+            env.gym.viewer_camera_look_at(env.viewer, env.envs[0], cam_eye, cam_target)
+
+            # Render graphics (fetch GPU PhysX results to graphics engine)
+            if env.device != 'cpu':
+                env.gym.fetch_results(env.sim, True)
             env.gym.step_graphics(env.sim)
             env.gym.draw_viewer(env.viewer, env.sim, True)
             env.gym.sync_frame_time(env.sim)
-
-            # Camera follow behind robot
-            root_pos = env.root_states[0, 0:3].cpu().numpy()
-            cam_target = gymapi.Vec3(root_pos[0], root_pos[1], root_pos[2] + 0.15)
-            cam_eye = gymapi.Vec3(root_pos[0] - 1.5, root_pos[1] - 2.0, root_pos[2] + 0.85)
-            env.gym.viewer_camera_look_at(env.viewer, None, cam_eye, cam_target)
 
             # Telemetry logging: clr_exact is bilateral minimum clearance
             clr_exact, clr_L, clr_R = compute_exact_cylinder_clearance(env)

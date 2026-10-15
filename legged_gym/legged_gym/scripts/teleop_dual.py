@@ -118,6 +118,11 @@ def main():
     env.gym.set_actor_root_state_tensor(env.sim, gymtorch.unwrap_tensor(env.root_states))
     env.init_dual_policies()
 
+    root_pos = env.root_states[0, 0:3].cpu().numpy()
+    cam_target = gymapi.Vec3(root_pos[0], root_pos[1], root_pos[2] + 0.10)
+    cam_eye = gymapi.Vec3(root_pos[0] - 1.5, root_pos[1] - 1.8, root_pos[2] + 0.70)
+    env.gym.viewer_camera_look_at(env.viewer, env.envs[0], cam_eye, cam_target)
+
     kb = NonBlockingKeyboard()
     user_vy = 0.0
     user_yaw = 0.0
@@ -129,7 +134,9 @@ def main():
     writer.writerow([
         "timestamp_s", "fsm_state", "cmd_vy", "act_vy",
         "roll_deg", "pitch_deg", "height_m", "clr_exact_cm",
-        "tau_knee_L", "tau_knee_R", "fn_L", "fn_R", "event"
+        "tau_hip_L", "tau_knee_L", "tau_hip_R", "tau_knee_R",
+        "tau_wheel_L", "tau_wheel_R",
+        "fn_L", "fn_R", "event_tag"
     ])
 
     print("\n" + "=" * 90)
@@ -224,16 +231,18 @@ def main():
             env.set_teleop_targets(vy=user_vy, yaw=user_yaw, height=user_height)
             env.step_dual_policy()
 
-            # Render graphics
+            # Camera follow behind robot
+            root_pos = env.root_states[0, 0:3].cpu().numpy()
+            cam_target = gymapi.Vec3(root_pos[0], root_pos[1], root_pos[2] + 0.10)
+            cam_eye = gymapi.Vec3(root_pos[0] - 1.5, root_pos[1] - 1.8, root_pos[2] + 0.70)
+            env.gym.viewer_camera_look_at(env.viewer, env.envs[0], cam_eye, cam_target)
+
+            # Render graphics (fetch GPU PhysX results to graphics engine)
+            if env.device != 'cpu':
+                env.gym.fetch_results(env.sim, True)
             env.gym.step_graphics(env.sim)
             env.gym.draw_viewer(env.viewer, env.sim, True)
             env.gym.sync_frame_time(env.sim)
-
-            # Camera follow
-            root_pos = env.root_states[0, 0:3].cpu().numpy()
-            cam_target = gymapi.Vec3(root_pos[0], root_pos[1], root_pos[2] + 0.15)
-            cam_eye = gymapi.Vec3(root_pos[0] - 1.5, root_pos[1] - 2.0, root_pos[2] + 0.85)
-            env.gym.viewer_camera_look_at(env.viewer, None, cam_eye, cam_target)
 
             # Telemetry logging
             clr_exact, clr_L, clr_R = compute_exact_cylinder_clearance(env)
@@ -246,8 +255,14 @@ def main():
                 f"{env.actual_cmd_vy[0].item():.3f}", f"{env.base_lin_vel[0, 1].item():.3f}",
                 f"{np.degrees(roll[0].item()):.2f}", f"{np.degrees(pitch[0].item()):.2f}",
                 f"{root_pos[2]:.3f}", f"{clr_exact[0].item()*100:.2f}",
-                f"{env.torques[0, env.left_knee_idx].item():.2f}", f"{env.torques[0, env.right_knee_idx].item():.2f}",
-                f"{env.contact_forces[0, env.feet_indices[0], 2].item():.1f}", f"{env.contact_forces[0, env.feet_indices[1], 2].item():.1f}",
+                f"{env.torques[0, env.left_hip_idx].item():.2f}",
+                f"{env.torques[0, env.left_knee_idx].item():.2f}",
+                f"{env.torques[0, env.right_hip_idx].item():.2f}",
+                f"{env.torques[0, env.right_knee_idx].item():.2f}",
+                f"{env.torques[0, env.left_wheel_idx].item():.2f}",
+                f"{env.torques[0, env.right_wheel_idx].item():.2f}",
+                f"{env.contact_forces[0, env.feet_indices[0], 2].item():.1f}",
+                f"{env.contact_forces[0, env.feet_indices[1], 2].item():.1f}",
                 env.last_transition_event[0]
             ])
 

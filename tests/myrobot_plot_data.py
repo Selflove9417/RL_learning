@@ -49,7 +49,11 @@ PRESETS = {
     "contact": ("contact", "fn_", "force"),
 }
 TIME_HINTS = ("timestamp_s", "time_s", "timestamp", "sim_time", "time", "t")
-EVENT_NAMES = ("TRIGGER_JUMP", "LIFTOFF", "AIR_APEX", "TOUCHDOWN", "HANDOFF_TO_BALANCE")
+EVENT_NAMES = (
+    "TRIGGER_JUMP", "ENTER_STOPPING", "ENTER_PREPARE_JUMP", "ENTER_JUMP",
+    "LIFTOFF", "AIR_APEX", "TOUCHDOWN", "TOUCHDOWN_ENTER_RECOVER",
+    "NORMAL_HANDOFF", "TIMEOUT_HANDOFF", "RECOVER_ABORT", "HANDOFF_TO_BALANCE"
+)
 
 
 def read_csv(path: Path) -> pd.DataFrame:
@@ -104,10 +108,15 @@ def clipped_xy(data: pd.DataFrame, x: str, y: str, start: float | None, end: flo
 
 
 def event_positions(data: pd.DataFrame, x: str, start: float | None, end: float | None):
-    if "event_tag" not in data.columns:
+    tag_col = None
+    for candidate in ("event_tag", "event"):
+        if candidate in data.columns:
+            tag_col = candidate
+            break
+    if tag_col is None:
         return []
     xx = pd.to_numeric(data[x], errors="coerce").to_numpy(dtype=float)
-    tags = data["event_tag"].fillna("").astype(str).to_numpy()
+    tags = data[tag_col].fillna("").astype(str).to_numpy()
     out = []
     for xv, tag in zip(xx, tags):
         if not np.isfinite(xv) or not tag.strip():
@@ -352,7 +361,7 @@ def main():
     parser.add_argument("--end", type=float, help="X 轴显示区间终点")
     parser.add_argument("--separate", action="store_true", help="每条曲线放独立子图")
     parser.add_argument("--stats", action="store_true", help="输出 min、max、mean、RMS")
-    parser.add_argument("--no-events", action="store_true", help="不显示 event_tag 事件竖线")
+    parser.add_argument("--no-events", action="store_true", help="不显示事件竖线 (event_tag / event)")
     parser.add_argument("--hline", type=float, action="append", default=[], help="添加水平阈值线，可重复")
     parser.add_argument("--title", help="图标题")
     parser.add_argument("--ylabel", help="Y 轴标签")
@@ -361,9 +370,11 @@ def main():
     parser.add_argument("--gui", action="store_true", help="打开图形选择器")
     args = parser.parse_args()
     path = Path(args.file).expanduser()
-    if args.gui or not (args.y or args.preset or args.list):
+    if args.gui or not (args.y or args.preset or args.list or args.out):
         launch_gui(path)
         return
+    if args.out and not (args.y or args.preset or args.list):
+        args.preset = "torque"
     data = read_csv(path)
     numeric = numeric_columns(data)
     if args.list:

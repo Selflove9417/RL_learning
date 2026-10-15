@@ -224,7 +224,21 @@ class MyRobotJump(LeggedRobot):
         # Step physics via base class
         res = super().step(actions)
 
-        # Refresh kinematics & contacts
+        # Refresh kinematics, clearance, airborne & contacts
+        self._refresh_physical_state(update_has_taken_off=True)
+
+        # Reset flight trackers at cycle reset
+        self.max_flight_clearance[cycle_done] = 0.0
+        self.peak_landing_impact[cycle_done] = 0.0
+        self.has_taken_off[cycle_done] = False
+
+        return res
+
+    def _refresh_physical_state(self, update_has_taken_off=True):
+        """
+        Refresh rigid body state tensor from PhysX and update bilateral wheel clearance,
+        airborne status, takeoff velocity, air time, and landing impact trackers.
+        """
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         pos_L = self.rb_states[:, self.left_wheel_body, 2]
         pos_R = self.rb_states[:, self.right_wheel_body, 2]
@@ -241,9 +255,10 @@ class MyRobotJump(LeggedRobot):
         now_airborne = (clr_L > 0.010) & (clr_R > 0.010) & (fn_L < 2.0) & (fn_R < 2.0)
 
         # Takeoff detection: in push-off window with positive vz and airborne
-        in_pushoff = (self.jump_phase >= 0.10) & (self.jump_phase <= 0.28)
-        upward_launch = (self.base_lin_vel[:, 2] > 0.8) & now_airborne
-        self.has_taken_off |= (in_pushoff & upward_launch)
+        if update_has_taken_off:
+            in_pushoff = (self.jump_phase >= 0.10) & (self.jump_phase <= 0.28)
+            upward_launch = (self.base_lin_vel[:, 2] > 0.8) & now_airborne
+            self.has_taken_off |= (in_pushoff & upward_launch)
 
         just_took_off = now_airborne & (~self.is_airborne)
         self.takeoff_vz[just_took_off] = self.base_lin_vel[just_took_off, 2]
@@ -265,13 +280,6 @@ class MyRobotJump(LeggedRobot):
             torch.maximum(fn_L, fn_R),
             self.peak_landing_impact
         )
-
-        # Reset flight trackers at cycle reset
-        self.max_flight_clearance[cycle_done] = 0.0
-        self.peak_landing_impact[cycle_done] = 0.0
-        self.has_taken_off[cycle_done] = False
-
-        return res
 
     def _compute_torques(self, actions):
         """

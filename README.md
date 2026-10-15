@@ -103,23 +103,54 @@ python legged_gym/legged_gym/scripts/teleop_dual.py
 
 ### 2. 📊 绘制本次手动驾驶的遥测曲线
 
-退出交互视窗后，可运行通用绘图工具一键生成详细曲线（包含 FSM 状态流转、指令 vs 实际速度、双轮最低净空、关节力矩、地面反力）：
+退出交互视窗后，可运行通用绘图工具生成详细曲线（包含 FSM 状态流转、指令 vs 实际速度、双轮最低净空、各关节命令力矩、地面反力）：
 
 ```bash
-python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv
+# 方式一：命令行直接导出并保存曲线图
+python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv --out evaluation_assets/phase6/viewer_telemetry_plot.png --no-show
+
+# 方式二：打开交互式 GUI 曲线选择器（可自由勾选各通道曲线并交互缩放）
+python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv --gui
 ```
 
-图表将自动保存于 `evaluation_assets/phase6/viewer_telemetry_plot.png`。
+使用方式一命令时，图表将自动保存于 `evaluation_assets/phase6/viewer_telemetry_plot.png`。
 
 ---
 
 ### 3. 策略回放与训练
 
-```bash
-# Phase 15 单策略演示回放 (50台机器人)
-python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130
+在当前跳跃与双策略工作空间（`IsaacTu_jump`）中，您可直接运行以下命令回放各项最新成果或启动新训练：
 
-# 启动训练
+#### 🚀 回放本仓库最新训练成果 (Stage 8 跳跃策略，50 台多机集群演示)
+回放最新强化学习训练得到的爆发跳跃策略（模型：`model_40.pt`，实测净空 $\ge 21.5\,\text{cm}$，50 台机器人循环起跳、空中折叠与缓冲着陆）：
+```bash
+python legged_gym/legged_gym/scripts/play.py --task=myrobot_jump --load_run Oct14_17-04-58_jump_stage8_earlyzero --checkpoint 40
+```
+
+#### 🏆 回放正式双策略连续跳跃与巡航成果 (推荐)
+- **纯手动 3D 交互视窗**（全键盘遥控、随时按空格跳跃、变高与巡航）：
+  ```bash
+  python legged_gym/legged_gym/scripts/teleop_dual.py
+  # 或直接运行一键脚本：
+  bash run_phase6_viewer.sh
+  ```
+- **自动化无故障双跳回归演示**（15s 会话连续执行两次完整跳跃与正常平稳交接）：
+  ```bash
+  python tests/test_formal_myrobot_dual_regression.py
+  ```
+
+#### ⚖️ 回放 Phase 15 平衡巡航与变高策略 (单机遥控)
+使用已归档在 `evaluation_assets` 中的冻结基准模型（`phase15_m130.pt`）：
+```bash
+python legged_gym/legged_gym/scripts/teleop.py --model_path evaluation_assets/phase15/models/phase15_m130.pt
+```
+
+#### 🏋️ 启动强化学习训练
+```bash
+# 启动爆发跳跃专项训练 (Stage 8)
+python legged_gym/legged_gym/scripts/train.py --task=myrobot_jump --headless --num_envs=512
+
+# 启动平衡基准训练
 python legged_gym/legged_gym/scripts/train.py --task=myrobot --headless --num_envs=512
 ```
 
@@ -127,14 +158,14 @@ python legged_gym/legged_gym/scripts/train.py --task=myrobot --headless --num_en
 
 ## 严谨评测指标与物理能力边界
 
-在标准测试集与严苛的 3D 圆柱体碰撞几何学评测下，当前双策略控制系统的基准成绩如下：
+在标准测试集与严苛的 3D 圆柱体碰撞几何学评测下，当前双策略控制系统的基准成绩如下（核对自已归档基准数据）：
 
 | 评测维度 | Clean 评测模式 | Noisy 噪声评测模式 | 说明 |
 | :--- | :---: | :---: | :--- |
-| **落地交接成功率** | **20 / 20 (100%)** | **19 / 20 (95%)** | 落地后由 Phase 15 正常平稳接管，无摔倒与倾覆 |
+| **落地交接成功率** | **20 / 20 (100%)** | **20 / 20 (100%)** | 落地后由 Phase 15 正常平稳接管，无摔倒与倾覆 |
 | **连续双跳全流程通过** | **8 / 10 (80%)** | **8 / 10 (80%)** | 单 session 零 reset 连续执行两次完整跳跃 |
-| **严苛 20 cm 净空达标** | **16 / 20 (80%)** | **16 / 20 (80%)** | 左右双轮最低点离地间隙 $\ge 20.00\text{ cm}$ |
-| **边界临界样本表现** | **19.93 ~ 19.97 cm** | **19.91 ~ 19.96 cm** | 2 台处于达标临界边缘 |
+| **严苛 20 cm 净空达标** | **16 / 20 (80%)** | **18 / 20 (90%)** | 左右双轮最低点离地间隙 $\ge 20.00\text{ cm}$ |
+| **边界临界样本表现** | **19.93 ~ 19.97 cm** | **18.12 cm & 19.78 cm** | 少数边界样本受推蹬时刻机身质量与观测噪声扰动处于 20cm 边缘 |
 
 > [!NOTE]
 > **关于 20 cm 临界样本的动力学成因说明**：  

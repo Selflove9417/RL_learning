@@ -36,8 +36,9 @@
 | **3b. 【官方综合机动基准】启动 Champion v6 全能基线模型 (m115)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path evaluation_assets/champion_v6/models/champion_v6_m115.pt` | `IsaacTu/` | 弹出 3D 视窗，加载 Champion v6 官方基准模型（21工况达标率87.96%，移动阶段Joint% 88.61%，综合机动能力最强） |
 | **3c. 【Phase 14 历史候选】启动 Phase 14 Exp 3 驻车特化模型 (model_125)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --model_path legged_gym/logs/myrobot/Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter/model_125.pt` | `IsaacTu/` | 弹出 3D 视窗与 HUD，加载 Phase 14 阶段驻车特化候选模型（常规驻车达标率92.05%，下蹲驻车全达标） |
 | **3d. 【历史里程碑】启动 Champion v4 基线模型 (m10)** | `python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter --checkpoint 10` | `IsaacTu/` | 弹出 3D 视窗，加载 Phase 8B 历史基准 Champion v4 模型 |
-| **4a. 【推荐】启动多机器人集群演示 (Phase 15 model_130)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（最新 model_130） |
-| **4b. 【推荐】启动多机器人集群演示 (Champion v6 综合基准)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter --checkpoint 115` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（Champion v6） |
+| **4a. 【本仓库最新·跳跃集群演示】启动 Stage 8 爆发跳跃 50 台多机集群 (model_40)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot_jump --load_run Oct14_17-04-58_jump_stage8_earlyzero --checkpoint 40` | `IsaacTu_jump/` | 弹出 3D 视窗，展示 50 台机器人在平地上循环执行深蹲蓄力、爆发跳跃（最低净空 $\ge 21.5\text{cm}$）、空中折叠与缓冲着陆 |
+| **4b. 【原工程基线·平衡集群演示】启动 Phase 15 平衡集群 (model_130)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（注：原始训练日志在 `IsaacTu/`，本目录可用 `teleop.py --model_path evaluation_assets/phase15/models/phase15_m130.pt` 回放单机） |
+| **4c. 【官方综合机动基准】启动 Champion v6 集群演示 (m115)** | `python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter --checkpoint 115` | `IsaacTu/` | 弹出 3D 视窗，展示 50 台机器人在平地上的自主巡航与平衡（Champion v6） |
 | **5. 启动 PPO 强化学习训练** | `python legged_gym/legged_gym/scripts/train.py --task=myrobot --headless --num_envs=512 --max_iterations=50 --run_name=my_first_train` | `IsaacTu/` | 在后台使用 GPU 启动 512 个环境并行训练，终端打印 Loss 与 Reward |
 | **6. 查看训练曲线 (TensorBoard)** | `tensorboard --logdir=legged_gym/logs/myrobot --port=6006` | `IsaacTu/` | 启动 Web 服务，浏览器访问 `http://localhost:6006` 查看收敛图表 |
 | **7a. 运行 21 工况全局基准评测** | `python scripts/eval_21_scenarios.py --model_path legged_gym/logs/myrobot/Oct14_00-28-55_phase15_height_034_060_exploration/model_130.pt` | `IsaacTu/` | 自动化评测标准 21 复合工况，输出全局 Joint% / Env% 及深蹲保持率并生成 JSON |
@@ -286,21 +287,25 @@ python legged_gym/legged_gym/scripts/teleop.py --task=myrobot --load_run Oct12_1
 - 按 **`Q`**：正常退出程序。
 
 ### 5.4 另一种演示模式：多机器人集群演示 (`play.py`)
-如果您想查看没有键盘输入时，策略网络在 50 台并行机器人上的随机巡航效果：
+如果您想查看没有键盘输入时，策略网络在 50 台并行机器人上的多机集群效果：
 
-- **【推荐·当前最新固化基准】Phase 15 model_130**：
+- **【本仓库最新训练成果·爆发跳跃集群】Stage 8 model_40（当前 `IsaacTu_jump` 工作区直接运行）**：
   ```bash
-  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130
+  python legged_gym/legged_gym/scripts/play.py --task=myrobot_jump --load_run Oct14_17-04-58_jump_stage8_earlyzero --checkpoint 40
   ```
-- **【推荐·综合基准】Champion v6 (m115)**：
+- **【原工程基准·平衡巡航集群】Phase 15 model_130（原始日志目录在 `IsaacTu/`）**：
+  ```bash
+  # 若在 IsaacTu/ 目录下：
+  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct14_00-28-55_phase15_height_034_060_exploration --checkpoint 130
+
+  # 若在当前 IsaacTu_jump/ 目录下，使用已归档权重回放单机：
+  python legged_gym/legged_gym/scripts/teleop.py --model_path evaluation_assets/phase15/models/phase15_m130.pt
+  ```
+- **【官方综合基准】Champion v6 (m115，需在 `IsaacTu/` 运行)**：
   ```bash
   python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_10-41-00_phase14_exp1_inplace_032_048_15iter --checkpoint 115
   ```
-- **【历史候选·驻车特化】Phase 14 Exp 3 (model_125)**：
-  ```bash
-  python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct13_15-16-03_phase14_exp3_parking_focus_resume10iter --checkpoint 125
-  ```
-- **【经典保留】Champion v4**：
+- **【经典保留】Champion v4（需在 `IsaacTu/` 运行）**：
   ```bash
   python legged_gym/legged_gym/scripts/play.py --task=myrobot --load_run Oct12_15-23-45_phase8b_curriculum_ext_resume_10iter --checkpoint 10
   ```
@@ -966,9 +971,13 @@ bash run_phase6_viewer.sh
 - **仿真重置**：按 `R` 一键重置机器人。
 
 ### 13.5 遥测分析与绘图工具
-视窗运行期间以 50 Hz 高频记录机身位姿、双轮最低净空、关节力矩与地面接触力。退出后可随时执行以下命令自动绘图：
+视窗运行期间以 50 Hz 高频记录机身位姿、双轮最低净空、各关节命令力矩与地面接触力。退出后可随时执行以下命令绘图：
 ```bash
-python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv
+# 方式一：命令行一键直接导出并保存遥测曲线分析图
+python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv --out evaluation_assets/phase6/viewer_telemetry_plot.png --no-show
+
+# 方式二：启动 GUI 交互图形界面（可自由勾选各通道曲线并交互缩放）
+python tests/myrobot_plot_data.py --file evaluation_assets/phase6/viewer_telemetry.csv --gui
 ```
-生成的包含 FSM 状态变迁、速度对比与净空曲线的分析图表将保存在 `evaluation_assets/phase6/viewer_telemetry_plot.png`。
+使用方式一命令时，生成的包含 FSM 状态变迁、速度对比、关节力矩与净空曲线的分析图表将自动保存在 `evaluation_assets/phase6/viewer_telemetry_plot.png`。
 
