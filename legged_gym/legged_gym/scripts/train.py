@@ -92,6 +92,8 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
         "legged_gym/envs/myrobot/myrobot_config.py",
         "legged_gym/envs/myrobot/myrobot_jump_env.py",
         "legged_gym/envs/myrobot/myrobot_jump_config.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_env.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_config.py",
         "legged_gym/scripts/train.py",
     ):
         full_p = os.path.join(LEGGED_GYM_ROOT_DIR, relative_path)

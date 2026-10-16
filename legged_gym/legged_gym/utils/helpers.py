@@ -101,6 +101,10 @@ def parse_sim_params(args, cfg):
     return sim_params
 
 def get_load_path(root, load_run=-1, checkpoint=-1):
+    if isinstance(load_run, str) and os.path.isfile(load_run):
+        return load_run
+    if isinstance(load_run, str) and os.path.isfile(os.path.join(root, load_run)):
+        return os.path.join(root, load_run)
     try:
         runs = os.listdir(root)
         #TODO sort by date to handle change of month
@@ -158,6 +162,9 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.runner.warm_start = True
         if getattr(args, 'warm_start_optimizer', False):
             cfg_train.runner.warm_start_optimizer = True
+        if getattr(args, 'warm_start_path', None) is not None:
+            cfg_train.runner.warm_start = True
+            cfg_train.runner.warm_start_path = args.warm_start_path
         if getattr(args, 'learning_rate', None) is not None:
             cfg_train.algorithm.learning_rate = args.learning_rate
         if getattr(args, 'enable_early_stopping', False):
@@ -189,6 +196,7 @@ def get_args():
         {"name": "--resume", "action": "store_true", "default": False,  "help": "Resume training from a checkpoint"},
         {"name": "--warm_start", "action": "store_true", "default": False, "help": "Warm start model weights from a checkpoint"},
         {"name": "--warm_start_optimizer", "action": "store_true", "default": False, "help": "Restore Adam optimizer state when warm starting"},
+        {"name": "--warm_start_path", "type": str, "help": "Direct path to model checkpoint for warm starting"},
         {"name": "--learning_rate", "type": float, "help": "Override algorithm learning rate"},
         {"name": "--experiment_name", "type": str,  "help": "Name of the experiment to run or load. Overrides config file if provided."},
         {"name": "--run_name", "type": str,  "help": "Name of the run. Overrides config file if provided."},

@@ -82,3 +82,9 @@ from legged_gym.envs.myrobot.myrobot_dual_config import MyRobotDualCfg, MyRobotD
 
 task_registry.register("myrobot_dual", MyRobotDualEnv, MyRobotDualCfg(), MyRobotDualCfgPPO())
 
+# 导入与注册 独立前向跳跃环境与配置 (Phase 1)
+from legged_gym.envs.myrobot.myrobot_forward_jump_env import MyRobotForwardJump
+from legged_gym.envs.myrobot.myrobot_forward_jump_config import MyRobotForwardJumpCfg, MyRobotForwardJumpCfgPPO
+
+task_registry.register("myrobot_forward_jump", MyRobotForwardJump, MyRobotForwardJumpCfg(), MyRobotForwardJumpCfgPPO())
+

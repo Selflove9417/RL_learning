@@ -167,7 +167,10 @@ class TaskRegistry():
             runner.load(resume_path)
         elif getattr(train_cfg.runner, 'warm_start', False):
             # 热启动（Warm start）：加载模型网络权重，并可配置是否恢复优化器状态，迭代步数重置为 0
-            warm_start_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+            if getattr(train_cfg.runner, 'warm_start_path', None) and os.path.isfile(train_cfg.runner.warm_start_path):
+                warm_start_path = train_cfg.runner.warm_start_path
+            else:
+                warm_start_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
             load_optimizer = getattr(train_cfg.runner, 'warm_start_optimizer', False)
             print(f"Warm starting model weights from: {warm_start_path} (load_optimizer={load_optimizer})")
             runner.load(warm_start_path, load_optimizer=load_optimizer)
