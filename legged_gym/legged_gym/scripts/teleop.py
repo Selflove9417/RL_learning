@@ -7,6 +7,11 @@ import types
 import tty
 import termios
 import select
+
+workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+sys.path.insert(0, os.path.join(workspace_root, "legged_gym"))
+sys.path.insert(0, os.path.join(workspace_root, "rsl_rl"))
+
 from legged_gym import LEGGED_GYM_ROOT_DIR
 
 # 重要: isaacgym 必须在 torch 之前导入

@@ -28,8 +28,14 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from legged_gym import LEGGED_GYM_ROOT_DIR
 import os
+import sys
+
+workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+sys.path.insert(0, os.path.join(workspace_root, "legged_gym"))
+sys.path.insert(0, os.path.join(workspace_root, "rsl_rl"))
+
+from legged_gym import LEGGED_GYM_ROOT_DIR
 
 import isaacgym
 from legged_gym.envs import *
