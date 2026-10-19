@@ -82,21 +82,10 @@ from legged_gym.envs.myrobot.myrobot_dual_config import MyRobotDualCfg, MyRobotD
 
 task_registry.register("myrobot_dual", MyRobotDualEnv, MyRobotDualCfg(), MyRobotDualCfgPPO())
 
-# 导入与注册 独立前向跳跃环境与配置 (Phase 1)
-from legged_gym.envs.myrobot.myrobot_forward_jump_env import MyRobotForwardJump
-from legged_gym.envs.myrobot.myrobot_forward_jump_config import MyRobotForwardJumpCfg, MyRobotForwardJumpCfgPPO
+# 导入与注册 动态行进中跑跳任务 (Dynamic Running Jump)
+from legged_gym.envs.myrobot.myrobot_running_jump_env import MyRobotRunningJump
+from legged_gym.envs.myrobot.myrobot_running_jump_config import MyRobotRunningJumpCfg, MyRobotRunningJumpCfgPPO
 
-task_registry.register("myrobot_forward_jump", MyRobotForwardJump, MyRobotForwardJumpCfg(), MyRobotForwardJumpCfgPPO())
+task_registry.register("myrobot_running_jump", MyRobotRunningJump, MyRobotRunningJumpCfg(), MyRobotRunningJumpCfgPPO())
 
-# 导入与注册 独立静止前向跳跃环境与配置 (Phase 2 最小课程)
-from legged_gym.envs.myrobot.myrobot_forward_jump_static_env import MyRobotForwardJumpStatic
-from legged_gym.envs.myrobot.myrobot_forward_jump_static_config import MyRobotForwardJumpStaticCfg, MyRobotForwardJumpStaticCfgPPO
-
-task_registry.register("myrobot_forward_jump_static", MyRobotForwardJumpStatic, MyRobotForwardJumpStaticCfg(), MyRobotForwardJumpStaticCfgPPO())
-
-# 导入与注册 Phase 4 增量优化环境与配置 (Phase 4 课程)
-from legged_gym.envs.myrobot.myrobot_forward_jump_phase4_env import MyRobotForwardJumpPhase4
-from legged_gym.envs.myrobot.myrobot_forward_jump_phase4_config import MyRobotForwardJumpPhase4Cfg, MyRobotForwardJumpPhase4CfgPPO
-
-task_registry.register("myrobot_forward_jump_phase4", MyRobotForwardJumpPhase4, MyRobotForwardJumpPhase4Cfg(), MyRobotForwardJumpPhase4CfgPPO())
 

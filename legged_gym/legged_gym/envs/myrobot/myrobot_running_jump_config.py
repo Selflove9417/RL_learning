@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# MyRobot Running Jump Config (Dynamic In-Motion Takeoff & Continuous Cruising)
+
+from legged_gym.envs.myrobot.myrobot_jump_config import MyRobotJumpCfg, MyRobotJumpCfgPPO
+
+
+class MyRobotRunningJumpCfg(MyRobotJumpCfg):
+    class env(MyRobotJumpCfg.env):
+        num_envs = 64
+        num_observations = 35
+        num_privileged_obs = 35
+        num_actions = 6
+        episode_length_s = 1.4  # 70 steps per jump episode
+        warmup_steps = 40       # 0.8s real Phase 15 cruising warmup before takeoff
+
+    class commands(MyRobotJumpCfg.commands):
+        curriculum = False
+        target_forward_vel = 0.20     # Target 0.20 m/s for low-speed dynamic jump
+        target_jump_height = 0.20     # 20cm clearance target
+        jump_cycle_time = 1.20        # Temporal phase cycle length
+        ranges = type("ranges", (), {
+            "lin_vel_y": [0.20, 0.20], # Constant 0.20 m/s in Stage 1 (expandable to 0.35 and 0.50)
+            "lin_vel_x": [0.0, 0.0],
+            "ang_vel_yaw": [0.0, 0.0],
+            "heading": [0.0, 0.0],
+        })()
+
+    class control(MyRobotJumpCfg.control):
+        # High-power jump PD gains + wheel velocity damping
+        control_type = 'P'
+        stiffness = {'link_002_joint': 140.0, 'link_003_joint': 140.0,
+                     'link_005_joint': 140.0, 'link_006_joint': 140.0}
+        damping = {'link_002_joint': 3.5, 'link_003_joint': 3.5,
+                   'link_005_joint': 3.5, 'link_006_joint': 3.5}
+        action_scale = 1.0
+        hip_action_scale = 0.70
+        knee_action_scale = 0.70
+        wheel_torque_scale = 10.0
+        wheel_velocity_damping = 0.30
+        decimation = 4
+
+    class domain_rand(MyRobotJumpCfg.domain_rand):
+        randomize_friction = False
+        push_robots = False
+
+    class rewards(MyRobotJumpCfg.rewards):
+        only_positive_rewards = False
+        tracking_sigma = 0.08
+
+        class scales:
+            # 1. Forward Momentum Retention (Rewarding vy ~ vy_cmd across the entire jump cycle)
+            forward_velocity_retention = 2.5
+            # 2. Vertical Push-off Impulse
+            takeoff_velocity = 1.8
+            # 3. Airborne Obstacle Clearance (>= 20 cm)
+            jump_clearance = 2.2
+            # 4. Touchdown Absorption Cushion
+            landing_cushion = 1.5
+            # 5. Post-touchdown Forward Tracking
+            post_touchdown_forward = 2.0
+            # 6. Attitude & Symmetry Stabilization
+            pitch_stability = -1.2
+            roll_stability = -1.5
+            ang_vel_xy = -0.05
+            # 7. Energy & Actuator Limits
+            torques = -0.0001
+            dof_acc = -2.5e-7
+            torque_limits = -0.2
+
+
+class MyRobotRunningJumpCfgPPO(MyRobotJumpCfgPPO):
+    class algorithm(MyRobotJumpCfgPPO.algorithm):
+        value_loss_coef = 1.0
+        use_clipped_value_loss = True
+        clip_param = 0.2
+        entropy_coef = 0.01
+        num_learning_epochs = 5
+        num_mini_batches = 4
+        learning_rate = 5.0e-5
+        schedule = 'fixed'
+        gamma = 0.99
+        lam = 0.95
+        desired_kl = 0.015
+        max_grad_norm = 1.0
+
+    class runner(MyRobotJumpCfgPPO.runner):
+        policy_class_name = 'ActorCritic'
+        algorithm_class_name = 'PPO'
+        num_steps_per_env = 70  # Matches episode_length_s = 1.4s (70 * 0.02)
+        max_iterations = 20
+        save_interval = 5
+        experiment_name = 'myrobot_running_jump'
+        run_name = 'running_jump_020ms'
+        resume = False
+        load_run = -1
+        checkpoint = -1

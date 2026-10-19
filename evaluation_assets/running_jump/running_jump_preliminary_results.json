@@ -1,0 +1,24 @@
+{
+  "task": "myrobot_running_jump",
+  "target_vy": 0.2,
+  "iterations": 10,
+  "baseline": {
+    "mean_takeoff_vy": 0.10764047503471375,
+    "mean_touchdown_vy": -0.450611412525177,
+    "mean_clearance_cm": 18.726158142089844,
+    "mean_distance_cm": 15.949748992919922,
+    "velocity_retention": -4.186263692907859,
+    "takeoff_count": 64,
+    "touchdown_count": 64
+  },
+  "post_training": {
+    "mean_takeoff_vy": 0.07987144589424133,
+    "mean_touchdown_vy": -0.3755800127983093,
+    "mean_clearance_cm": 19.938379287719727,
+    "mean_distance_cm": 20.929317474365234,
+    "velocity_retention": -4.702306419939098,
+    "takeoff_count": 64,
+    "touchdown_count": 64
+  },
+  "checkpoint": "/home/xy/IsaacTu_jump/evaluation_assets/running_jump/model_running_jump_v1.pt"
+}
