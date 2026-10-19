@@ -70,7 +70,7 @@ class MyRobotRunningJump(MyRobotDualEnv):
 
         # Initialize teleoperation command targets to cruising speed
         self.user_cmd_vy[env_ids] = self.target_forward_vel
-        self.actual_cmd_vy[env_ids] = self.target_forward_vel
+        self.actual_cmd_vy[env_ids] = 0.0 # Ramps smoothly to user_cmd_vy via step rate limiter (0.5 m/s^2)
         self.user_cmd_yaw[env_ids] = 0.0
         self.actual_cmd_yaw[env_ids] = 0.0
         self.user_target_height[env_ids] = 0.39774
@@ -184,9 +184,13 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.bilateral_clearance[:] = clr_min
 
         # 5. Check termination (fall / tilt > 45 deg / timeout)
+        # Note: In MyRobot, X is lateral (wheel axle), Y is longitudinal (forward travel).
+        # get_euler_xyz returns (x_rot, y_rot, z_rot).
+        # x_rot (r_raw) is sagittal pitch around wheel axle.
+        # y_rot (p_raw) is coronal roll around forward travel axis.
         r_raw, p_raw, _ = get_euler_xyz(self.base_quat)
-        pitch = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
-        roll = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
+        pitch = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
+        roll = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
 
         fall = (self.root_states[:, 2] < 0.20) | (torch.abs(pitch) > math.radians(45.0)) | (torch.abs(roll) > math.radians(40.0))
         timeout = self.episode_length_buf >= self.max_episode_length
@@ -263,25 +267,29 @@ class MyRobotRunningJump(MyRobotDualEnv):
         return torch.where(self.has_touched_down, ret, torch.zeros_like(ret))
 
     def _reward_pitch_stability(self):
-        """Penalizes pitch deviation and angular pitch rate."""
-        _, p_raw, _ = get_euler_xyz(self.base_quat)
-        pitch = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
-        return -torch.square(pitch) - 0.05 * torch.square(self.base_ang_vel[:, 0])
+        """Penalizes sagittal pitch deviation and pitch angular rate (about wheel axle X)."""
+        r_raw, _, _ = get_euler_xyz(self.base_quat)
+        pitch = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
+        return torch.square(pitch) + 0.05 * torch.square(self.base_ang_vel[:, 0])
 
     def _reward_roll_stability(self):
-        """Penalizes roll deviation and roll angular rate."""
-        r_raw, _, _ = get_euler_xyz(self.base_quat)
-        roll = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
-        return -torch.square(roll) - 0.05 * torch.square(self.base_ang_vel[:, 1])
+        """Penalizes coronal roll deviation and roll angular rate (about forward travel axis Y)."""
+        _, p_raw, _ = get_euler_xyz(self.base_quat)
+        roll = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
+        return torch.square(roll) + 0.05 * torch.square(self.base_ang_vel[:, 1])
 
     def _reward_ang_vel_xy(self):
-        return -torch.sum(torch.square(self.base_ang_vel[:, :2]), dim=-1)
+        """Penalizes body angular velocity in the horizontal plane (pitch rate wx and roll rate wy)."""
+        return torch.sum(torch.square(self.base_ang_vel[:, :2]), dim=-1)
 
     def _reward_torques(self):
-        return -torch.sum(torch.square(self.torques), dim=-1)
+        """Penalizes motor torques to encourage energy efficiency."""
+        return torch.sum(torch.square(self.torques), dim=-1)
 
     def _reward_dof_acc(self):
-        return -torch.sum(torch.square((self.dof_vel - self.last_dof_vel) / self.dt), dim=-1)
+        """Penalizes joint accelerations to smooth motor control."""
+        return torch.sum(torch.square((self.dof_vel - self.last_dof_vel) / self.dt), dim=-1)
 
     def _reward_torque_limits(self):
-        return -torch.sum(torch.clamp(torch.abs(self.torques) - 0.90 * self.torque_limits, min=0.0), dim=-1)
+        """Penalizes torques exceeding 90% of physical actuator limits."""
+        return torch.sum(torch.clamp(torch.abs(self.torques) - 0.90 * self.torque_limits, min=0.0), dim=-1)
