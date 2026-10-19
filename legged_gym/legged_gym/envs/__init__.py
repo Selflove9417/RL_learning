@@ -94,5 +94,16 @@ task_registry.register("myrobot_running_jump", MyRobotRunningJump, MyRobotRunnin
 task_registry.register("myrobot_running_jump_035", MyRobotRunningJump, MyRobotRunningJump035Cfg(), MyRobotRunningJump035CfgPPO())
 task_registry.register("myrobot_running_jump_050", MyRobotRunningJump, MyRobotRunningJump050Cfg(), MyRobotRunningJump050CfgPPO())
 
+# 导入与注册 真实碰撞物理障碍跨越任务 (Physical Obstacle Clearance Jump)
+from legged_gym.envs.myrobot.myrobot_obstacle_jump_env import MyRobotObstacleJump
+from legged_gym.envs.myrobot.myrobot_obstacle_jump_config import (
+    MyRobotObstacleJumpCfg, MyRobotObstacleJumpCfgPPO,
+    MyRobotObstacleJump020Cfg, MyRobotObstacleJump020CfgPPO
+)
+
+task_registry.register("myrobot_obstacle_jump", MyRobotObstacleJump, MyRobotObstacleJumpCfg(), MyRobotObstacleJumpCfgPPO())
+task_registry.register("myrobot_obstacle_jump_020", MyRobotObstacleJump, MyRobotObstacleJump020Cfg(), MyRobotObstacleJump020CfgPPO())
+
+
 
 
