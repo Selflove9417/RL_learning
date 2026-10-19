@@ -83,16 +83,22 @@ class MyRobotRunningJumpCfgPPO(MyRobotJumpCfgPPO):
         gamma = 0.99
         lam = 0.95
         desired_kl = 0.015
+        enable_early_stopping = True
+        early_stop_kl = 0.03
         max_grad_norm = 1.0
 
     class runner(MyRobotJumpCfgPPO.runner):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 140  # Matches episode_length_s = 2.8s (140 * 0.02)
-        max_iterations = 20
-        save_interval = 5
+        max_iterations = 1       # Exactly 1 iteration for safety exploration
+        save_interval = 1
         experiment_name = 'myrobot_running_jump'
-        run_name = 'running_jump_020ms'
+        run_name = 'running_jump_020ms_iter1'
         resume = False
         load_run = -1
         checkpoint = -1
+        warm_start = True
+        warm_start_path = 'evaluation_assets/frozen_stage8/model_40.pt'
+        warm_start_optimizer = False
+        init_at_random_ep_len = False
