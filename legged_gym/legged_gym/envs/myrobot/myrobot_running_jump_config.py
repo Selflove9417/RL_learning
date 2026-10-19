@@ -12,14 +12,14 @@ class MyRobotRunningJumpCfg(MyRobotJumpCfg):
         num_observations = 35
         num_privileged_obs = 35
         num_actions = 6
-        episode_length_s = 1.4  # 70 steps per jump episode
+        episode_length_s = 2.8  # 140 steps per running jump cycle (40 cruise + 40 jump + 20 cushion + 40 resume)
         warmup_steps = 40       # 0.8s real Phase 15 cruising warmup before takeoff
 
     class commands(MyRobotJumpCfg.commands):
         curriculum = False
         target_forward_vel = 0.20     # Target 0.20 m/s for low-speed dynamic jump
         target_jump_height = 0.20     # 20cm clearance target
-        jump_cycle_time = 1.20        # Temporal phase cycle length
+        jump_cycle_time = 0.80        # Temporal phase cycle length (40 steps = 0.80s)
         ranges = type("ranges", (), {
             "lin_vel_y": [0.20, 0.20], # Constant 0.20 m/s in Stage 1 (expandable to 0.35 and 0.50)
             "lin_vel_x": [0.0, 0.0],
@@ -88,7 +88,7 @@ class MyRobotRunningJumpCfgPPO(MyRobotJumpCfgPPO):
     class runner(MyRobotJumpCfgPPO.runner):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
-        num_steps_per_env = 70  # Matches episode_length_s = 1.4s (70 * 0.02)
+        num_steps_per_env = 140  # Matches episode_length_s = 2.8s (140 * 0.02)
         max_iterations = 20
         save_interval = 5
         experiment_name = 'myrobot_running_jump'

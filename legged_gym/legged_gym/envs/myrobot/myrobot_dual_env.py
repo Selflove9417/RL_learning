@@ -242,16 +242,28 @@ class MyRobotDualEnv(MyRobotJump):
                 self.handoff_step[i] = -1
                 self.abort_step[i] = -1
                 self.has_taken_off[i] = False
-                self.last_transition_event[i] = "ENTER_STOPPING"
+
+                # Dynamic In-Motion Takeoff: If already cruising or commanded forward, jump immediately without stopping!
+                is_cruising = abs(self.user_cmd_vy[i].item()) > 0.05 or abs(self.base_lin_vel[i, 1].item()) > 0.08
+                if is_cruising:
+                    self.fsm_state[i] = self.STATE_JUMP
+                    self.fsm_state_timer[i] = 0.0
+                    self.jump_timer[i] = 0.0
+                    self.jump_phase[i] = 0.0
+                    self.current_kp[i] = 40.0
+                    self.current_kd[i] = 2.0
+                    self.last_transition_event[i] = "ENTER_RUNNING_JUMP"
+                else:
+                    self.fsm_state[i] = self.STATE_STOPPING
+                    self.fsm_state_timer[i] = 0.0
+                    self.stopping_stable_steps[i] = 0
+                    self.stopping_start_pos[i] = self.root_states[i, 0:2].clone()
+                    self.user_cmd_vy[i] = 0.0
+                    self.user_cmd_yaw[i] = 0.0
+                    self.user_target_height[i] = 0.39774
+                    self.last_transition_event[i] = "ENTER_STOPPING"
 
         self.teleop_jump_requested[can_request] = True
-        self.fsm_state[can_request] = self.STATE_STOPPING
-        self.fsm_state_timer[can_request] = 0.0
-        self.stopping_stable_steps[can_request] = 0
-        self.stopping_start_pos[can_request] = self.root_states[can_request, 0:2].clone()
-        self.user_cmd_vy[can_request] = 0.0
-        self.user_cmd_yaw[can_request] = 0.0
-        self.user_target_height[can_request] = 0.39774
 
     def step_dual_policy(self):
         """
@@ -406,14 +418,19 @@ class MyRobotDualEnv(MyRobotJump):
                     self.bal_filtered_actions[i] = 0.0
                     self.pi_integral[i] = 0.0
                     self.pi_v_filt[i] = 0.0
-                    self.actual_cmd_vy[i] = 0.0
-                    self.actual_cmd_yaw[i] = 0.0
-                    self.actual_cmd_height[i] = 0.39774
-                    self.user_cmd_vy[i] = 0.0
-                    self.user_cmd_yaw[i] = 0.0
-                    self.user_target_height[i] = 0.39774
                     self.teleop_jump_requested[i] = False
                     self.handoff_step[i] = self.common_step_counter
+
+                    # Only reset commands to zero if this was a static jump (from STOPPING).
+                    # For in-motion running jump, keep user_cmd_vy intact so cruising resumes!
+                    is_running_jump = (abs(self.user_cmd_vy[i].item()) > 0.05) or (abs(self.actual_cmd_vy[i].item()) > 0.05)
+                    if not is_running_jump:
+                        self.actual_cmd_vy[i] = 0.0
+                        self.actual_cmd_yaw[i] = 0.0
+                        self.actual_cmd_height[i] = 0.39774
+                        self.user_cmd_vy[i] = 0.0
+                        self.user_cmd_yaw[i] = 0.0
+                        self.user_target_height[i] = 0.39774
 
                     if normal_handoff:
                         self.last_transition_event[i] = "NORMAL_HANDOFF"
@@ -429,11 +446,12 @@ class MyRobotDualEnv(MyRobotJump):
         step_max_yaw = 2.0 * self.dt
         step_max_h = 0.04 * self.dt
 
-        not_in_balance = (self.fsm_state != self.STATE_BALANCE)
-        self.user_cmd_vy[not_in_balance] = 0.0
-        self.user_cmd_yaw[not_in_balance] = 0.0
-        self.user_target_height[not_in_balance] = 0.39774
-        self.teleop_jump_requested[not_in_balance & (self.fsm_state != self.STATE_STOPPING)] = False
+        # Only force command zeroing during active static stopping / prepare, NOT during running jump!
+        in_static_stop = (self.fsm_state == self.STATE_STOPPING) | (self.fsm_state == self.STATE_PREPARE_JUMP)
+        self.user_cmd_vy[in_static_stop] = 0.0
+        self.user_cmd_yaw[in_static_stop] = 0.0
+        self.user_target_height[in_static_stop] = 0.39774
+        self.teleop_jump_requested[in_static_stop] = False
 
         delta_vy = self.user_cmd_vy - self.actual_cmd_vy
         self.actual_cmd_vy += torch.clamp(delta_vy, -step_max_vy, step_max_vy)
@@ -530,11 +548,12 @@ class MyRobotDualEnv(MyRobotJump):
         tgt_hip_jump_R = self.default_dof_pos[:, self.right_hip_idx] + self.filtered_actions[:, self.right_hip_idx] * self.hip_action_scale
         tgt_knee_jump_R = self.default_dof_pos[:, self.right_knee_idx] + self.filtered_actions[:, self.right_knee_idx] * self.knee_action_scale
 
-        tau_w_jump_L_g = self.filtered_actions[:, self.left_wheel_idx] * 10.0 - 0.5 * self.dof_vel[:, self.left_wheel_idx]
+        target_w = - self.actual_cmd_vy / self.wheel_radius
+        tau_w_jump_L_g = self.filtered_actions[:, self.left_wheel_idx] * 10.0 - 0.35 * (self.dof_vel[:, self.left_wheel_idx] - target_w)
         tau_w_jump_L_a = torch.clamp(self.filtered_actions[:, self.left_wheel_idx] * 3.0 - 0.3 * self.dof_vel[:, self.left_wheel_idx], -3.0, 3.0)
         tau_w_jump_L = torch.where(air, tau_w_jump_L_a, tau_w_jump_L_g)
 
-        tau_w_jump_R_g = self.filtered_actions[:, self.right_wheel_idx] * 10.0 - 0.5 * self.dof_vel[:, self.right_wheel_idx]
+        tau_w_jump_R_g = self.filtered_actions[:, self.right_wheel_idx] * 10.0 - 0.35 * (self.dof_vel[:, self.right_wheel_idx] - target_w)
         tau_w_jump_R_a = torch.clamp(self.filtered_actions[:, self.right_wheel_idx] * 3.0 - 0.3 * self.dof_vel[:, self.right_wheel_idx], -3.0, 3.0)
         tau_w_jump_R = torch.where(air, tau_w_jump_R_a, tau_w_jump_R_g)
 
