@@ -136,6 +136,13 @@ class MyRobotDualEnv(MyRobotJump):
         self.current_kp = torch.full((self.num_envs,), 40.0, device=self.device)
         self.current_kd = torch.full((self.num_envs,), 2.0, device=self.device)
         self.has_taken_off = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.has_touched_down = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.takeoff_vy = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.touchdown_vy = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.takeoff_pos_y = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.touchdown_pos_y = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.flight_distance_y = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.velocity_retention_ratio = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
 
         # Transition smoothing buffers
         self.last_fsm_state = torch.full((self.num_envs,), self.STATE_BALANCE, device=self.device, dtype=torch.long)
@@ -188,6 +195,13 @@ class MyRobotDualEnv(MyRobotJump):
         self.current_kp[env_ids] = 40.0
         self.current_kd[env_ids] = 2.0
         self.has_taken_off[env_ids] = False
+        self.has_touched_down[env_ids] = False
+        self.takeoff_vy[env_ids] = 0.0
+        self.touchdown_vy[env_ids] = 0.0
+        self.takeoff_pos_y[env_ids] = 0.0
+        self.touchdown_pos_y[env_ids] = 0.0
+        self.flight_distance_y[env_ids] = 0.0
+        self.velocity_retention_ratio[env_ids] = 0.0
 
         # Reset transition & handoff smoothing caches
         self.last_fsm_state[env_ids] = self.STATE_BALANCE
@@ -242,6 +256,7 @@ class MyRobotDualEnv(MyRobotJump):
                 self.handoff_step[i] = -1
                 self.abort_step[i] = -1
                 self.has_taken_off[i] = False
+                self.has_touched_down[i] = False
 
                 # Dynamic In-Motion Takeoff: If already cruising or commanded forward, jump immediately without stopping!
                 is_cruising = abs(self.user_cmd_vy[i].item()) > 0.05 or abs(self.base_lin_vel[i, 1].item()) > 0.08
@@ -368,37 +383,54 @@ class MyRobotDualEnv(MyRobotJump):
                 self.current_kp[i] = 40.0 + gain_progress * (180.0 - 40.0)
                 self.current_kd[i] = 2.0 + gain_progress * (4.5 - 2.0)
 
-                if (air[i].item() or self.wheel_clearance[i].min().item() > 0.02) and v_z[i].item() > 0.5 and not self.has_taken_off[i].item():
+                if (air[i].item() or self.wheel_clearance[i].min().item() > 0.02) and v_z[i].item() > 0.4 and not self.has_taken_off[i].item():
                     self.has_taken_off[i] = True
+                    self.takeoff_vy[i] = self.base_lin_vel[i, 1]
+                    self.takeoff_pos_y[i] = self.root_states[i, 1]
                     if self.takeoff_step[i].item() == -1:
                         self.takeoff_step[i] = self.common_step_counter
                         self.last_transition_event[i] = "LIFTOFF"
 
-                past_apex = self.jump_phase[i].item() >= 0.50
-                firm_contact = (fn_L[i] > 25.0 and fn_R[i] > 25.0) or (self.jump_phase[i].item() >= 0.65 and (fn_L[i] > 25.0 or fn_R[i] > 25.0))
+                past_apex = self.jump_phase[i].item() >= 0.40
+                is_descending = v_z[i].item() < 0.0
+                firm_contact = (fn_L[i] > 25.0 and fn_R[i] > 25.0) or (self.jump_phase[i].item() >= 0.60 and (fn_L[i] > 25.0 or fn_R[i] > 25.0))
 
-                if self.has_taken_off[i].item() and past_apex and firm_contact:
+                if self.has_taken_off[i].item() and (past_apex or is_descending) and firm_contact:
                     self.fsm_state[i] = self.STATE_RECOVER
                     self.fsm_state_timer[i] = 0.0
                     self.settle_stable_steps[i] = 0
+                    self.has_touched_down[i] = True
+                    self.touchdown_vy[i] = self.base_lin_vel[i, 1]
+                    self.touchdown_pos_y[i] = self.root_states[i, 1]
+                    self.flight_distance_y[i] = self.root_states[i, 1] - self.takeoff_pos_y[i]
+                    if abs(self.takeoff_vy[i].item()) > 0.01:
+                        self.velocity_retention_ratio[i] = self.touchdown_vy[i] / self.takeoff_vy[i]
                     if self.touchdown_step[i].item() == -1:
                         self.touchdown_step[i] = self.common_step_counter
                     self.last_transition_event[i] = "TOUCHDOWN_ENTER_RECOVER"
 
             elif st == self.STATE_RECOVER:
+                self.has_touched_down[i] = True
                 self.jump_timer[i] += self.dt
                 self.jump_phase[i] = min(0.95, self.jump_timer[i] / self.jump_cycle_time)
                 self.current_kp[i] = 180.0
                 self.current_kd[i] = 4.5
 
-                cushion_time = (self.fsm_state_timer[i].item() >= 0.35)
-                cushion_complete = (bz[i].item() >= 0.320) and (v_z[i].item() >= -0.05)
+                is_running_jump = (abs(self.user_cmd_vy[i].item()) > 0.05) or (abs(self.actual_cmd_vy[i].item()) > 0.05)
+                cushion_time = (self.fsm_state_timer[i].item() >= (0.25 if is_running_jump else 0.35))
+                cushion_complete = (bz[i].item() >= 0.300) and (v_z[i].item() >= -0.05)
                 grounded = (fn_L[i] > 20.0) and (fn_R[i] > 20.0) and (not air[i].item())
-                vz_calm = (abs(v_z[i].item()) < 0.15)
-                vxy_calm = (v_xy[i].item() < 0.22)
-                att_calm = (abs(p[i].item()) < np.radians(4.0)) and (abs(r[i].item()) < np.radians(3.0))
-                joint_calm = (knee_vel[i] < 0.8)
-                yaw_calm = (abs(self.base_ang_vel[i, 2].item()) < 0.25)
+                vz_calm = (abs(v_z[i].item()) < 0.20)
+                if is_running_jump:
+                    vxy_calm = (v_xy[i].item() < 1.20)  # In-motion running preserves forward momentum
+                    att_calm = (abs(p[i].item()) < np.radians(12.0)) and (abs(r[i].item()) < np.radians(6.0))
+                    joint_calm = (knee_vel[i] < 1.5)
+                    yaw_calm = (abs(self.base_ang_vel[i, 2].item()) < 0.50)
+                else:
+                    vxy_calm = (v_xy[i].item() < 0.22)
+                    att_calm = (abs(p[i].item()) < np.radians(4.0)) and (abs(r[i].item()) < np.radians(3.0))
+                    joint_calm = (knee_vel[i] < 0.8)
+                    yaw_calm = (abs(self.base_ang_vel[i, 2].item()) < 0.25)
 
                 all_settle_calm = cushion_time and cushion_complete and grounded and vz_calm and vxy_calm and att_calm and joint_calm and yaw_calm
                 if all_settle_calm:
@@ -406,9 +438,14 @@ class MyRobotDualEnv(MyRobotJump):
                 else:
                     self.settle_stable_steps[i] = 0
 
-                normal_handoff = (self.settle_stable_steps[i].item() >= 5)
-                timeout_handoff = (self.fsm_state_timer[i].item() >= 1.50) and (self.settle_stable_steps[i].item() >= 2)
-                hard_timeout_abort = (self.fsm_state_timer[i].item() >= 2.00)
+                if is_running_jump:
+                    normal_handoff = (self.settle_stable_steps[i].item() >= 3)
+                    timeout_handoff = (self.fsm_state_timer[i].item() >= 0.40) and grounded
+                    hard_timeout_abort = (self.fsm_state_timer[i].item() >= 0.60)
+                else:
+                    normal_handoff = (self.settle_stable_steps[i].item() >= 5)
+                    timeout_handoff = (self.fsm_state_timer[i].item() >= 1.50) and (self.settle_stable_steps[i].item() >= 2)
+                    hard_timeout_abort = (self.fsm_state_timer[i].item() >= 2.00)
 
                 if normal_handoff or timeout_handoff or hard_timeout_abort:
                     self.fsm_state[i] = self.STATE_BALANCE
@@ -430,6 +467,10 @@ class MyRobotDualEnv(MyRobotJump):
                         self.actual_cmd_height[i] = 0.39774
                         self.user_cmd_vy[i] = 0.0
                         self.user_cmd_yaw[i] = 0.0
+                        self.user_target_height[i] = 0.39774
+                    else:
+                        # Smoothly ramp height from landing squat up to nominal standing height
+                        self.actual_cmd_height[i] = torch.clamp(bz[i], 0.28, 0.40)
                         self.user_target_height[i] = 0.39774
 
                     if normal_handoff:

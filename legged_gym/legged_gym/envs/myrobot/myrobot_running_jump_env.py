@@ -50,6 +50,7 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.default_jump_height = getattr(self.cfg.commands, 'target_jump_height', 0.20)
         self.cycle_length = getattr(self.cfg.env, 'cycle_length', 140) # 140 steps = 2.8s per running jump cycle
         self.jump_trigger_step = getattr(self.cfg.env, 'jump_trigger_step', 40) # Jump triggers at t = 0.80s
+        self.max_episode_length = int(round(self.max_episode_length_s / self.dt)) # Avoid IEEE 754 float32 precision round-up
 
         self.commands[:, 1] = self.target_forward_vel
 
@@ -149,12 +150,11 @@ class MyRobotRunningJump(MyRobotDualEnv):
         3. Timing and lifecycle:
            render -> simulate physics -> refresh -> check termination -> compute reward -> reset -> compute obs.
         """
-        # Periodic auto-trigger for running jump cycle
-        step_in_cycle = self.common_step_counter % self.cycle_length
-        if step_in_cycle == self.jump_trigger_step:
-            can_jump = (self.fsm_state == self.STATE_BALANCE)
-            if can_jump.any():
-                self.request_teleop_jump(can_jump)
+        # Independent per-environment auto-trigger for running jump cycle
+        step_in_cycle = self.episode_length_buf % self.cycle_length
+        can_jump = (step_in_cycle == self.jump_trigger_step) & (self.fsm_state == self.STATE_BALANCE)
+        if can_jump.any():
+            self.request_teleop_jump(can_jump)
 
         # 1. Render for interactive viewer if active
         self.render()
@@ -183,7 +183,7 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.wheel_clearance[:, 1] = clr_R
         self.bilateral_clearance[:] = clr_min
 
-        # 5. Check termination
+        # 5. Check termination (fall / tilt > 45 deg / timeout)
         r_raw, p_raw, _ = get_euler_xyz(self.base_quat)
         pitch = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
         roll = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
@@ -194,18 +194,25 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.reset_buf = fall | timeout
         self.time_out_buf = timeout & (~fall)
 
-        # 6. Compute reward for (s_t, a_t) -> s_{t+1} transition BEFORE reset
+        # 6. Compute reward for transition (s_t, a_t) -> s_{t+1} BEFORE reset
         self.compute_reward()
 
-        # 7. Reset terminated envs
+        # 7. Compute true terminal observation BEFORE reset for RSL-RL GAE timeout bootstrapping
+        self.compute_observations()
+        pre_reset_obs = self.obs_buf.clone()
+
+        self.extras["time_outs"] = self.time_out_buf.clone()
+        self.extras["terminal_observation"] = pre_reset_obs.clone()
+
+        # 8. Reset terminated envs
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         if len(env_ids) > 0:
             self.reset_idx(env_ids)
 
-        # 8. Compute observations for next step AFTER reset
+        # 9. Compute observations for next step AFTER reset (returns clean s_0 for reset envs)
         self.compute_observations()
 
-        # 9. Update last step buffers
+        # 10. Update last step buffers
         clip_actions = getattr(self.cfg.normalization, 'clip_actions', 100.0)
         self.last_actions[:] = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
         self.last_dof_vel[:] = self.dof_vel[:]
