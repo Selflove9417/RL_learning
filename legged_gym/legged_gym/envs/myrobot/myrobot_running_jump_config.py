@@ -102,3 +102,48 @@ class MyRobotRunningJumpCfgPPO(MyRobotJumpCfgPPO):
         warm_start_path = 'legged_gym/logs/myrobot_running_jump/Oct19_20-39-35_running_jump_020ms_iter1/model_1.pt'
         warm_start_optimizer = False
         init_at_random_ep_len = False
+
+
+class MyRobotRunningJump035Cfg(MyRobotRunningJumpCfg):
+    class commands(MyRobotRunningJumpCfg.commands):
+        target_forward_vel = 0.35     # Target 0.35 m/s
+        target_jump_height = 0.20     # 20cm clearance target
+        ranges = type("ranges", (), {
+            "lin_vel_y": [0.35, 0.35],
+            "lin_vel_x": [0.0, 0.0],
+            "ang_vel_yaw": [0.0, 0.0],
+            "heading": [0.0, 0.0],
+        })()
+
+
+class MyRobotRunningJump035CfgPPO(MyRobotRunningJumpCfgPPO):
+    class runner(MyRobotRunningJumpCfgPPO.runner):
+        experiment_name = 'myrobot_running_jump'
+        run_name = 'running_jump_035ms_controlled'
+        warm_start = True
+        warm_start_path = 'legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt'
+        max_iterations = 3
+        save_interval = 1
+
+
+class MyRobotRunningJump050Cfg(MyRobotRunningJumpCfg):
+    class commands(MyRobotRunningJumpCfg.commands):
+        target_forward_vel = 0.50     # Target 0.50 m/s
+        target_jump_height = 0.20     # 20cm clearance target
+        ranges = type("ranges", (), {
+            "lin_vel_y": [0.50, 0.50],
+            "lin_vel_x": [0.0, 0.0],
+            "ang_vel_yaw": [0.0, 0.0],
+            "heading": [0.0, 0.0],
+        })()
+
+
+class MyRobotRunningJump050CfgPPO(MyRobotRunningJumpCfgPPO):
+    class runner(MyRobotRunningJumpCfgPPO.runner):
+        experiment_name = 'myrobot_running_jump'
+        run_name = 'running_jump_050ms_controlled'
+        warm_start = True
+        warm_start_path = 'legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt'
+        max_iterations = 3
+        save_interval = 1
+

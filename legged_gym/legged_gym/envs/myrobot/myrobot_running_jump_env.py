@@ -140,6 +140,15 @@ class MyRobotRunningJump(MyRobotDualEnv):
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = self.obs_buf.clone()
 
+    def request_teleop_jump(self, env_mask=None):
+        super().request_teleop_jump(env_mask)
+        if env_mask is None:
+            env_mask = torch.ones(self.num_envs, device=self.device, dtype=torch.bool)
+        reset_mask = env_mask & (self.fsm_state == self.STATE_JUMP)
+        if reset_mask.any():
+            self.max_flight_clearance[reset_mask] = 0.0
+            self.flight_distance_y[reset_mask] = 0.0
+
     def step(self, actions):
         """
         Step simulation with unified action execution for train.py and play.py.
@@ -151,10 +160,12 @@ class MyRobotRunningJump(MyRobotDualEnv):
            render -> simulate physics -> refresh -> check termination -> compute reward -> reset -> compute obs.
         """
         # Independent per-environment auto-trigger for running jump cycle
-        step_in_cycle = self.episode_length_buf % self.cycle_length
-        can_jump = (step_in_cycle == self.jump_trigger_step) & (self.fsm_state == self.STATE_BALANCE)
-        if can_jump.any():
-            self.request_teleop_jump(can_jump)
+        auto_jump_enabled = getattr(self.cfg.env, 'auto_jump', True)
+        if auto_jump_enabled:
+            step_in_cycle = self.episode_length_buf % self.cycle_length
+            can_jump = (step_in_cycle == self.jump_trigger_step) & (self.fsm_state == self.STATE_BALANCE)
+            if can_jump.any():
+                self.request_teleop_jump(can_jump)
 
         # 1. Render for interactive viewer if active
         self.render()
@@ -183,6 +194,15 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.wheel_clearance[:, 1] = clr_R
         self.bilateral_clearance[:] = clr_min
 
+        # Track peak flight clearance while airborne
+        in_flight = (self.fsm_state == self.STATE_JUMP) & self.has_taken_off
+        if in_flight.any():
+            self.max_flight_clearance = torch.where(
+                in_flight,
+                torch.maximum(self.max_flight_clearance, self.bilateral_clearance),
+                self.max_flight_clearance
+            )
+
         # Immediate takeoff latch: eliminates 1-frame lag so takeoff is captured in exact frame of contact loss
         in_jump = (self.fsm_state == self.STATE_JUMP)
         now_air = self.is_airborne | (self.bilateral_clearance > 0.015)
@@ -207,7 +227,11 @@ class MyRobotRunningJump(MyRobotDualEnv):
         roll = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
 
         fall = (self.root_states[:, 2] < 0.20) | (torch.abs(pitch) > math.radians(45.0)) | (torch.abs(roll) > math.radians(40.0))
-        timeout = self.episode_length_buf >= self.max_episode_length
+        continuous_mode = getattr(self.cfg.env, 'continuous_mode', False)
+        if continuous_mode:
+            timeout = torch.zeros_like(fall)
+        else:
+            timeout = self.episode_length_buf >= self.max_episode_length
 
         self.reset_buf = fall | timeout
         self.time_out_buf = timeout & (~fall)

@@ -84,8 +84,15 @@ task_registry.register("myrobot_dual", MyRobotDualEnv, MyRobotDualCfg(), MyRobot
 
 # 导入与注册 动态行进中跑跳任务 (Dynamic Running Jump)
 from legged_gym.envs.myrobot.myrobot_running_jump_env import MyRobotRunningJump
-from legged_gym.envs.myrobot.myrobot_running_jump_config import MyRobotRunningJumpCfg, MyRobotRunningJumpCfgPPO
+from legged_gym.envs.myrobot.myrobot_running_jump_config import (
+    MyRobotRunningJumpCfg, MyRobotRunningJumpCfgPPO,
+    MyRobotRunningJump035Cfg, MyRobotRunningJump035CfgPPO,
+    MyRobotRunningJump050Cfg, MyRobotRunningJump050CfgPPO
+)
 
 task_registry.register("myrobot_running_jump", MyRobotRunningJump, MyRobotRunningJumpCfg(), MyRobotRunningJumpCfgPPO())
+task_registry.register("myrobot_running_jump_035", MyRobotRunningJump, MyRobotRunningJump035Cfg(), MyRobotRunningJump035CfgPPO())
+task_registry.register("myrobot_running_jump_050", MyRobotRunningJump, MyRobotRunningJump050Cfg(), MyRobotRunningJump050CfgPPO())
+
 
 
