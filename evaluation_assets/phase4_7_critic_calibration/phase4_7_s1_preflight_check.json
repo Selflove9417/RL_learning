@@ -1,0 +1,26 @@
+{
+  "model_paths": {
+    "champion": "/home/xy/IsaacTu_jump/evaluation_assets/phase3_1_forward_distance/models/model_champion.pt",
+    "calibrated_critic": "/home/xy/IsaacTu_jump/evaluation_assets/phase4_7_critic_calibration/model_critic_calibrated_target_b.pt"
+  },
+  "actor_invariance": {
+    "weight_diff": 0.0,
+    "std_diff": 0.0,
+    "action_diff": 0.0,
+    "total_param_diff_after_rollout": 0.0
+  },
+  "numerical_integrity": {
+    "val_min": 19.088382720947266,
+    "val_max": 26.041528701782227,
+    "ret_min": 19.1868839263916,
+    "ret_max": 25.625749588012695,
+    "adv_min": -3.6357991695404053,
+    "adv_max": 2.516045093536377
+  },
+  "step139_online_bootstrap": {
+    "v_term_online_mean": 19.661792755126953,
+    "stored_rew_139": 19.659164428710938,
+    "expected_online_rew": 19.659161258339882,
+    "diff": 3.170371055460919e-06
+  }
+}

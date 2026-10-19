@@ -94,6 +94,10 @@ def save_run_snapshot(log_dir, env_cfg, train_cfg, args, ppo_runner=None):
         "legged_gym/envs/myrobot/myrobot_jump_config.py",
         "legged_gym/envs/myrobot/myrobot_forward_jump_env.py",
         "legged_gym/envs/myrobot/myrobot_forward_jump_config.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_static_env.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_static_config.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_phase4_env.py",
+        "legged_gym/envs/myrobot/myrobot_forward_jump_phase4_config.py",
         "legged_gym/scripts/train.py",
     ):
         full_p = os.path.join(LEGGED_GYM_ROOT_DIR, relative_path)
@@ -123,7 +127,8 @@ def train(args):
     # 保存本次实验运行的代码与配置快照
     save_run_snapshot(ppo_runner.log_dir, env_cfg, train_cfg, args, ppo_runner=ppo_runner)
     # 启动 PPO 策略训练迭代
-    ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
+    init_at_random_ep_len = getattr(train_cfg.runner, "init_at_random_ep_len", True)
+    ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=init_at_random_ep_len)
 
 if __name__ == '__main__':
     args = get_args()

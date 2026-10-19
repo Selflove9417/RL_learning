@@ -1,0 +1,105 @@
+{
+  "terminal_bootstraps": {
+    "v_term_A_mean": 17.214576721191406,
+    "v_term_B_mean": 19.661792755126953,
+    "delta_mean": 2.447218418121338
+  },
+  "advantage_distributions": {
+    "norm_A": {
+      "mean": -6.769384697236092e-08,
+      "std": 1.0,
+      "min": -3.4179468154907227,
+      "max": 3.0700643062591553,
+      "positive_count": 4949,
+      "negative_count": 4011
+    },
+    "norm_B": {
+      "mean": 2.639634288925663e-08,
+      "std": 1.0,
+      "min": -3.6357991695404053,
+      "max": 2.516045093536377,
+      "positive_count": 4917,
+      "negative_count": 4043
+    },
+    "jump_phase_step0_33": {
+      "total_elements": 2176,
+      "sign_flips": 782,
+      "sign_flip_percentage": 35.9375
+    }
+  },
+  "mini_batch_diagnostics": [
+    {
+      "batch_idx": 1,
+      "loss_A": -0.026010848581790924,
+      "loss_B": -0.004449055064469576,
+      "grad_norm_A": 4.104301452636719,
+      "grad_norm_B": 6.0635480880737305,
+      "cosine_similarity": 0.4274337887763977,
+      "rel_diff_pct": 138.5515900252578,
+      "kl_A": 6.661984662059695e-05,
+      "ratio_mean_A": 0.9999619722366333,
+      "clip_fraction_A": 0.0
+    },
+    {
+      "batch_idx": 2,
+      "loss_A": 0.004561999812722206,
+      "loss_B": 0.011455714702606201,
+      "grad_norm_A": 4.495400428771973,
+      "grad_norm_B": 5.955963611602783,
+      "cosine_similarity": 0.7914836406707764,
+      "rel_diff_pct": 81.12265877885983,
+      "kl_A": 6.621208740398288e-05,
+      "ratio_mean_A": 1.0000699758529663,
+      "clip_fraction_A": 0.0
+    },
+    {
+      "batch_idx": 3,
+      "loss_A": 0.008885865099728107,
+      "loss_B": -0.0029468375723809004,
+      "grad_norm_A": 3.6012332439422607,
+      "grad_norm_B": 4.5713677406311035,
+      "cosine_similarity": 0.5613750219345093,
+      "rel_diff_pct": 108.91016633680017,
+      "kl_A": 6.655867036897689e-05,
+      "ratio_mean_A": 0.9999784231185913,
+      "clip_fraction_A": 0.0
+    },
+    {
+      "batch_idx": 4,
+      "loss_A": 0.012545977719128132,
+      "loss_B": -0.003928420599550009,
+      "grad_norm_A": 3.601541519165039,
+      "grad_norm_B": 6.026850700378418,
+      "cosine_similarity": 0.6356896162033081,
+      "rel_diff_pct": 129.33518919521097,
+      "kl_A": 6.624116940656677e-05,
+      "ratio_mean_A": 1.0001760721206665,
+      "clip_fraction_A": 0.0
+    }
+  ],
+  "full_batch_diagnostics": {
+    "loss_A": -3.623536713348585e-06,
+    "loss_B": 2.5314943741250318e-06,
+    "backbone_grad_norm_A": 2.166903018951416,
+    "backbone_grad_norm_B": 3.101592540740967,
+    "std_grad_norm_A": 0.4400525987148285,
+    "std_grad_norm_B": 0.6580266952514648,
+    "total_grad_norm_A": 2.211134195327759,
+    "total_grad_norm_B": 3.1706268787384033,
+    "max_abs_grad_A": 0.5336580872535706,
+    "max_abs_grad_B": 0.6492979526519775,
+    "cosine_similarity": 0.33679887652397156,
+    "gradient_diff_norm": 3.196812629699707,
+    "relative_diff_pct": 144.57795560291828,
+    "active_gradient_tensors": 9
+  },
+  "root_cause_diagnosis": {
+    "s1_r_flawed_product_shape": [
+      8960,
+      8960
+    ],
+    "s1_r_reproduced_grad_norm": 1.688282225131843e-07,
+    "formal_ppo_squeezed_grad_norm": 2.211134195327759,
+    "explanation": "Missing torch.squeeze(advantages_batch) caused an [8960, 1] * [8960] outer product. Mean over rows collapsed to mean(advantages) * mean(ratio). Since mean(norm_advantages) == 0, the analytical gradient was identically zero."
+  }
+}

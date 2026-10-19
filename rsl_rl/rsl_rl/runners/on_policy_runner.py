@@ -300,9 +300,9 @@ class OnPolicyRunner:
         # resumed runs retain monotonic checkpoint and TensorBoard step numbers.
         checkpoint_match = re.search(r'model_(\d+)\.pt$', os.path.basename(path))
         self.current_learning_iteration = (
-            int(checkpoint_match.group(1)) if checkpoint_match else loaded_dict['iter']
+            int(checkpoint_match.group(1)) if checkpoint_match else loaded_dict.get('iter', 0)
         )
-        return loaded_dict['infos']
+        return loaded_dict.get('infos', None)
 
     def get_inference_policy(self, device=None):
         self.alg.actor_critic.eval() # switch to evaluation mode (dropout for example)

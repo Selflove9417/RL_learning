@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "experiment": "Phase 4.8-Pilot-A",
+    "task_name": "myrobot_forward_jump_phase4",
+    "seed": 6001,
+    "num_envs": 64,
+    "timestamp": "Oct17_20-07-17",
+    "log_dir": "/home/xy/IsaacTu_jump/legged_gym/logs/myrobot_forward_jump_phase4/Oct17_20-07-22_Oct17_20-07-17_phase4_8_pilot_a_1iter",
+    "calib_init_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase4_7_critic_calibration/model_critic_calibrated_target_b.pt",
+    "calib_init_sha256": "a5fca202c667da64476bb36044f9fdd814cae430753b57e349699b2e679f5ed0",
+    "pilot_model_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase4_8_pilot_a/model_pilot_a_iter1.pt",
+    "pilot_model_sha256": "c4b4b294a985de20bcda917f62f3cb133b968d2f3d7cc49d6bbb5343c3ad83e9",
+    "elapsed_seconds": 1.5781543254852295
+  },
+  "hyperparameters": {
+    "learning_rate": 0.0001,
+    "num_learning_epochs": 5,
+    "num_mini_batches": 4,
+    "planned_updates": 20,
+    "clip_param": 0.2,
+    "desired_kl": 0.01,
+    "early_stop_kl": 0.04,
+    "max_grad_norm": 1.0,
+    "gamma": 0.99,
+    "lam": 0.95
+  },
+  "parameter_shifts": {
+    "actor_delta_l2": 0.06364651769399643,
+    "actor_rel_delta": 0.002337536209770433,
+    "critic_delta_l2": 0.06321919709444046,
+    "critic_rel_delta": 0.0018800721372445378,
+    "std_delta_l2": 0.0003674144682008773,
+    "initial_std_mean": 0.2725926637649536,
+    "final_std_mean": 0.2724926769733429
+  },
+  "aggregated_diagnostics": {
+    "kl_mean": 0.06634916365146637,
+    "kl_median": 0.0007346272468566895,
+    "kl_p95": 0.19878338277339935,
+    "kl_max": 0.7375100255012512,
+    "clip_fraction": 0.0,
+    "surrogate_loss": -0.013893131166696548,
+    "value_loss": 0.6538735628128052,
+    "entropy": -2.4947829246520996,
+    "action_std_mean": 0.2724926769733429,
+    "action_std_min": 0.0628918707370758,
+    "action_std_max": 0.6579659581184387,
+    "learning_rate": 0.0001,
+    "actual_lr_before_step_mean": 0.00015000000000000001,
+    "actual_lr_step_list": [
+      0.00015000000000000001
+    ],
+    "grad_norm_mean": 72.3360595703125,
+    "actor_grad_norm_mean": 4.7115888595581055,
+    "critic_grad_norm_mean": 72.16629028320312,
+    "updates_executed": 1,
+    "updates_planned": 20,
+    "early_stop_triggered": 1,
+    "early_stop_reason": "KL mean (0.132632) exceeded threshold (0.040000) at update 2/20",
+    "actor_param_delta_l2": 0.06364651769399643,
+    "actor_param_delta_rel": 0.002337536209770433,
+    "critic_param_delta_l2": 0.06321919709444046,
+    "critic_param_delta_rel": 0.0018800721372445378,
+    "adv_mean": 2.7673585645260346e-09,
+    "adv_std": 1.0,
+    "adv_min": -3.5919008255004883,
+    "adv_max": 2.2849254608154297,
+    "enable_ref_kl": false,
+    "ref_kl_coef": 0.0,
+    "ref_kl_mean": 0.0,
+    "ref_kl_loss_mean": 0.0,
+    "ref_policy_path": null,
+    "ref_policy_sha256": null,
+    "enable_sym_reg": false,
+    "sym_reg_coef": 0.0,
+    "sym_loss_mean": 0.0,
+    "sym_loss_scaled_mean": 0.0
+  },
+  "step_by_step_updates": [
+    {
+      "step_index": 1,
+      "learning_rate": 0.00015000000000000001,
+      "actor_grad_norm_unclipped": 0.06513471901416779,
+      "critic_grad_norm_unclipped": 0.997653067111969,
+      "action_std_mean": 0.2725926637649536,
+      "action_std_min": 0.06304185837507248,
+      "action_std_max": 0.6581159830093384,
+      "lr_verified": 0.00015000000000000001
+    }
+  ]
+}

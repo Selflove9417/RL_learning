@@ -1,0 +1,8 @@
+{
+  "vy_reset_after_mean_mps": -0.0009737492538988591,
+  "vy_reset_after_std_mps": 0.09872374648648968,
+  "vy_reset_after_min_mps": -0.21119776368141174,
+  "vy_reset_after_max_mps": 0.09822096675634384,
+  "count_abs_gt_005_mps": 17,
+  "count_abs_gt_010_mps": 4
+}

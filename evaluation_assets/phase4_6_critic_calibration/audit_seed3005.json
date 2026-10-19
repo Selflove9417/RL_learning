@@ -1,0 +1,119 @@
+{
+  "seed": 3005,
+  "actor_max_diff": 0.0,
+  "settle_step_reached": 75,
+  "fwd_dist_cm": 12.32362687587738,
+  "max_clearance_cm": 21.60925269126892,
+  "takeoff_step": 12,
+  "touchdown_step": 34,
+  "undiscounted_return": 35.43406902439892,
+  "terminal_values": {
+    "va_pre_reset": 17.22517204284668,
+    "vb_pre_reset": 19.359682083129883,
+    "va_post_reset": 18.19888687133789,
+    "vb_post_reset": 21.15153694152832,
+    "va_step0": 18.589311599731445,
+    "vb_step0": 21.448930740356445,
+    "va_step139": 17.224714279174805,
+    "vb_step139": 19.359704971313477
+  },
+  "stats": {
+    "Target_A_finite": {
+      "model_a": {
+        "mse": 55.70851957065939,
+        "mae": 5.5217166999681115,
+        "ev": 0.2744124344421769
+      },
+      "model_b": {
+        "mse": 90.36533875094459,
+        "mae": 8.37695310915125,
+        "ev": 0.42037585822633405
+      },
+      "td_mean_a": -0.05890532370071335,
+      "td_mean_b": -0.10773152200611584,
+      "td_step139_a": -16.960271686315536,
+      "td_step139_b": -19.09526237845421,
+      "adv_launch_a": 0.7041887572609569,
+      "adv_launch_b": 0.18145682240626831,
+      "adv_flight_a": 0.7425868837364518,
+      "adv_flight_b": 0.30078967177720833,
+      "adv_touchdown_a": 0.7258920702209927,
+      "adv_touchdown_b": 0.0738744702477162,
+      "adv_recovery_a": -1.6329868901817606,
+      "adv_recovery_b": -2.56483022780487
+    },
+    "Target_B_pre_reset_bootstrap": {
+      "model_a": {
+        "mse": 15.578179282955235,
+        "mae": 3.681544534983061,
+        "ev": 0.6138594137900505
+      },
+      "model_b": {
+        "mse": 4.247688953451291,
+        "mae": 1.9608869360036612,
+        "ev": 0.8835743802600577
+      },
+      "td_mean_a": 0.06290125003084532,
+      "td_mean_b": 0.02916908701030262,
+      "td_step139_a": 0.09264863610267682,
+      "td_step139_b": 0.07082288384437518,
+      "adv_launch_a": 0.7110446911621581,
+      "adv_launch_b": 0.18916233039074903,
+      "adv_flight_a": 0.7567081471675079,
+      "adv_flight_b": 0.3166608148901684,
+      "adv_touchdown_a": 0.7560024195072093,
+      "adv_touchdown_b": 0.10771603584387734,
+      "adv_recovery_a": 1.2268391351271752,
+      "adv_recovery_b": 0.6493799133376235
+    },
+    "Target_C_post_reset_bootstrap": {
+      "model_a": {
+        "mse": 19.169870603886523,
+        "mae": 4.2014966758970465,
+        "ev": 0.6533556562489757
+      },
+      "model_b": {
+        "mse": 8.810727348364042,
+        "mae": 2.9177161251771038,
+        "ev": 0.8694776083595941
+      },
+      "td_mean_a": 0.06978680488946173,
+      "td_mean_b": 0.041840060651834425,
+      "td_step139_a": 1.056626316308975,
+      "td_step139_b": 1.8447591936588275,
+      "adv_launch_a": 0.7114322474946089,
+      "adv_launch_b": 0.18987552143692088,
+      "adv_flight_a": 0.7575064023933861,
+      "adv_flight_b": 0.31812978451338736,
+      "adv_touchdown_a": 0.7577045153421949,
+      "adv_touchdown_b": 0.11084827600510042,
+      "adv_recovery_a": 1.3885010912935183,
+      "adv_recovery_b": 0.9468743676674533
+    }
+  },
+  "reward_totals": {
+    "action_rate": -0.01610690743535218,
+    "airborne_forward_displacement": 0.9266655893624065,
+    "ang_vel_xy": -0.07271197494027953,
+    "bilateral_symmetry": -0.31093702536077356,
+    "collision": 0.0,
+    "dof_acc": -0.10522366000265161,
+    "dof_pos_limits": 0.0,
+    "dof_vel": -0.028059642595243236,
+    "feet_air_time": 0.8799999803304672,
+    "jump_clearance": 4.901460123178507,
+    "landing_cushion": 5.057403874604315,
+    "lin_vel_z": -2.781877258231663,
+    "recovery_balance": 7.429637960427146,
+    "squat_prep": 0.2088432444727626,
+    "stationary_prep": 0.0,
+    "takeoff_forward_velocity": 0.10350217550713794,
+    "takeoff_velocity": 0.8201841528672538,
+    "torque_limits": -0.4790669524878197,
+    "torques": -0.6584013865000888,
+    "touchdown_forward_distance": 0.02832306560151876,
+    "tracking_ang_vel": 5.142873189763218,
+    "tracking_lin_vel": 8.147560876885926,
+    "wheel_contact": 6.239999860525131
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "experiment": "Phase 4.8-Pilot-B",
+    "task_name": "myrobot_forward_jump_phase4",
+    "seed": 6001,
+    "num_envs": 64,
+    "timestamp": "Oct19_10-08-50",
+    "target_b_init_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase4_7_critic_calibration/model_critic_calibrated_target_b.pt",
+    "target_b_init_sha256": "a5fca202c667da64476bb36044f9fdd814cae430753b57e349699b2e679f5ed0",
+    "champion_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase3_1_forward_distance/models/model_champion.pt",
+    "champion_sha256": "fad590f4699abac8ae2b3e635d9cb88ef2658da85bbb37008e13362bb3c5b950",
+    "pilot_b_model_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase4_8_pilot_b/model_pilot_b_step1.pt",
+    "pilot_b_model_sha256": "64aedcfd0156a5ed512c4c8c1c97f06caefae8c7e662322a143dc3ec9decc29b",
+    "elapsed_seconds": 1.5299129486083984
+  },
+  "hyperparameters": {
+    "learning_rate": 5e-05,
+    "schedule": "fixed",
+    "desired_kl": null,
+    "early_stop_kl": 0.04,
+    "max_grad_norm": 1.0,
+    "clip_param": 0.2,
+    "num_learning_epochs": 5,
+    "num_mini_batches": 4,
+    "planned_updates": 1,
+    "actual_updates": 1,
+    "gamma": 0.99,
+    "lam": 0.95
+  },
+  "optimizer_step_telemetry": {
+    "step_index": 1,
+    "learning_rate": 5e-05,
+    "actor_grad_norm_unclipped": 0.06513471901416779,
+    "critic_grad_norm_unclipped": 0.997653067111969,
+    "total_grad_norm_unclipped": 0.9997770621188373,
+    "action_std_mean": 0.2725926637649536,
+    "action_std_min": 0.06304185837507248,
+    "action_std_max": 0.6581159830093384
+  },
+  "parameter_shifts": {
+    "actor_delta_l2": 0.021215500310063362,
+    "actor_rel_delta": 0.0007791785313628685,
+    "critic_delta_l2": 0.021073054522275925,
+    "critic_rel_delta": 0.0006266903800562516,
+    "std_delta_l2": 0.00012247959966771305,
+    "initial_std": [
+      0.10037662088871002,
+      0.06517013162374496,
+      0.6581159830093384,
+      0.09305131435394287,
+      0.06304185837507248,
+      0.6558001041412354
+    ],
+    "final_std": [
+      0.10042662173509598,
+      0.06512013077735901,
+      0.6580659747123718,
+      0.09300131350755692,
+      0.06299186497926712,
+      0.6557500958442688
+    ]
+  },
+  "rollout_kl_summary": {
+    "kl_mean": 0.014540256932377815,
+    "kl_median": 0.012867748737335205,
+    "kl_p90": 0.02198576331138611,
+    "kl_p95": 0.02364987432956694,
+    "kl_p99": 0.043545868396759016,
+    "kl_max": 0.09780234098434448,
+    "ratio_mean": 0.9997575879096985,
+    "ratio_min": 0.34844398498535156,
+    "ratio_max": 2.4305875301361084,
+    "ratio_p05": 0.7426650702953339,
+    "ratio_p95": 1.3027688980102539,
+    "clip_fraction": 0.21640625596046448
+  },
+  "dim_contributions": {
+    "Left Hip": {
+      "kl_mean": 0.007320073898881674,
+      "kl_pct": 50.34349759378426,
+      "d_mu_mean": 0.011365283280611038,
+      "d_mu_max": 0.016499996185302734,
+      "std_old": 0.10037662088871002,
+      "std_new": 0.10042662173509598
+    },
+    "Left Knee": {
+      "kl_mean": 0.0035720020532608032,
+      "kl_pct": 24.566292534396517,
+      "d_mu_mean": 0.0051481169648468494,
+      "d_mu_max": 0.017369240522384644,
+      "std_old": 0.06517013162374496,
+      "std_new": 0.06512013077735901
+    },
+    "Left Wheel": {
+      "kl_mean": 8.573839295422658e-05,
+      "kl_pct": 0.5896621590180215,
+      "d_mu_mean": 0.007226192858070135,
+      "d_mu_max": 0.01909315586090088,
+      "std_old": 0.6581159830093384,
+      "std_new": 0.6580659747123718
+    },
+    "Right Hip": {
+      "kl_mean": 0.0017815844621509314,
+      "kl_pct": 12.252771532418741,
+      "d_mu_mean": 0.004172522109001875,
+      "d_mu_max": 0.015271633863449097,
+      "std_old": 0.09305131435394287,
+      "std_new": 0.09300131350755692
+    },
+    "Right Knee": {
+      "kl_mean": 0.001331746345385909,
+      "kl_pct": 9.159028974380883,
+      "d_mu_mean": 0.002151093678548932,
+      "d_mu_max": 0.02197474241256714,
+      "std_old": 0.06304185837507248,
+      "std_new": 0.06299186497926712
+    },
+    "Right Wheel": {
+      "kl_mean": 0.0004491116851568222,
+      "kl_pct": 3.0887465554804163,
+      "d_mu_mean": 0.017848188057541847,
+      "d_mu_max": 0.03655456006526947,
+      "std_old": 0.6558001041412354,
+      "std_new": 0.6557500958442688
+    }
+  },
+  "phase_contributions": {
+    "prep_0_9": {
+      "steps": "0-9",
+      "n_samples": 640,
+      "kl_mean": 0.012634655460715294,
+      "kl_median": 0.004027873277664185,
+      "kl_p95": 0.06647038459777832,
+      "kl_max": 0.09780234098434448
+    },
+    "launch_10_13": {
+      "steps": "10-13",
+      "n_samples": 256,
+      "kl_mean": 0.013549938797950745,
+      "kl_median": 0.0040087103843688965,
+      "kl_p95": 0.0565011203289032,
+      "kl_max": 0.08507692813873291
+    },
+    "ascent_14_21": {
+      "steps": "14-21",
+      "n_samples": 512,
+      "kl_mean": 0.006988884881138802,
+      "kl_median": 0.0062500834465026855,
+      "kl_p95": 0.013584959506988525,
+      "kl_max": 0.01655566692352295
+    },
+    "descent_22_31": {
+      "steps": "22-31",
+      "n_samples": 640,
+      "kl_mean": 0.020584626123309135,
+      "kl_median": 0.020824521780014038,
+      "kl_p95": 0.027902084589004512,
+      "kl_max": 0.03305637836456299
+    },
+    "touchdown_32_39": {
+      "steps": "32-39",
+      "n_samples": 512,
+      "kl_mean": 0.01539838407188654,
+      "kl_median": 0.014102011919021606,
+      "kl_p95": 0.026902243494987488,
+      "kl_max": 0.0348086953163147
+    },
+    "recovery_40_139": {
+      "steps": "40-139",
+      "n_samples": 6400,
+      "kl_mean": 0.014701453037559986,
+      "kl_median": 0.012898862361907959,
+      "kl_p95": 0.022409373521804807,
+      "kl_max": 0.02567189931869507
+    }
+  }
+}

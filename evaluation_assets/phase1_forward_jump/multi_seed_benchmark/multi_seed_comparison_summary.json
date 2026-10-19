@@ -1,0 +1,476 @@
+{
+  "Stage 8 Baseline (In-Place)": {
+    "model_path": "/home/xy/IsaacTu_jump/evaluation_assets/frozen_stage8/model_40.pt",
+    "seeds": [
+      42,
+      100,
+      200,
+      300,
+      400
+    ],
+    "total_trials": 5,
+    "valid_jumps": 5,
+    "abnormal_resets": 0,
+    "max_clearance_cm": {
+      "mean": 21.384,
+      "std": 0.929,
+      "min": 19.96,
+      "max": 22.56
+    },
+    "flight_duration_s": {
+      "mean": 0.432,
+      "std": 0.024,
+      "min": 0.4,
+      "max": 0.46
+    },
+    "root_forward_dist_cm": {
+      "mean": -6.772,
+      "std": 4.268,
+      "min": -14.85,
+      "max": -2.46
+    },
+    "com_forward_dist_cm": {
+      "mean": -6.258,
+      "std": 3.87,
+      "min": -13.56,
+      "max": -2.28
+    },
+    "takeoff_root_vy_mps": {
+      "mean": -0.184,
+      "std": 0.102,
+      "min": -0.348,
+      "max": -0.043
+    },
+    "takeoff_root_vz_mps": {
+      "mean": 1.378,
+      "std": 0.53,
+      "min": 0.89,
+      "max": 2.246
+    },
+    "takeoff_com_vy_mps": {
+      "mean": -0.125,
+      "std": 0.071,
+      "min": -0.261,
+      "max": -0.062
+    },
+    "takeoff_com_vz_mps": {
+      "mean": 1.945,
+      "std": 0.126,
+      "min": 1.789,
+      "max": 2.114
+    },
+    "touchdown_pitch_deg": {
+      "mean": 0.134,
+      "std": 5.763,
+      "min": -7.74,
+      "max": 9.83
+    },
+    "touchdown_roll_deg": {
+      "mean": -0.82,
+      "std": 1.868,
+      "min": -3.54,
+      "max": 1.57
+    },
+    "yaw_drift_deg": {
+      "mean": 4.56,
+      "std": 2.722,
+      "min": 1.46,
+      "max": 8.6
+    },
+    "recovery_vy_mps": {
+      "mean": -0.014,
+      "std": 0.016,
+      "min": -0.031,
+      "max": 0.015
+    },
+    "recovery_vx_mps": {
+      "mean": 0.0,
+      "std": 0.027,
+      "min": -0.045,
+      "max": 0.04
+    },
+    "peak_hip_tau_nm": {
+      "mean": 26.854,
+      "std": 1.26,
+      "min": 25.16,
+      "max": 28.49
+    },
+    "peak_knee_tau_nm": {
+      "mean": 120.0,
+      "std": 0.0,
+      "min": 120.0,
+      "max": 120.0
+    },
+    "peak_wheel_tau_nm": {
+      "mean": 6.98,
+      "std": 1.936,
+      "min": 4.35,
+      "max": 9.41
+    },
+    "knee_saturation_steps": {
+      "mean": 4.2,
+      "std": 0.748,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "records": [
+      {
+        "seed": 42,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 22.56,
+        "flight_duration_s": 0.46,
+        "flight_steps": 23,
+        "root_forward_dist_cm": -4.6,
+        "com_forward_dist_cm": -4.06,
+        "takeoff_root_vy_mps": -0.043,
+        "takeoff_root_vz_mps": 2.246,
+        "takeoff_com_vy_mps": -0.078,
+        "takeoff_com_vz_mps": 2.114,
+        "touchdown_pitch_deg": 0.96,
+        "touchdown_roll_deg": -0.57,
+        "touchdown_yaw_deg": 2.46,
+        "yaw_drift_deg": 1.46,
+        "recovery_vy_mps": -0.031,
+        "recovery_vx_mps": 0.001,
+        "peak_hip_tau_nm": 25.16,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 5.07,
+        "knee_saturation_steps": 3
+      },
+      {
+        "seed": 100,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 21.86,
+        "flight_duration_s": 0.42,
+        "flight_steps": 21,
+        "root_forward_dist_cm": -2.46,
+        "com_forward_dist_cm": -2.28,
+        "takeoff_root_vy_mps": -0.212,
+        "takeoff_root_vz_mps": 0.939,
+        "takeoff_com_vy_mps": -0.062,
+        "takeoff_com_vz_mps": 1.896,
+        "touchdown_pitch_deg": -2.9,
+        "touchdown_roll_deg": 0.68,
+        "touchdown_yaw_deg": -2.25,
+        "yaw_drift_deg": 5.41,
+        "recovery_vy_mps": -0.02,
+        "recovery_vx_mps": 0.002,
+        "peak_hip_tau_nm": 26.08,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 9.41,
+        "knee_saturation_steps": 5
+      },
+      {
+        "seed": 200,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 21.84,
+        "flight_duration_s": 0.46,
+        "flight_steps": 23,
+        "root_forward_dist_cm": -6.76,
+        "com_forward_dist_cm": -6.06,
+        "takeoff_root_vy_mps": -0.12,
+        "takeoff_root_vz_mps": 1.74,
+        "takeoff_com_vy_mps": -0.104,
+        "takeoff_com_vz_mps": 2.07,
+        "touchdown_pitch_deg": 9.83,
+        "touchdown_roll_deg": 1.57,
+        "touchdown_yaw_deg": 6.18,
+        "yaw_drift_deg": 5.76,
+        "recovery_vy_mps": -0.022,
+        "recovery_vx_mps": -0.045,
+        "peak_hip_tau_nm": 28.12,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 8.19,
+        "knee_saturation_steps": 5
+      },
+      {
+        "seed": 300,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 19.96,
+        "flight_duration_s": 0.42,
+        "flight_steps": 21,
+        "root_forward_dist_cm": -5.19,
+        "com_forward_dist_cm": -5.33,
+        "takeoff_root_vy_mps": -0.198,
+        "takeoff_root_vz_mps": 1.077,
+        "takeoff_com_vy_mps": -0.12,
+        "takeoff_com_vz_mps": 1.854,
+        "touchdown_pitch_deg": 0.52,
+        "touchdown_roll_deg": -3.54,
+        "touchdown_yaw_deg": -0.61,
+        "yaw_drift_deg": 1.57,
+        "recovery_vy_mps": -0.011,
+        "recovery_vx_mps": 0.002,
+        "peak_hip_tau_nm": 26.42,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 4.35,
+        "knee_saturation_steps": 4
+      },
+      {
+        "seed": 400,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 20.7,
+        "flight_duration_s": 0.4,
+        "flight_steps": 20,
+        "root_forward_dist_cm": -14.85,
+        "com_forward_dist_cm": -13.56,
+        "takeoff_root_vy_mps": -0.348,
+        "takeoff_root_vz_mps": 0.89,
+        "takeoff_com_vy_mps": -0.261,
+        "takeoff_com_vz_mps": 1.789,
+        "touchdown_pitch_deg": -7.74,
+        "touchdown_roll_deg": -2.24,
+        "touchdown_yaw_deg": 10.14,
+        "yaw_drift_deg": 8.6,
+        "recovery_vy_mps": 0.015,
+        "recovery_vx_mps": 0.04,
+        "peak_hip_tau_nm": 28.49,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 7.88,
+        "knee_saturation_steps": 4
+      }
+    ]
+  },
+  "Trial 2 (Forward Jump)": {
+    "model_path": "/home/xy/IsaacTu_jump/evaluation_assets/phase1_forward_jump/models/model_30_yaw_aligned.pt",
+    "seeds": [
+      42,
+      100,
+      200,
+      300,
+      400
+    ],
+    "total_trials": 5,
+    "valid_jumps": 5,
+    "abnormal_resets": 0,
+    "max_clearance_cm": {
+      "mean": 21.046,
+      "std": 1.057,
+      "min": 19.84,
+      "max": 22.73
+    },
+    "flight_duration_s": {
+      "mean": 0.42,
+      "std": 0.025,
+      "min": 0.38,
+      "max": 0.44
+    },
+    "root_forward_dist_cm": {
+      "mean": 2.386,
+      "std": 3.821,
+      "min": -5.15,
+      "max": 5.1
+    },
+    "com_forward_dist_cm": {
+      "mean": 2.95,
+      "std": 3.679,
+      "min": -4.16,
+      "max": 6.03
+    },
+    "takeoff_root_vy_mps": {
+      "mean": -0.034,
+      "std": 0.135,
+      "min": -0.25,
+      "max": 0.125
+    },
+    "takeoff_root_vz_mps": {
+      "mean": 1.51,
+      "std": 0.568,
+      "min": 0.802,
+      "max": 2.226
+    },
+    "takeoff_com_vy_mps": {
+      "mean": 0.051,
+      "std": 0.073,
+      "min": -0.089,
+      "max": 0.119
+    },
+    "takeoff_com_vz_mps": {
+      "mean": 1.95,
+      "std": 0.146,
+      "min": 1.735,
+      "max": 2.094
+    },
+    "touchdown_pitch_deg": {
+      "mean": -2.126,
+      "std": 5.408,
+      "min": -7.28,
+      "max": 7.49
+    },
+    "touchdown_roll_deg": {
+      "mean": 3.48,
+      "std": 1.146,
+      "min": 2.0,
+      "max": 5.04
+    },
+    "yaw_drift_deg": {
+      "mean": 3.58,
+      "std": 2.019,
+      "min": 0.73,
+      "max": 6.61
+    },
+    "recovery_vy_mps": {
+      "mean": 0.002,
+      "std": 0.029,
+      "min": -0.019,
+      "max": 0.056
+    },
+    "recovery_vx_mps": {
+      "mean": 0.008,
+      "std": 0.023,
+      "min": -0.031,
+      "max": 0.038
+    },
+    "peak_hip_tau_nm": {
+      "mean": 23.398,
+      "std": 3.105,
+      "min": 20.59,
+      "max": 28.67
+    },
+    "peak_knee_tau_nm": {
+      "mean": 120.0,
+      "std": 0.0,
+      "min": 120.0,
+      "max": 120.0
+    },
+    "peak_wheel_tau_nm": {
+      "mean": 8.322,
+      "std": 2.354,
+      "min": 4.76,
+      "max": 11.29
+    },
+    "knee_saturation_steps": {
+      "mean": 3.8,
+      "std": 0.748,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "records": [
+      {
+        "seed": 42,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 22.73,
+        "flight_duration_s": 0.44,
+        "flight_steps": 22,
+        "root_forward_dist_cm": 4.81,
+        "com_forward_dist_cm": 5.46,
+        "takeoff_root_vy_mps": 0.072,
+        "takeoff_root_vz_mps": 2.026,
+        "takeoff_com_vy_mps": 0.099,
+        "takeoff_com_vz_mps": 2.094,
+        "touchdown_pitch_deg": -4.77,
+        "touchdown_roll_deg": 4.24,
+        "touchdown_yaw_deg": -4.26,
+        "yaw_drift_deg": 4.09,
+        "recovery_vy_mps": -0.019,
+        "recovery_vx_mps": 0.011,
+        "peak_hip_tau_nm": 20.59,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 11.29,
+        "knee_saturation_steps": 3
+      },
+      {
+        "seed": 100,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 21.67,
+        "flight_duration_s": 0.44,
+        "flight_steps": 22,
+        "root_forward_dist_cm": 5.1,
+        "com_forward_dist_cm": 6.03,
+        "takeoff_root_vy_mps": 0.125,
+        "takeoff_root_vz_mps": 2.226,
+        "takeoff_com_vy_mps": 0.119,
+        "takeoff_com_vz_mps": 2.085,
+        "touchdown_pitch_deg": 0.01,
+        "touchdown_roll_deg": 5.04,
+        "touchdown_yaw_deg": -2.65,
+        "yaw_drift_deg": 2.1,
+        "recovery_vy_mps": 0.006,
+        "recovery_vx_mps": 0.002,
+        "peak_hip_tau_nm": 21.48,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 8.95,
+        "knee_saturation_steps": 4
+      },
+      {
+        "seed": 200,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 20.88,
+        "flight_duration_s": 0.44,
+        "flight_steps": 22,
+        "root_forward_dist_cm": 3.78,
+        "com_forward_dist_cm": 4.02,
+        "takeoff_root_vy_mps": -0.002,
+        "takeoff_root_vz_mps": 1.561,
+        "takeoff_com_vy_mps": 0.068,
+        "takeoff_com_vz_mps": 2.015,
+        "touchdown_pitch_deg": 7.49,
+        "touchdown_roll_deg": 2.35,
+        "touchdown_yaw_deg": -4.75,
+        "yaw_drift_deg": 4.37,
+        "recovery_vy_mps": 0.056,
+        "recovery_vx_mps": -0.031,
+        "peak_hip_tau_nm": 25.21,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 4.76,
+        "knee_saturation_steps": 5
+      },
+      {
+        "seed": 300,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 19.84,
+        "flight_duration_s": 0.4,
+        "flight_steps": 20,
+        "root_forward_dist_cm": 3.39,
+        "com_forward_dist_cm": 3.4,
+        "takeoff_root_vy_mps": -0.116,
+        "takeoff_root_vz_mps": 0.936,
+        "takeoff_com_vy_mps": 0.06,
+        "takeoff_com_vz_mps": 1.82,
+        "touchdown_pitch_deg": -6.08,
+        "touchdown_roll_deg": 2.0,
+        "touchdown_yaw_deg": -7.13,
+        "yaw_drift_deg": 6.61,
+        "recovery_vy_mps": -0.018,
+        "recovery_vx_mps": 0.021,
+        "peak_hip_tau_nm": 21.04,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 6.6,
+        "knee_saturation_steps": 4
+      },
+      {
+        "seed": 400,
+        "valid_jump": true,
+        "abnormal_resets": 0,
+        "max_clearance_cm": 20.11,
+        "flight_duration_s": 0.38,
+        "flight_steps": 19,
+        "root_forward_dist_cm": -5.15,
+        "com_forward_dist_cm": -4.16,
+        "takeoff_root_vy_mps": -0.25,
+        "takeoff_root_vz_mps": 0.802,
+        "takeoff_com_vy_mps": -0.089,
+        "takeoff_com_vz_mps": 1.735,
+        "touchdown_pitch_deg": -7.28,
+        "touchdown_roll_deg": 3.77,
+        "touchdown_yaw_deg": -1.36,
+        "yaw_drift_deg": 0.73,
+        "recovery_vy_mps": -0.015,
+        "recovery_vx_mps": 0.038,
+        "peak_hip_tau_nm": 28.67,
+        "peak_knee_tau_nm": 120.0,
+        "peak_wheel_tau_nm": 10.01,
+        "knee_saturation_steps": 3
+      }
+    ]
+  }
+}

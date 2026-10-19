@@ -88,3 +88,15 @@ from legged_gym.envs.myrobot.myrobot_forward_jump_config import MyRobotForwardJu
 
 task_registry.register("myrobot_forward_jump", MyRobotForwardJump, MyRobotForwardJumpCfg(), MyRobotForwardJumpCfgPPO())
 
+# 导入与注册 独立静止前向跳跃环境与配置 (Phase 2 最小课程)
+from legged_gym.envs.myrobot.myrobot_forward_jump_static_env import MyRobotForwardJumpStatic
+from legged_gym.envs.myrobot.myrobot_forward_jump_static_config import MyRobotForwardJumpStaticCfg, MyRobotForwardJumpStaticCfgPPO
+
+task_registry.register("myrobot_forward_jump_static", MyRobotForwardJumpStatic, MyRobotForwardJumpStaticCfg(), MyRobotForwardJumpStaticCfgPPO())
+
+# 导入与注册 Phase 4 增量优化环境与配置 (Phase 4 课程)
+from legged_gym.envs.myrobot.myrobot_forward_jump_phase4_env import MyRobotForwardJumpPhase4
+from legged_gym.envs.myrobot.myrobot_forward_jump_phase4_config import MyRobotForwardJumpPhase4Cfg, MyRobotForwardJumpPhase4CfgPPO
+
+task_registry.register("myrobot_forward_jump_phase4", MyRobotForwardJumpPhase4, MyRobotForwardJumpPhase4Cfg(), MyRobotForwardJumpPhase4CfgPPO())
+

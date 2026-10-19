@@ -214,7 +214,15 @@ class PPO:
         self.transition.dones = dones
         # Bootstrapping on time outs
         if 'time_outs' in infos:
-            self.transition.rewards += self.gamma * torch.squeeze(self.transition.values * infos['time_outs'].unsqueeze(1).to(self.device), 1)
+            time_outs = infos['time_outs'].unsqueeze(1).to(self.device)
+            if 'terminal_observation' in infos:
+                # Target B: evaluate Critic on the TRUE pre-reset terminal observation s_{t+1}
+                with torch.no_grad():
+                    terminal_critic_obs = infos['terminal_observation']
+                    terminal_values = self.actor_critic.evaluate(terminal_critic_obs.to(self.device)).detach()
+                self.transition.rewards += self.gamma * torch.squeeze(terminal_values * time_outs, 1)
+            else:
+                self.transition.rewards += self.gamma * torch.squeeze(self.transition.values * time_outs, 1)
 
         # Record the transition
         self.storage.add_transitions(self.transition)

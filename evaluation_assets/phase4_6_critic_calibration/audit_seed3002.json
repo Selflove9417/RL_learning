@@ -1,0 +1,119 @@
+{
+  "seed": 3002,
+  "actor_max_diff": 0.0,
+  "settle_step_reached": 75,
+  "fwd_dist_cm": 12.671329081058502,
+  "max_clearance_cm": 22.09651619195938,
+  "takeoff_step": 12,
+  "touchdown_step": 34,
+  "undiscounted_return": 35.14790918678045,
+  "terminal_values": {
+    "va_pre_reset": 17.22579574584961,
+    "vb_pre_reset": 19.359743118286133,
+    "va_post_reset": 18.19842529296875,
+    "vb_post_reset": 21.152177810668945,
+    "va_step0": 18.66083526611328,
+    "vb_step0": 21.492414474487305,
+    "va_step139": 17.225685119628906,
+    "vb_step139": 19.361570358276367
+  },
+  "stats": {
+    "Target_A_finite": {
+      "model_a": {
+        "mse": 55.742438411514286,
+        "mae": 5.562364299336029,
+        "ev": 0.27590597018423924
+      },
+      "model_b": {
+        "mse": 90.7101000165962,
+        "mae": 8.422804798777994,
+        "ev": 0.4229311130543264
+      },
+      "td_mean_a": -0.061499072051473924,
+      "td_mean_b": -0.11012678716225288,
+      "td_step139_a": -16.961285650730133,
+      "td_step139_b": -19.097170889377594,
+      "adv_launch_a": 0.6057037142542373,
+      "adv_launch_b": 0.07945874797272373,
+      "adv_flight_a": 0.6237044466328315,
+      "adv_flight_b": 0.19850517107095048,
+      "adv_touchdown_a": 0.7121536170506557,
+      "adv_touchdown_b": 0.08656887601131119,
+      "adv_recovery_a": -1.6346181117866758,
+      "adv_recovery_b": -2.57010028616628
+    },
+    "Target_B_pre_reset_bootstrap": {
+      "model_a": {
+        "mse": 15.167347992668475,
+        "mae": 3.6360058136877105,
+        "ev": 0.6122068972891099
+      },
+      "model_b": {
+        "mse": 4.080214445457685,
+        "mae": 1.9150678384246442,
+        "ev": 0.8742041389724982
+      },
+      "td_mean_a": 0.06031191215131975,
+      "td_mean_b": 0.026774253459913338,
+      "td_step139_a": 0.0922521376609815,
+      "td_step139_b": 0.0689747977256765,
+      "adv_launch_a": 0.6125598964006551,
+      "adv_launch_b": 0.08716428025031438,
+      "adv_flight_a": 0.6378262213780499,
+      "adv_flight_b": 0.21437636422077028,
+      "adv_touchdown_a": 0.7422650565968263,
+      "adv_touchdown_b": 0.12041054829957779,
+      "adv_recovery_a": 1.2253114644229657,
+      "adv_recovery_b": 0.6441199883976876
+    },
+    "Target_C_post_reset_bootstrap": {
+      "model_a": {
+        "mse": 18.729857501053452,
+        "mae": 4.155378427253041,
+        "ev": 0.64974154763793
+      },
+      "model_b": {
+        "mse": 8.597708743012303,
+        "mae": 2.8722066520514953,
+        "ev": 0.8373679608204457
+      },
+      "td_mean_a": 0.06718979252023366,
+      "td_mean_b": 0.03944932735604895,
+      "td_step139_a": 1.0551553893089292,
+      "td_step139_b": 1.8434851431846617,
+      "adv_launch_a": 0.6129470207712456,
+      "adv_launch_b": 0.0878777020810298,
+      "adv_flight_a": 0.6386235868860128,
+      "adv_flight_b": 0.2158458091941581,
+      "adv_touchdown_a": 0.74396525531281,
+      "adv_touchdown_b": 0.12354380203580348,
+      "adv_recovery_a": 1.3867932356886925,
+      "adv_recovery_b": 0.9417107102315372
+    }
+  },
+  "reward_totals": {
+    "action_rate": -0.015555804970358196,
+    "airborne_forward_displacement": 0.9389026870078734,
+    "ang_vel_xy": -0.06818430257641511,
+    "bilateral_symmetry": -0.33058787155979397,
+    "collision": 0.0,
+    "dof_acc": -0.10484700519865825,
+    "dof_pos_limits": 0.0,
+    "dof_vel": -0.027959201336751838,
+    "feet_air_time": 0.8799999803304672,
+    "jump_clearance": 4.8364561287360734,
+    "landing_cushion": 5.084037991969925,
+    "lin_vel_z": -2.767573177682093,
+    "recovery_balance": 7.372765392673786,
+    "squat_prep": 0.19371041793144528,
+    "stationary_prep": 0.0,
+    "takeoff_forward_velocity": 0.09193312584860128,
+    "takeoff_velocity": 0.8131593164840489,
+    "torque_limits": -0.4919999966323374,
+    "torques": -0.6690393299383072,
+    "touchdown_forward_distance": 0.02625014246441104,
+    "tracking_ang_vel": 4.965607003149234,
+    "tracking_lin_vel": 8.180834396611871,
+    "wheel_contact": 6.239999860525131
+  }
+}

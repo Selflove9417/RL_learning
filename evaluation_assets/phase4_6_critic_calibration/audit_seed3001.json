@@ -1,0 +1,119 @@
+{
+  "seed": 3001,
+  "actor_max_diff": 0.0,
+  "settle_step_reached": 75,
+  "fwd_dist_cm": 12.355542182922363,
+  "max_clearance_cm": 21.599559485912323,
+  "takeoff_step": 12,
+  "touchdown_step": 34,
+  "undiscounted_return": 35.432672845199704,
+  "terminal_values": {
+    "va_pre_reset": 17.225234985351562,
+    "vb_pre_reset": 19.359865188598633,
+    "va_post_reset": 18.198097229003906,
+    "vb_post_reset": 21.153217315673828,
+    "va_step0": 18.547277450561523,
+    "vb_step0": 21.41239356994629,
+    "va_step139": 17.225353240966797,
+    "vb_step139": 19.35975456237793
+  },
+  "stats": {
+    "Target_A_finite": {
+      "model_a": {
+        "mse": 55.70273841682544,
+        "mae": 5.519856259142372,
+        "ev": 0.2743432955618694
+      },
+      "model_b": {
+        "mse": 90.3559814932058,
+        "mae": 8.376137375951709,
+        "ev": 0.4202500480120195
+      },
+      "td_mean_a": -0.05861412360785285,
+      "td_mean_b": -0.10747837556206762,
+      "td_step139_a": -16.960751116275787,
+      "td_step139_b": -19.09515243768692,
+      "adv_launch_a": 0.702790319239205,
+      "adv_launch_b": 0.18228041032700187,
+      "adv_flight_a": 0.7411367511486135,
+      "adv_flight_b": 0.29914982962744124,
+      "adv_touchdown_a": 0.7291218318088086,
+      "adv_touchdown_b": 0.07749012556640622,
+      "adv_recovery_a": -1.6324452237344176,
+      "adv_recovery_b": -2.564374513865728
+    },
+    "Target_B_pre_reset_bootstrap": {
+      "model_a": {
+        "mse": 15.584883692467738,
+        "mae": 3.6823120943472287,
+        "ev": 0.6137177083897525
+      },
+      "model_b": {
+        "mse": 4.251817092585793,
+        "mae": 1.9618004453463889,
+        "ev": 0.8834453887041881
+      },
+      "td_mean_a": 0.0631928952171332,
+      "td_mean_b": 0.029423528271594154,
+      "td_step139_a": 0.0922315192222598,
+      "td_step139_b": 0.07111409902572774,
+      "adv_launch_a": 0.7096462781926757,
+      "adv_launch_b": 0.18998599119081222,
+      "adv_flight_a": 0.7552580661801817,
+      "adv_flight_b": 0.31502112285098094,
+      "adv_touchdown_a": 0.7592322911212593,
+      "adv_touchdown_b": 0.11133201123888392,
+      "adv_recovery_a": 1.227391251665415,
+      "adv_recovery_b": 0.6498660275411927
+    },
+    "Target_C_post_reset_bootstrap": {
+      "model_a": {
+        "mse": 19.17388953168289,
+        "mae": 4.201808965094526,
+        "ev": 0.6531623956055377
+      },
+      "model_b": {
+        "mse": 8.82098955410679,
+        "mae": 2.919429158190641,
+        "ev": 0.8693690234699906
+      },
+      "td_mean_a": 0.0700724210829605,
+      "td_mean_b": 0.04210508974162589,
+      "td_step139_a": 1.0553651404380808,
+      "td_step139_b": 1.846532704830171,
+      "adv_launch_a": 0.7100334951807477,
+      "adv_launch_b": 0.19069977817733538,
+      "adv_flight_a": 0.756055622453673,
+      "adv_flight_b": 0.31649131994091884,
+      "adv_touchdown_a": 0.7609328966008957,
+      "adv_touchdown_b": 0.11446686869082084,
+      "adv_recovery_a": 1.3889116566005186,
+      "adv_recovery_b": 0.9476090673665997
+    }
+  },
+  "reward_totals": {
+    "action_rate": -0.016123354067131408,
+    "airborne_forward_displacement": 0.9277158162508345,
+    "ang_vel_xy": -0.0726439342350974,
+    "bilateral_symmetry": -0.31152424011464985,
+    "collision": 0.0,
+    "dof_acc": -0.10532007524717586,
+    "dof_pos_limits": 0.0,
+    "dof_vel": -0.02808535302978895,
+    "feet_air_time": 0.8799999803304672,
+    "jump_clearance": 4.90313385494499,
+    "landing_cushion": 5.060574101047795,
+    "lin_vel_z": -2.782352837517927,
+    "recovery_balance": 7.43324107006398,
+    "squat_prep": 0.21263109955469006,
+    "stationary_prep": 0.0,
+    "takeoff_forward_velocity": 0.10550047667347846,
+    "takeoff_velocity": 0.8191800172810249,
+    "torque_limits": -0.4919999966323374,
+    "torques": -0.6569713796529607,
+    "touchdown_forward_distance": 0.02813502010401292,
+    "tracking_ang_vel": 5.140324621947347,
+    "tracking_lin_vel": 8.14725868134367,
+    "wheel_contact": 6.239999860525131
+  }
+}

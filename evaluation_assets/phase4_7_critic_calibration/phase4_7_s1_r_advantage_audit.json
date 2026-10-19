@@ -1,0 +1,72 @@
+{
+  "terminal_values": {
+    "v_term_champ_mean": 17.224218368530273,
+    "v_term_calib_mean": 19.717012405395508,
+    "diff_mean": 2.4927945137023926
+  },
+  "raw_gae": {
+    "mean_A": 0.006686671636998653,
+    "std_A": 0.633320689201355,
+    "min_A": -2.406869888305664,
+    "max_A": 0.9607207775115967,
+    "mean_B": 0.30289408564567566,
+    "std_B": 0.509149968624115,
+    "min_B": -0.655306339263916,
+    "max_B": 1.0751926898956299,
+    "diff_mean": 0.29620739817619324,
+    "diff_std": 0.5376536846160889,
+    "diff_max": 2.474477767944336
+  },
+  "norm_gae": {
+    "mean_A": -6.811959440966575e-09,
+    "std_A": 0.9999998807907104,
+    "min_A": -3.8109548091888428,
+    "max_A": 1.5063996315002441,
+    "mean_B": -1.9903694692402496e-08,
+    "std_B": 0.9999998807907104,
+    "min_B": -1.8819611072540283,
+    "max_B": 1.5168391466140747,
+    "diff_mean": -1.277242400732348e-08,
+    "diff_std": 0.9212245345115662,
+    "diff_max": 3.349374771118164,
+    "max_abs_diff": 3.349374771118164
+  },
+  "step_0_33_jump_segment": {
+    "total_elements": 2176,
+    "raw_sign_flips": 0,
+    "norm_sign_flips": 814,
+    "max_abs_raw_diff": 0.003711223602294922,
+    "max_abs_norm_diff": 0.686456561088562
+  },
+  "step_70_audit": {
+    "exponent": 69,
+    "mu_69": 0.014512999896396412,
+    "theoretical_adv_diff": 0.0358161451086047,
+    "actual_raw_diff": 0.03581619635224342,
+    "report_reported_val": 0.0326,
+    "report_weight_reported": 0.0132,
+    "reconciliation_note": "Report previously cited 0.0326 using weight 0.01320; exact recalculation gives weight 0.014513 and diff 0.035837."
+  },
+  "actor_loss_and_gradients": {
+    "loss_det_A": 3.2600091515178065e-09,
+    "loss_det_B": 2.5763803535028273e-08,
+    "loss_det_diff": 2.2503794383510467e-08,
+    "grad_norm_det_A": 4.588940616390147e-10,
+    "grad_norm_det_B": 1.2682106476091803e-09,
+    "loss_stoch_A": 3.2600091515178065e-09,
+    "loss_stoch_B": 2.5763803535028273e-08,
+    "loss_stoch_diff": 2.2503794383510467e-08,
+    "grad_norm_stoch_A": 7.253811329377413e-09,
+    "grad_norm_stoch_B": 2.0045661131007364e-08,
+    "grad_cosine_similarity": 1.4540741055668605e-08,
+    "grad_norm_diff": 1.279185113389758e-08,
+    "rel_grad_diff_pct": 74.13927792358189,
+    "max_elem_diff": 2.41833530978397e-09,
+    "loss_raw_A": -0.006686671636998653,
+    "loss_raw_B": -0.30289408564567566,
+    "raw_grad_norm_A": 0.006925565656274557,
+    "raw_grad_norm_B": 0.3137250542640686,
+    "raw_grad_cosine_similarity": 0.9999997615814209,
+    "raw_rel_grad_diff_pct": 4429.949457020069
+  }
+}
