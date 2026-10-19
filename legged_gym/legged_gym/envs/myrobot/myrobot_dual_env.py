@@ -385,7 +385,7 @@ class MyRobotDualEnv(MyRobotJump):
 
                 if (air[i].item() or self.wheel_clearance[i].min().item() > 0.02) and v_z[i].item() > 0.4 and not self.has_taken_off[i].item():
                     self.has_taken_off[i] = True
-                    self.takeoff_vy[i] = self.base_lin_vel[i, 1]
+                    self.takeoff_vy[i] = self.root_states[i, 8]
                     self.takeoff_pos_y[i] = self.root_states[i, 1]
                     if self.takeoff_step[i].item() == -1:
                         self.takeoff_step[i] = self.common_step_counter
@@ -400,7 +400,7 @@ class MyRobotDualEnv(MyRobotJump):
                     self.fsm_state_timer[i] = 0.0
                     self.settle_stable_steps[i] = 0
                     self.has_touched_down[i] = True
-                    self.touchdown_vy[i] = self.base_lin_vel[i, 1]
+                    self.touchdown_vy[i] = self.root_states[i, 8]
                     self.touchdown_pos_y[i] = self.root_states[i, 1]
                     self.flight_distance_y[i] = self.root_states[i, 1] - self.takeoff_pos_y[i]
                     if abs(self.takeoff_vy[i].item()) > 0.01:

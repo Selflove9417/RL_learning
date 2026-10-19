@@ -210,19 +210,23 @@ class PPO:
         return self.transition.actions
     
     def process_env_step(self, rewards, dones, infos):
-        self.transition.rewards = rewards.clone()
+        self.transition.rewards = rewards.clone().view(-1)
         self.transition.dones = dones
+        if 'actor_loss_mask' in infos:
+            self.transition.actor_mask = infos['actor_loss_mask'].clone().to(self.device)
+        else:
+            self.transition.actor_mask = torch.ones(dones.shape[0], 1, device=self.device)
         # Bootstrapping on time outs
         if 'time_outs' in infos:
-            time_outs = infos['time_outs'].unsqueeze(1).to(self.device)
+            time_outs = infos['time_outs'].view(-1, 1).to(self.device)
             if 'terminal_observation' in infos:
                 # Target B: evaluate Critic on the TRUE pre-reset terminal observation s_{t+1}
                 with torch.no_grad():
                     terminal_critic_obs = infos['terminal_observation']
                     terminal_values = self.actor_critic.evaluate(terminal_critic_obs.to(self.device)).detach()
-                self.transition.rewards += self.gamma * torch.squeeze(terminal_values * time_outs, 1)
+                self.transition.rewards += self.gamma * (terminal_values * time_outs).view(-1)
             else:
-                self.transition.rewards += self.gamma * torch.squeeze(self.transition.values * time_outs, 1)
+                self.transition.rewards += self.gamma * (self.transition.values * time_outs).view(-1)
 
         # Record the transition
         self.storage.add_transitions(self.transition)
@@ -281,6 +285,15 @@ class PPO:
                     sigma_batch = self.actor_critic.action_std
                     entropy_batch = self.actor_critic.entropy
 
+                    # Action execution mask: 1.0 for JUMP/RECOVER (Jump Actor executed), 0.0 for BALANCE (Phase 15 executed)
+                    if masks_batch is not None:
+                        actor_mask = torch.squeeze(masks_batch).float()
+                        if actor_mask.dim() == 0:
+                            actor_mask = actor_mask.unsqueeze(0)
+                    else:
+                        actor_mask = torch.ones_like(torch.squeeze(advantages_batch))
+                    num_valid_actor = actor_mask.sum().clamp(min=1.0)
+
                     # Numerical stability check for action distribution
                     if torch.isnan(mu_batch).any() or torch.isinf(mu_batch).any() or \
                        torch.isnan(sigma_batch).any() or torch.isinf(sigma_batch).any() or (sigma_batch <= 0).any():
@@ -290,8 +303,14 @@ class PPO:
                     with torch.inference_mode():
                         kl = torch.sum(
                             torch.log(sigma_batch / old_sigma_batch + 1.e-5) + (torch.square(old_sigma_batch) + torch.square(old_mu_batch - mu_batch)) / (2.0 * torch.square(sigma_batch)) - 0.5, axis=-1)
-                        kl_mean = torch.mean(kl)
-                        kl_all.append(kl.detach())
+                        # Compute KL over valid active actor steps
+                        kl_valid = (kl * actor_mask).sum() / num_valid_actor
+                        kl_mean = kl_valid
+                        kl_valid_elements = kl[actor_mask > 0.5]
+                        if kl_valid_elements.numel() > 0:
+                            kl_all.append(kl_valid_elements.detach())
+                        else:
+                            kl_all.append(kl_valid.unsqueeze(0).detach())
 
                         # Adaptive LR schedule
                         if self.desired_kl is not None and self.schedule == 'adaptive':
@@ -309,19 +328,21 @@ class PPO:
                             early_stop_reason = f"KL mean ({kl_mean.item():.6f}) exceeded threshold ({self.early_stop_kl:.6f}) at update {num_updates_executed + 1}/{num_updates_planned}"
                             break
 
-                    # Surrogate loss
+                    # Surrogate loss (masked for active actor steps only)
                     ratio = torch.exp(actions_log_prob_batch - torch.squeeze(old_actions_log_prob_batch))
                     surrogate = -torch.squeeze(advantages_batch) * ratio
                     surrogate_clipped = -torch.squeeze(advantages_batch) * torch.clamp(ratio, 1.0 - self.clip_param,
                                                                                     1.0 + self.clip_param)
-                    surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
+                    surrogate_loss_unreduced = torch.max(surrogate, surrogate_clipped)
+                    surrogate_loss = (surrogate_loss_unreduced * actor_mask).sum() / num_valid_actor
 
-                    # Clip fraction diagnostics
+                    # Clip fraction diagnostics (computed over valid actor steps)
                     with torch.no_grad():
-                        clip_fraction = torch.mean((torch.abs(ratio - 1.0) > self.clip_param).float()).item()
+                        is_clipped = (torch.abs(ratio - 1.0) > self.clip_param).float()
+                        clip_fraction = ((is_clipped * actor_mask).sum() / num_valid_actor).item()
                         clip_fractions.append(clip_fraction)
 
-                    # Value function loss
+                    # Value function loss (computed over full rollout without mask)
                     if self.use_clipped_value_loss:
                         value_clipped = target_values_batch + (value_batch - target_values_batch).clamp(-self.clip_param,
                                                                                                         self.clip_param)
@@ -331,7 +352,10 @@ class PPO:
                     else:
                         value_loss = (returns_batch - value_batch).pow(2).mean()
 
-                    loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_batch.mean()
+                    # Entropy loss (masked for active actor steps only)
+                    entropy_per_sample = entropy_batch.mean(dim=-1) if entropy_batch.dim() > 1 else entropy_batch
+                    entropy_loss = (entropy_per_sample * actor_mask).sum() / num_valid_actor
+                    loss = surrogate_loss + self.value_loss_coef * value_loss - self.entropy_coef * entropy_loss
 
                     # Reference-Policy KL regularization (Phase 6B-Pilot, beta > 0)
                     if self.enable_ref_kl and self.ref_actor is not None:
@@ -339,10 +363,10 @@ class PPO:
                             mu_ref = self.ref_actor(obs_batch)
                         ref_dist = Normal(mu_ref, self.ref_std)
                         curr_dist = Normal(mu_batch, sigma_batch)
-                        ref_kl_batch = kl_divergence(ref_dist, curr_dist).sum(dim=-1).mean()
-                        ref_kl_loss = self.ref_kl_coef * ref_kl_batch
+                        ref_kl_batch = kl_divergence(ref_dist, curr_dist).sum(dim=-1)
+                        ref_kl_loss = self.ref_kl_coef * ((ref_kl_batch * actor_mask).sum() / num_valid_actor)
                         loss = loss + ref_kl_loss
-                        ref_kl_all.append(ref_kl_batch.item())
+                        ref_kl_all.append(ref_kl_loss.item())
                         ref_kl_loss_all.append(ref_kl_loss.item())
 
                     # Actor Symmetry Regularization (Phase 9A, lambda_sym > 0)
@@ -350,10 +374,10 @@ class PPO:
                         obs_batch_mirr = self._apply_obs_symmetry(obs_batch)
                         mu_mirr = self.actor_critic.actor(obs_batch_mirr)
                         mu_mirr_target = self._apply_act_symmetry(mu_batch)
-                        sym_loss_batch = torch.mean(torch.sum(torch.square(mu_mirr - mu_mirr_target), dim=-1) / 6.0)
-                        sym_loss = self.sym_reg_coef * sym_loss_batch
+                        sym_loss_batch = torch.sum(torch.square(mu_mirr - mu_mirr_target), dim=-1) / 6.0
+                        sym_loss = self.sym_reg_coef * ((sym_loss_batch * actor_mask).sum() / num_valid_actor)
                         loss = loss + sym_loss
-                        sym_loss_all.append(sym_loss_batch.item())
+                        sym_loss_all.append(sym_loss.item())
                         sym_loss_scaled_all.append(sym_loss.item())
 
                     if torch.isnan(loss) or torch.isinf(loss):
@@ -382,7 +406,7 @@ class PPO:
 
                     num_updates_executed += 1
                     grad_norms.append(grad_norm.item())
-                    entropy_list.append(entropy_batch.mean().item())
+                    entropy_list.append(entropy_loss.item())
                     surr_losses_list.append(surrogate_loss.item())
                     val_losses_list.append(value_loss.item())
 

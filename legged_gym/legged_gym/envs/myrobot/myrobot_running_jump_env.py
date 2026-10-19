@@ -7,7 +7,7 @@ import os
 import math
 import torch
 from isaacgym import gymapi, gymtorch
-from isaacgym.torch_utils import get_euler_xyz, quat_rotate_inverse
+from isaacgym.torch_utils import get_euler_xyz, quat_rotate, quat_rotate_inverse
 from rsl_rl.modules import ActorCritic
 from legged_gym.envs.myrobot.myrobot_dual_env import (
     MyRobotDualEnv,
@@ -183,6 +183,20 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.wheel_clearance[:, 1] = clr_R
         self.bilateral_clearance[:] = clr_min
 
+        # Immediate takeoff latch: eliminates 1-frame lag so takeoff is captured in exact frame of contact loss
+        in_jump = (self.fsm_state == self.STATE_JUMP)
+        now_air = self.is_airborne | (self.bilateral_clearance > 0.015)
+        just_took_off = in_jump & now_air & (self.root_states[:, 9] > 0.3) & (~self.has_taken_off)
+        if just_took_off.any():
+            self.has_taken_off |= just_took_off
+            self.takeoff_vy[just_took_off] = self.root_states[just_took_off, 8]
+            self.takeoff_pos_y[just_took_off] = self.root_states[just_took_off, 1]
+            for env_idx in just_took_off.nonzero(as_tuple=False).flatten():
+                idx = env_idx.item()
+                if self.takeoff_step[idx].item() == -1:
+                    self.takeoff_step[idx] = self.common_step_counter
+                    self.last_transition_event[idx] = "LIFTOFF"
+
         # 5. Check termination (fall / tilt > 45 deg / timeout)
         # Note: In MyRobot, X is lateral (wheel axle), Y is longitudinal (forward travel).
         # get_euler_xyz returns (x_rot, y_rot, z_rot).
@@ -201,10 +215,13 @@ class MyRobotRunningJump(MyRobotDualEnv):
         # 6. Compute reward for transition (s_t, a_t) -> s_{t+1} BEFORE reset
         self.compute_reward()
 
-        # 7. Compute true terminal observation BEFORE reset for RSL-RL GAE timeout bootstrapping
+        # 7. Compute true terminal observation and action execution mask BEFORE reset
         self.compute_observations()
         pre_reset_obs = self.obs_buf.clone()
 
+        # Action execution mask: 1.0 if Jump Actor actions were executed this step, 0.0 if Phase 15 Balance was active
+        actor_loss_mask = ((self.fsm_state == self.STATE_JUMP) | (self.fsm_state == self.STATE_RECOVER)).float()
+        self.extras["actor_loss_mask"] = actor_loss_mask.clone()
         self.extras["time_outs"] = self.time_out_buf.clone()
         self.extras["terminal_observation"] = pre_reset_obs.clone()
 
@@ -233,17 +250,29 @@ class MyRobotRunningJump(MyRobotDualEnv):
     # Reward Functions: Explicitly Tailored for In-Motion Running Jump
     # =========================================================================
 
+    def _get_world_forward_velocity(self):
+        """Computes robot forward velocity projected onto horizontal heading in the world frame."""
+        body_fwd = torch.zeros(self.num_envs, 3, device=self.device)
+        body_fwd[:, 1] = 1.0  # body Y is longitudinal forward
+        world_fwd = quat_rotate(self.base_quat, body_fwd)
+        fwd_xy = world_fwd[:, :2]
+        heading_norm = torch.norm(fwd_xy, dim=-1, keepdim=True).clamp(min=1e-6)
+        heading_xy = fwd_xy / heading_norm
+        # Project world horizontal velocity (indices 7:9: vx_world, vy_world) onto horizontal heading
+        return torch.sum(self.root_states[:, 7:9] * heading_xy, dim=-1)
+
     def _reward_forward_velocity_retention(self):
-        """Rewards keeping forward velocity v_y ~ v_y^cmd across the ENTIRE jump cycle."""
+        """Rewards keeping world-frame forward velocity v_fwd_world ~ v_cmd across the ENTIRE jump cycle."""
         cmd_vy = self.actual_cmd_vy if hasattr(self, 'actual_cmd_vy') else self.commands[:, 1]
-        err_vy = self.base_lin_vel[:, 1] - cmd_vy
+        v_fwd_world = self._get_world_forward_velocity()
+        err_vy = v_fwd_world - cmd_vy
         sigma = self.cfg.rewards.tracking_sigma
         return torch.exp(-torch.square(err_vy) / (2.0 * sigma**2))
 
     def _reward_takeoff_velocity(self):
-        """Rewards vertical explosive impulse during push-off window (phi in [0.08, 0.24])."""
+        """Rewards vertical explosive impulse in world frame during push-off window (phi in [0.08, 0.24])."""
         is_push = (self.jump_phase >= 0.08) & (self.jump_phase <= 0.24)
-        vz = self.base_lin_vel[:, 2]
+        vz = self.root_states[:, 9]
         return torch.where(is_push, torch.clamp(vz, 0.0, 1.2), torch.zeros_like(vz))
 
     def _reward_jump_clearance(self):
@@ -260,9 +289,10 @@ class MyRobotRunningJump(MyRobotDualEnv):
         return torch.where(self.has_touched_down, cushion_rew, torch.zeros_like(cushion_rew))
 
     def _reward_post_touchdown_forward(self):
-        """Rewards immediately tracking forward velocity after landing."""
+        """Rewards immediately tracking world-frame forward velocity after landing."""
         cmd_vy = self.actual_cmd_vy if hasattr(self, 'actual_cmd_vy') else self.commands[:, 1]
-        err_vy = self.base_lin_vel[:, 1] - cmd_vy
+        v_fwd_world = self._get_world_forward_velocity()
+        err_vy = v_fwd_world - cmd_vy
         ret = torch.exp(-torch.square(err_vy) / (2.0 * (self.cfg.rewards.tracking_sigma**2)))
         return torch.where(self.has_touched_down, ret, torch.zeros_like(ret))
 
