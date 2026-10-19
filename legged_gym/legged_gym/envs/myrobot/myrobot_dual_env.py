@@ -265,7 +265,7 @@ class MyRobotDualEnv(MyRobotJump):
 
         self.teleop_jump_requested[can_request] = True
 
-    def step_dual_policy(self):
+    def step_dual_policy(self, actions=None, call_post_physics_step=True):
         """
         Execute one control cycle (50 Hz outer loop with 200 Hz inner torque integration).
         """
@@ -536,12 +536,23 @@ class MyRobotDualEnv(MyRobotJump):
         tau_w_bal_R = tau_c_allocated + tau_d_clamped
 
         # Jump Policy Pipeline
-        self.compute_observations()
-        jump_obs = self.get_observations()
-        with torch.no_grad():
-            act_jump_raw = self.ac_jump.act_inference(jump_obs)
         jump_active = (self.fsm_state == self.STATE_JUMP) | (self.fsm_state == self.STATE_RECOVER)
-        self.filtered_actions[jump_active] = 0.80 * act_jump_raw[jump_active] + 0.20 * self.filtered_actions[jump_active]
+        if actions is not None:
+            # External actions provided (from PPO runner in train.py or policy in play.py)
+            clip_act = getattr(self.cfg.normalization, 'clip_actions', 100.0) if hasattr(self, 'cfg') and hasattr(self.cfg, 'normalization') else 100.0
+            act_jump_raw = torch.clamp(actions, -clip_act, clip_act)
+            self.actions = actions.clone()
+        else:
+            # Standalone fallback (e.g. teleop_dual.py without PPO runner)
+            self.compute_observations()
+            jump_obs = self.get_observations()
+            with torch.no_grad():
+                act_jump_raw = self.ac_jump.act_inference(jump_obs)
+            self.actions = act_jump_raw.clone()
+
+        if jump_active.any():
+            self.filtered_actions[jump_active] = 0.80 * act_jump_raw[jump_active] + 0.20 * self.filtered_actions[jump_active]
+        self.filtered_actions[~jump_active] = 0.0
 
         tgt_hip_jump_L = self.default_dof_pos[:, self.left_hip_idx] + self.filtered_actions[:, self.left_hip_idx] * self.hip_action_scale
         tgt_knee_jump_L = self.default_dof_pos[:, self.left_knee_idx] + self.filtered_actions[:, self.left_knee_idx] * self.knee_action_scale
@@ -622,5 +633,6 @@ class MyRobotDualEnv(MyRobotJump):
             self.gym.refresh_dof_state_tensor(self.sim)
 
         self.last_q_tgt = q_target.clone()
-        self.post_physics_step()
-        self._refresh_physical_state(update_has_taken_off=False)
+        if call_post_physics_step:
+            self.post_physics_step()
+            self._refresh_physical_state(update_has_taken_off=False)

@@ -41,6 +41,8 @@ class MyRobotRunningJump(MyRobotDualEnv):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # Initialize dual policies from trained assets
         self.init_dual_policies()
+        self.user_cmd_vy[:] = self.target_forward_vel
+        self.actual_cmd_vy[:] = self.target_forward_vel
 
     def _init_buffers(self):
         super()._init_buffers()
@@ -48,6 +50,8 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.default_jump_height = getattr(self.cfg.commands, 'target_jump_height', 0.20)
         self.cycle_length = getattr(self.cfg.env, 'cycle_length', 140) # 140 steps = 2.8s per running jump cycle
         self.jump_trigger_step = getattr(self.cfg.env, 'jump_trigger_step', 40) # Jump triggers at t = 0.80s
+
+        self.commands[:, 1] = self.target_forward_vel
 
         self.takeoff_vy = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
         self.touchdown_vy = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
@@ -70,18 +74,80 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.actual_cmd_yaw[env_ids] = 0.0
         self.user_target_height[env_ids] = 0.39774
         self.actual_cmd_height[env_ids] = 0.39774
+        self.commands[env_ids, 1] = self.target_forward_vel
 
         # Dynamic jump trackers
         self.takeoff_vy[env_ids] = 0.0
         self.touchdown_vy[env_ids] = 0.0
         self.flight_distance_y[env_ids] = 0.0
         self.velocity_retention_ratio[env_ids] = 0.0
+        self.filtered_actions[env_ids] = 0.0
+        self.has_taken_off[env_ids] = False
+        self.has_touched_down[env_ids] = False
+        self.is_airborne[env_ids] = False
+        self.wheel_clearance[env_ids] = 0.0
+        self.bilateral_clearance[env_ids] = 0.0
+        self.max_flight_clearance[env_ids] = 0.0
+
+    def compute_observations(self):
+        """
+        35-dim observation vector (100% compatible with ActorCritic architecture):
+        - base_lin_vel * 2.0 (3: [vx*2, vy*2, vz*2])
+        - base_ang_vel * 0.25 (3)
+        - projected_gravity (3)
+        - jump_cmds (4: [cmd_fwd * 2.0, cmd_yaw * 0.25, norm_h, jump_phase])
+          * Slot 9 receives forward command (cmd_fwd = actual_cmd_vy) with NO ZeroCmd!
+        - obs_dof_pos (6: joints relative to nominal, wheels zeroed)
+        - dof_vel * 0.05 (6)
+        - filtered_actions (6)
+        - contact_state (2: normalized contact forces)
+        - phase_clock (2: sin(2pi*phase), cos(2pi*phase))
+        """
+        obs_dof_pos = (self.dof_pos - self.default_dof_pos).clone()
+        obs_dof_pos[:, self.wheel_indices] = 0.0
+
+        norm_h = (self.default_jump_height - 0.20) / 0.10
+        cmd_fwd = self.actual_cmd_vy if hasattr(self, 'actual_cmd_vy') else self.commands[:, 1]
+        cmd_yaw = self.actual_cmd_yaw if hasattr(self, 'actual_cmd_yaw') else self.commands[:, 2]
+
+        jump_cmds = torch.stack([
+            cmd_fwd * 2.0,
+            cmd_yaw * 0.25,
+            torch.full_like(cmd_fwd, norm_h),
+            self.jump_phase
+        ], dim=-1)
+
+        phi = 2.0 * math.pi * self.jump_phase
+        phase_clock = torch.stack([torch.sin(phi), torch.cos(phi)], dim=-1)
+
+        fn_L = torch.clamp(self.contact_forces[:, self.left_wheel_body, 2:3] / 150.0, 0.0, 1.0)
+        fn_R = torch.clamp(self.contact_forces[:, self.right_wheel_body, 2:3] / 150.0, 0.0, 1.0)
+        contact_state = torch.cat([fn_L, fn_R], dim=-1)
+
+        self.obs_buf = torch.cat([
+            self.base_lin_vel * 2.0,
+            self.base_ang_vel * 0.25,
+            self.projected_gravity,
+            jump_cmds,
+            obs_dof_pos * 1.0,
+            self.dof_vel * 0.05,
+            self.filtered_actions,
+            contact_state,
+            phase_clock,
+        ], dim=-1)
+
+        if self.privileged_obs_buf is not None:
+            self.privileged_obs_buf = self.obs_buf.clone()
 
     def step(self, actions):
         """
-        Step simulation.
-        In play / evaluation mode:
-          Automatically manages the running jump cycle (cruise -> in-motion jump -> touchdown -> resume).
+        Step simulation with unified action execution for train.py and play.py.
+        1. Cruising phase (STATE_BALANCE):
+           Robot is balanced and accelerated by frozen Phase 15.
+        2. Jump phase (STATE_JUMP / STATE_RECOVER):
+           Actuators are directly driven by incoming external `actions` from PPO Runner / play.py!
+        3. Timing and lifecycle:
+           render -> simulate physics -> refresh -> check termination -> compute reward -> reset -> compute obs.
         """
         # Periodic auto-trigger for running jump cycle
         step_in_cycle = self.common_step_counter % self.cycle_length
@@ -90,19 +156,34 @@ class MyRobotRunningJump(MyRobotDualEnv):
             if can_jump.any():
                 self.request_teleop_jump(can_jump)
 
-        # Execute dual-policy physics step (handles 50 Hz control & 200 Hz actuator PD/wheel blending)
-        self.step_dual_policy()
+        # 1. Render for interactive viewer if active
+        self.render()
 
-        # Update observations
-        self.compute_observations()
+        # 2. Execute dual-policy physics step without internal post_physics_step
+        self.step_dual_policy(actions=actions, call_post_physics_step=False)
 
-        # Track clearances & flight events
+        # 3. Refresh simulation sensors and base kinematics
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+        self.gym.refresh_dof_state_tensor(self.sim)
+
+        self.episode_length_buf += 1
+        self.common_step_counter += 1
+
+        self.base_quat[:] = self.root_states[:, 3:7]
+        self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
+        self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
+        self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        # 4. Refresh kinematics, clearance, airborne & contacts
+        self._refresh_physical_state(update_has_taken_off=False)
         clr_min, clr_L, clr_R = compute_exact_cylinder_clearance(self)
         self.wheel_clearance[:, 0] = clr_L
         self.wheel_clearance[:, 1] = clr_R
         self.bilateral_clearance[:] = clr_min
 
-        # Check termination (fall / tilt > 45 deg)
+        # 5. Check termination
         r_raw, p_raw, _ = get_euler_xyz(self.base_quat)
         pitch = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
         roll = torch.atan2(torch.sin(r_raw), torch.cos(r_raw))
@@ -113,9 +194,27 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.reset_buf = fall | timeout
         self.time_out_buf = timeout & (~fall)
 
+        # 6. Compute reward for (s_t, a_t) -> s_{t+1} transition BEFORE reset
+        self.compute_reward()
+
+        # 7. Reset terminated envs
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         if len(env_ids) > 0:
             self.reset_idx(env_ids)
+
+        # 8. Compute observations for next step AFTER reset
+        self.compute_observations()
+
+        # 9. Update last step buffers
+        clip_actions = getattr(self.cfg.normalization, 'clip_actions', 100.0)
+        self.last_actions[:] = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
+        self.last_dof_vel[:] = self.dof_vel[:]
+        self.last_root_vel[:] = self.root_states[:, 7:13]
+
+        clip_obs = self.cfg.normalization.clip_observations
+        self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
+        if self.privileged_obs_buf is not None:
+            self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
 
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
 
@@ -125,7 +224,8 @@ class MyRobotRunningJump(MyRobotDualEnv):
 
     def _reward_forward_velocity_retention(self):
         """Rewards keeping forward velocity v_y ~ v_y^cmd across the ENTIRE jump cycle."""
-        err_vy = self.base_lin_vel[:, 1] - self.commands[:, 1]
+        cmd_vy = self.actual_cmd_vy if hasattr(self, 'actual_cmd_vy') else self.commands[:, 1]
+        err_vy = self.base_lin_vel[:, 1] - cmd_vy
         sigma = self.cfg.rewards.tracking_sigma
         return torch.exp(-torch.square(err_vy) / (2.0 * sigma**2))
 
@@ -150,7 +250,8 @@ class MyRobotRunningJump(MyRobotDualEnv):
 
     def _reward_post_touchdown_forward(self):
         """Rewards immediately tracking forward velocity after landing."""
-        err_vy = self.base_lin_vel[:, 1] - self.commands[:, 1]
+        cmd_vy = self.actual_cmd_vy if hasattr(self, 'actual_cmd_vy') else self.commands[:, 1]
+        err_vy = self.base_lin_vel[:, 1] - cmd_vy
         ret = torch.exp(-torch.square(err_vy) / (2.0 * (self.cfg.rewards.tracking_sigma**2)))
         return torch.where(self.has_touched_down, ret, torch.zeros_like(ret))
 
