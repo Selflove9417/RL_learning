@@ -372,6 +372,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         # Reset obstacle root states to nominal fixed poses
         obs_px = getattr(self.cfg.obstacle, 'pos_x', 0.000)
         obs_py = getattr(self.cfg.obstacle, 'pos_y', 0.300)
+        self.obstacle_py = obs_py
         obs_pz = self.obstacle_h * 0.5
         self.obstacle_root_states[env_ids, 0] = self.env_origins[env_ids, 0] + obs_px
         self.obstacle_root_states[env_ids, 1] = self.env_origins[env_ids, 1] + obs_py
@@ -584,16 +585,59 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             has_warmed_up = self.episode_length_buf >= 20  # Minimum 0.4s to stabilize balance
             can_jump = in_balance & is_cruising & reached_window & has_warmed_up
             if can_jump.any():
+                jump_ids = can_jump.nonzero(as_tuple=False).flatten()
+                self.peak_obstacle_contact_force[jump_ids] = 0.0
+                self.has_obstacle_collision[jump_ids] = False
+                self.min_obstacle_clearance[jump_ids] = 1.0
+                self.obstacle_cleared[jump_ids] = False
+                self.is_crossing_obstacle[jump_ids] = False
+                self.takeoff_margin_m[jump_ids] = 0.0
+                self.landing_margin_m[jump_ids] = 0.0
+                self.post_touchdown_vels[jump_ids] = 0.0
+                self.post_touchdown_samples[jump_ids] = 0.0
                 self.request_teleop_jump(can_jump)
         else:
             # Legacy step-based trigger for frozen model_3.pt baseline comparison
             step_in_cycle = self.episode_length_buf % self.cycle_length
             can_jump = (step_in_cycle == self.step_trigger) & (self.fsm_state == self.STATE_BALANCE)
             if can_jump.any():
+                jump_ids = can_jump.nonzero(as_tuple=False).flatten()
+                self.peak_obstacle_contact_force[jump_ids] = 0.0
+                self.has_obstacle_collision[jump_ids] = False
+                self.min_obstacle_clearance[jump_ids] = 1.0
+                self.obstacle_cleared[jump_ids] = False
+                self.is_crossing_obstacle[jump_ids] = False
+                self.takeoff_margin_m[jump_ids] = 0.0
+                self.landing_margin_m[jump_ids] = 0.0
+                self.post_touchdown_vels[jump_ids] = 0.0
+                self.post_touchdown_samples[jump_ids] = 0.0
                 self.request_teleop_jump(can_jump)
 
         # Execute parent step (renders, steps dual policy, refreshes tensors, handles reset)
         obs, priv_obs, rews, dones, infos = super().step(actions)
+
+        # In continuous mode, reposition the obstacle ahead of the robot whenever recovering to BALANCE
+        continuous_mode = getattr(self.cfg.env, 'continuous_mode', False)
+        if continuous_mode:
+            recovered_to_balance = (self.fsm_state == self.STATE_BALANCE) & self.has_touched_down
+            if recovered_to_balance.any():
+                for idx in recovered_to_balance.nonzero(as_tuple=False).flatten().tolist():
+                    robot_y = self.root_states[idx, 1].item()
+                    lead_dist = getattr(self.cfg.obstacle, 'lead_dist', 0.60)
+                    new_obs_py = robot_y + lead_dist
+                    self.obstacle_py = new_obs_py
+                    self.obstacle_root_states[idx, 1] = self.env_origins[idx, 1] + new_obs_py
+
+                    obs_actor_id = torch.tensor([idx * 2 + 1], device=self.device, dtype=torch.int32)
+                    all_root_contiguous = self.all_root_states.view(-1, 13).contiguous()
+                    self.gym.set_actor_root_state_tensor_indexed(
+                        self.sim,
+                        gymtorch.unwrap_tensor(all_root_contiguous),
+                        gymtorch.unwrap_tensor(obs_actor_id),
+                        1
+                    )
+                    self.has_touched_down[idx] = False
+                    self.has_taken_off[idx] = False
 
         # Update obstacle physics telemetry
         self.compute_obstacle_metrics()
