@@ -74,7 +74,7 @@ rsl_rl/rsl_rl/runners/on_policy_runner.py:94
 
 ### 0.5 冻结模型重评测：修复解除了假象，暴露了更糟的真实情况
 
-> **读这一节前必须先看 §3 的 `NORMAL_HANDOFF` 发现**：本轮实测证明 `NORMAL_HANDOFF` 在 32 个 run 中出现 **0 次**，其时间预算只剩约 4 步余量、实测全部错过。因此下面两张表里凡以 `NORMAL_HANDOFF` / `recovery_70pct` 为必要条件的账目（`strict_obstacle_clearance`、`recovery_70pct`）**在当前任务实现下不可能非零**，它们的 0/8 不能读作策略能力差。真正有判别力的是三账中的 `collision_free_safe_pass`、`end_to_end_recruise`，以及逐种子的碰撞步数。
+> **Phase D.1 更正**：`NORMAL_HANDOFF` 在 32 个 run 中出现 **0 次**，说明当前冻结策略在这些样本中未达到判据，不能证明状态机逻辑不可达。约 4 步余量也不是不可达证明，因为速度保持可以与缓冲/稳定计数同时累积。有障两臂均有 8/8 真实碰撞、整机通过 0/8；严格成功为零不能仅归因于恢复门槛。以下历史表格沿用 Phase D 原定义，Phase D.1 新定义与小样本实测另见 `PHASE_D1_REPORT.md`。
 
 
 8 种子（11,13,15,20,25,27,31,35）确定性 `act_inference`，0.35 m/s，CPU pipeline 接触对归因：
@@ -249,14 +249,14 @@ BEFORE 臂 8 个 run **一次触地都没有发生**（`touched_down=2` 但那�
 **`NORMAL_HANDOFF` 在全部 32 个 run 中出现 0 次。** 这是本轮新暴露、且必须上报的现象：无障臂 8/8 都以 `TIMEOUT_HANDOFF` 收尾，有障臂 AFTER 5 个也是 `TIMEOUT_HANDOFF`。也就是说 **RECOVER 状态从来没能在超时前靠自身条件正常退出**，每次都是超时后被 BALANCE 接管。
 
 其后果正是三账分离的价值所在：
-- 若把「恢复成功」定义成 `NORMAL_HANDOFF`，**两臂的恢复账永远为 0**，而这个 0 与障碍无关——无障臂也做不到。
+- 若把「恢复成功」定义成 `NORMAL_HANDOFF`，**本次样本中两臂的恢复账为 0**，无障臂也未达到此快速恢复判据。
 - `end_to_end_recruise`（不看 handoff 来源、只看原始速度曲线）无障臂 8/8，说明**巡航能力确实存在，只是从未在 RECOVER 内按时达成**。
 
 **机制（已定位，`myrobot_dual_env.py:588-597`）**：`normal_handoff` 要求 `settle_stable_steps >= 3` **且** `recovery_sustained`，而 `recovery_sustained` 要求 `recovery_hold_steps >= RECOVERY_HOLD_STEPS(10)` 且 `recovery_regression_steps <= 1`；`timeout_handoff` 在 `fsm_state_timer >= 0.40 s`（即 20 步）时无条件触发（只要 grounded 且尚未 normal）。源码注释自己算的时间预算是「handoff 约在第 16 步、timer 约 0.32 s，超时 0.40 s，约 4 步余量」。
 
-实测的 handoff 时刻：AFTER 臂 5 个 run 全部是**触地第 62 步 → handoff 第 81 步**，即**触地后第 19 步、timer≈0.38 s**，紧贴 0.40 s 超时线（差 1 步）。这解释了为什么 `NORMAL_HANDOFF` 恒为 0：`all_settle_calm` 需要 `cushion_time`（0.25 s = 13 步）之后才可能为真，再累积 3 步 → 最早第 16 步；而 `recovery_sustained` 需要 10 步连续达标，两者同时满足的窗口只有约 4 步，实测全部落在窗口之外，于是先撞上 20 步超时。
+实测的 handoff 时刻：AFTER 臂 5 个 run 全部是**触地第 62 步 → handoff 第 81 步**，即**触地后第 19 步、timer≈0.38 s**，紧贴 0.40 s 超时线（差 1 步）。这给出了当前样本未出现 `NORMAL_HANDOFF` 的时间约束背景：`all_settle_calm` 需要 `cushion_time`（0.25 s = 13 步）之后才可能为真，再累积 3 步 → 最早第 16 步；而 `recovery_sustained` 需要 10 步连续达标，两者同时满足的窗口只有约 4 步，实测全部落在窗口之外，于是先撞上 20 步超时。
 
-**这一条改变了裁决，必须明确说**：`NORMAL_HANDOFF` 作为「恢复成功」的必要条件在当前的 4 步余量下**实际上不可达**，因此 `strict_obstacle_clearance` 与 `recovery_70pct` 这两个账目**在修复时间预算之前不可能非零**。它们的 0/8 不能读作「策略恢复能力差」。
+**Phase D.1 更正**：这些观测不能证明 `NORMAL_HANDOFF` 逻辑不可达；源码允许速度保持与缓冲并行累积。32 次为零只支持当前策略未达标。有障两臂 8/8 真实碰撞、整机通过 0/8 本身也足以否决完整跨障，不应把严格成功为零全归因于恢复条件。
 
 
 
@@ -335,7 +335,7 @@ GPU 训练数据链路回归（`test_ppo_smoke.py --pipeline gpu` 41/41）覆盖
 ### 6.2 尚未解释的现象
 
 1. **GPU 首轮 reset 伪影的根因未追到**。只确认了现象、范围（仅 env0，+16.9 mm 离群）与管线依赖（GPU 专有），没有定位到 Isaac Gym 内部或本仓库 GPU 路径缺了哪一步。**不得表述为「已根因定位」。**
-2. **`NORMAL_HANDOFF` 恒为 0 的成因已定位到机制（时间预算只剩约 4 步），但「这算缺陷还是设计本意」未裁决。** 需技术负责人决定：是把 `timeout_handoff` 的 0.40 s 放宽 / 把 `RECOVERY_HOLD_STEPS` 下调，还是承认 RECOVER 的职责只是卸残余、把「恢复成功」改判给 `end_to_end_recruise`。**在裁决前，`strict_obstacle_clearance` 与 `recovery_70pct` 恒为 0 是判据属性，不是策略属性。**
+2. **Phase D.1 裁决已明确**：保留 0.40 s 与 10 步，`NORMAL_HANDOFF` 独立作为快速恢复指标；正式任务采用落地后 2.0 s 内持续、安全的巡航恢复。旧 `end_to_end_recruise` 只检查速度，不直接作为正式成功。32 次未达标不构成逻辑不可达证明。
 3. **整机 `whole_body_passed` 两臂全为 0**（16 个有障 run 全 False）。这与「碰撞发生在机身完全驶离之前」一致，但本轮未逐帧确认每个种子的碰撞时刻机身还差多少，因此**不能断言**「碰撞一定发生在整机驶离前」。
 4. 腾空位移在 AFTER 反而略降（0.1744→0.1601 m，但 n 从 2 变 6，样本集不同）。**这两个均值不可直接比较**——分母不同，已在 JSON 中分别给出 `n_flight_measured`。`mean_shortfall_m` 同理（n 为 2 vs 6）。
 5. BEFORE 臂 `touched_down=2` 却 `handoff` 全为 `NONE`：这两个 run 在触地后、RECOVER 建立前就碰撞终止了（td=63，reset=65/70）。**这是因果顺序问题，不是判据失效**，但意味着 BEFORE 臂的恢复数据几乎为空，两臂的恢复指标本就不可比。

@@ -389,14 +389,11 @@ def run_worker():
                     'root_y': round(float(snap['root_y'][0]), 5),
                     'root_z': round(float(snap['root_z'][0]), 5),
                     # --- recovery evidence (task 2) -------------------------
-                    # The env's own verdict, computed from a CONSECUTIVE-run
-                    # counter over a 0.20 s window that must end in
-                    # NORMAL_HANDOFF. TIMEOUT_HANDOFF and RECOVER_ABORT are
-                    # explicitly NOT success, so the evaluator must not
-                    # re-derive success from a mean velocity: an average cannot
-                    # distinguish a sustained 0.70x cruise from a lunge followed
-                    # by a roll-back, and it cannot see which FSM event closed
-                    # the window.
+                    # Task-owned 2 s recovery survives the FSM handoff.
+                    'mission_completed': bool(snap['mission_completed'][0].item()),
+                    'fast_recovered': bool(snap['fast_recovered'][0].item()),
+                    'e2e_best_hold_steps': int(snap['e2e_best_hold_steps'][0].item()),
+                    'e2e_success_step': int(snap['e2e_success_step'][0].item()),
                     'recovery_outcome': snap['recovery_outcome'][0],
                     'recovery_best_hold_steps': int(
                         snap['recovery_best_hold_steps'][0].item()),
@@ -611,13 +608,7 @@ def run_worker():
         derived['pre_jump_speed_mps'] = (None if pre_jump_vel is None
                                          else round(pre_jump_vel, 4))
 
-        # The env's own verdict is authoritative (task 2) and the strict verdict
-        # below is built on it, so it has to exist before that block runs. It is
-        # computed from a CONSECUTIVE-run counter that must end in
-        # NORMAL_HANDOFF, so it cannot be satisfied by a lunge-then-roll-back, and
-        # TIMEOUT_HANDOFF / RECOVER_ABORT are rejected by construction. The mean
-        # window computed further down is SUPPORTING EVIDENCE only: a 40-step
-        # average can hide a 10-step collapse.
+        # Shared with the PPO success gate: safe sustained cruise by TD + 2 s.
         derived['recovery_sustained'] = bool(outcome['recovered_sustained'])
         derived['recovery_verdict_source'] = 'env._recovery_succeeded'
 
@@ -784,6 +775,7 @@ def run_worker():
         # seed in Phase C eventually started cruising again.
         derived['m7_handoff'] = {
             'recovery_outcome': outcome['recovery_outcome'],
+            'fast_recovery_within_040s': outcome['fast_recovered'],
             'normal_handoff': outcome['recovery_outcome'] == 'NORMAL_HANDOFF',
             'timeout_handoff': outcome['recovery_outcome'] == 'TIMEOUT_HANDOFF',
             'recover_abort': outcome['recovery_outcome'] == 'RECOVER_ABORT',
@@ -875,7 +867,6 @@ def run_worker():
                     first_cruise_run_start = r['common_step'] - 9
             else:
                 run = 0
-        handoff_ok = outcome['recovery_outcome'] == 'NORMAL_HANDOFF'
         derived['recovery_after_balance_takeover'] = {
             'scanned_steps': len(all_post_rows),
             'scan_window_seconds': round(len(all_post_rows) * 0.02, 3),
@@ -895,11 +886,9 @@ def run_worker():
             'seconds_from_handoff': (
                 None if (first_cruise is None or outcome['handoff_step'] < 0)
                 else round((first_cruise - outcome['handoff_step']) * 0.02, 3)),
-            'strict_gate_satisfied': bool(handoff_ok and first_cruise is not None),
-            'note': ('A NORMAL_HANDOFF is required for the strict verdict; this '
-                     'entry records the different fact that cruising resumed '
-                     'anyway, and when. Both are reported; neither replaces the '
-                     'other.'),
+            'strict_gate_satisfied': derived['recovery_sustained'],
+            'note': ('This legacy speed-only scan is diagnostic. Formal recovery '
+                     'requires safe sustained cruise within 2 s, recorded separately.'),
         }
 
         # Small helper for the accounts below: the shared kinematic facts, each
@@ -912,7 +901,7 @@ def run_worker():
 
         # ---- (9) STRICT VERDICT --------------------------------------------
         # Every clause is a separate physical fact and the recovery clause is the
-        # env's own NORMAL_HANDOFF-gated verdict. Nothing here can be satisfied
+        # env's own safe 2 s recovery verdict. Nothing here can be satisfied
         # by `cleared`, which is exactly what Phase C did by mistake.
         strict_criteria = {
             'real_liftoff': took_off_ok,
@@ -921,9 +910,13 @@ def run_worker():
             'landing_was_clear': outcome['landing_safe'],
             'whole_body_left_the_box': body_ok,
             'no_obstacle_contact': no_contact,
-            'sustained_recovery_with_normal_handoff': derived['recovery_sustained'],
+            'safe_sustained_recovery_within_2s': derived['recovery_sustained'],
+            'task_did_not_fail': not outcome['task_failed'],
+            'whole_body_still_past_box': outcome['whole_body_rear_margin'] > 0.005,
             'did_not_fall': not outcome['fell'],
         }
+        assert all(strict_criteria.values()) == outcome['mission_completed'], (
+            'Evaluator and PPO physical success contracts disagree', strict_criteria)
         derived['m9_strict'] = {
             'criteria': strict_criteria,
             'success': all(strict_criteria.values()),
@@ -938,6 +931,12 @@ def run_worker():
         post = derived['m8_post_landing_1s']
         reconv = derived['recovery_after_balance_takeover']
         derived['m10_end_to_end_recruise'] = {
+            'formal_within_2s': {
+                'success': derived['recovery_sustained'],
+                'best_consecutive_safe_steps': outcome['e2e_best_hold_steps'],
+                'success_step': outcome['e2e_success_step'],
+                'window_seconds': 2.0,
+            },
             'within_1s': {
                 'reached_70pct_for_10_consecutive_steps': bool(
                     post.get('best_consecutive_steps_at_70pct', 0) >= 10),
@@ -968,11 +967,11 @@ def run_worker():
         # cruise begins only after the RECOVER state has been abandoned.
         derived['accounts'] = {
             'strict_obstacle_clearance': {
-                'value': all(strict_criteria.values()),
+                'value': outcome['mission_completed'],
                 'definition': ('liftoff + touchdown + both wheels clean + clear '
                                'landing + whole body past the box + zero '
-                               'obstacle contact + sustained 70% cruise ending '
-                               'in NORMAL_HANDOFF + no fall'),
+                               'obstacle contact + safe sustained 70% cruise within '
+                               '2 s of touchdown + no fall + no task failure'),
                 'uses_cleared_latch': False,
             },
             'collision_free_safe_pass': {
@@ -984,13 +983,10 @@ def run_worker():
                 'uses_cleared_latch': False,
             },
             'end_to_end_recruise': {
-                'value': bool(reconv['recovered_at_all']),
-                'definition': ('reached >=70%% of the commanded speed for 10 '
-                               'consecutive steps at ANY point after touchdown, '
-                               'measured on the raw trace regardless of which '
-                               'handoff closed RECOVER. Note this is a whole-'
-                               'episode reading; the 1.0 s-window reading lives '
-                               'in m10.within_1s and is strictly weaker here.'),
+                'value': derived['recovery_sustained'],
+                'definition': ('safe >=70% commanded forward speed for ten consecutive '
+                               'steps completed within 2 s after touchdown; both wheels '
+                               'loaded, attitude and rates stable, no fall; any handoff'),
                 'uses_cleared_latch': False,
             },
         }
@@ -1274,6 +1270,7 @@ def summarise(results):
                 lambda x: x.get('m7_handoff', {}).get('best_hold_steps'), 2),
             # ---- recovery verdicts (strict gate, kept for comparison) -----
             'mean_recovery_ratio': mean_of('recovery_ratio'),
+            'fast_recovery_040s': sum(1 for r in rows if r['outcome']['fast_recovered']),
             'recovery_70pct': sum(1 for x in d if x.get('recovery_sustained')),
             # ---- task 4 extra: did it actually re-cruise after the handoff
             # These three are NOT verdicts and must never be read as a success
@@ -1387,11 +1384,11 @@ def main():
 
     summary = summarise(results)
     payload = {
-        'evaluation': 'obstacle_jump_phaseD_three_layer',
+        'evaluation': 'obstacle_jump_phaseD1_safe_recovery',
         'note': ('Pre-reset snapshots; three-layer URDF geometry (approach / '
                  'wheel crossing / whole-body); collision evidence from the '
                  'contact pair AND an independent geometric overlap source; '
-                 'NORMAL_HANDOFF-gated 70% sustained recovery gate. Phase D '
+                 'safe 2 s sustained recovery gate. Phase D.1 '
                  'reads no tier-1 `cleared` latch as a verdict.'),
         'model_path': args.model_path,
         'model_label': args.model_label,

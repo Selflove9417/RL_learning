@@ -261,12 +261,18 @@ def _arm_success(env):
     env.task_takeoff_step[:] = 40
     env.task_touchdown_step[:] = 60
     env.final_success_paid[:] = False
+    env.wheel_pass_clean[:] = True
+    env.landing_safe[:] = True
+    env.whole_body_passed[:] = True
+    env.whole_body_rear_margin[:] = 0.05
     env.has_taken_off[:] = True
     env.has_touched_down[:] = True
 
 
 def _recovered(env, ok=True):
     """Force `_recovery_succeeded()` to a known value for all envs."""
+    env.e2e_success_step[:] = 70 if ok else -1
+    env.e2e_fall_seen[:] = False
     if ok:
         env.recovery_outcome = ["NORMAL_HANDOFF"] * env.num_envs
         env.recovery_best_hold_steps[:] = env.RECOVERY_HOLD_STEPS + 5
@@ -329,7 +335,7 @@ def test_mission_success_gate(env):
         _recovered(env, True)
         env.recovery_outcome = [bad] * env.num_envs
         check("%s is not success" % bad,
-              not bool(env._recovery_succeeded()[0].item()))
+              not bool(env._fast_recovery_succeeded()[0].item()))
 
     # A pass whose landing never latched (episode ended in the air) is not a
     # success either: the TASK's touchdown latch staying at -1 means "we never
@@ -390,6 +396,137 @@ def test_mission_success_gate(env):
           "tier1=%.3f vs full=5.0 nominal" % tier1)
 
     env.reset_idx(ids)
+
+
+def test_end_to_end_recovery(env):
+    print("\nE.1 Safe end-to-end recovery, independent of the FSM handoff")
+    ids = torch.arange(env.num_envs, device=env.device)
+    saved_step = env.common_step_counter
+
+    def setup():
+        env.reset_idx(ids)
+        _arm_success(env)
+        env.task_touchdown_step[:] = 60
+        env.recovery_outcome = ["TIMEOUT_HANDOFF"] * env.num_envs
+        env.fsm_state[:] = env.STATE_BALANCE
+        env.handoff_step[:] = 79
+        env.base_quat[:] = torch.tensor([0., 0., 0., 1.], device=env.device)
+        env.root_states[:, 2] = 0.40
+        env.root_states[:, 7:10] = 0.
+        env.root_states[:, 8] = 0.35
+        env.base_lin_vel[:] = 0.
+        env.base_lin_vel[:, 1] = 0.35
+        env.base_ang_vel[:] = 0.
+        env.dof_vel[:] = 0.
+        env.is_airborne[:] = False
+        env.contact_forces[:] = 0.
+        env.contact_forces[:, env.left_wheel_body, 2] = 100.
+        env.contact_forces[:, env.right_wheel_body, 2] = 100.
+
+    def sample(step):
+        env.common_step_counter = step
+        env._update_end_to_end_recovery()
+
+    def run(start, end):
+        for step in range(start, end + 1):
+            sample(step)
+
+    setup()
+    check("TIMEOUT event alone never earns task success",
+          not bool(env._mission_success_mask()[0]))
+    run(100, 108)
+    check("nine safe samples do not satisfy recovery", not bool(env._recovery_succeeded()[0]))
+    sample(109)
+    check("TIMEOUT then BALANCE safe cruise earns recovery",
+          bool(env._recovery_succeeded()[0]))
+    check("complete clean crossing plus safe recovery earns full success",
+          bool(env._mission_success_mask()[0]))
+    check("TIMEOUT recovery is not fast NORMAL_HANDOFF",
+          not bool(env._fast_recovery_succeeded()[0]))
+    env.final_success_paid[:] = True
+    check("paid reward leaves shared physical verdict true", bool(env._mission_completed_mask()[0]))
+    check("new success contract still pays once", not bool(env._mission_success_mask()[0]))
+    env.has_obstacle_collision[:] = True
+    check("later collision revokes even a previously paid physical verdict",
+          not bool(env._mission_completed_mask()[0]))
+    env.final_success_paid[:] = False
+    check("collision after recovery vetoes full success", not bool(env._mission_success_mask()[0]))
+    env.has_obstacle_collision[:] = False
+    for field in ('wheel_pass_clean', 'landing_safe', 'whole_body_passed'):
+        value = getattr(env, field)
+        value[:] = False
+        check("full success requires " + field, not bool(env._mission_success_mask()[0]))
+        value[:] = True
+    env.whole_body_rear_margin[:] = -0.01
+    check("rolling back into box region vetoes full success", not bool(env._mission_success_mask()[0]))
+
+    setup()
+    env.root_states[:, 8] = 0.1
+    run(61, 170)
+    check("TIMEOUT with no actual cruise fails recovery", not bool(env._recovery_succeeded()[0]))
+    setup()
+    env.contact_forces[:, env.right_wheel_body, 2] = 0.
+    run(100, 115)
+    check("speed on one loaded wheel fails recovery", not bool(env._recovery_succeeded()[0]))
+    setup()
+    env.base_quat[:, 0] = math.sin(math.radians(15.) / 2)
+    env.base_quat[:, 3] = math.cos(math.radians(15.) / 2)
+    run(100, 115)
+    check("speed with unsafe attitude fails recovery", not bool(env._recovery_succeeded()[0]))
+    for axis in range(3):
+        setup()
+        env.base_ang_vel[:, axis] = 0.6
+        run(100, 115)
+        check("speed with angular instability axis %d fails" % axis,
+              not bool(env._recovery_succeeded()[0]))
+
+    setup()
+    env.root_states[:, 8] = 0.244
+    run(100, 109)
+    check("speed below 0.245 m/s fails", not bool(env._recovery_succeeded()[0]))
+    env.root_states[:, 8] = 0.245
+    run(110, 119)
+    check("speed at 0.245 m/s qualifies", bool(env._recovery_succeeded()[0]))
+
+    setup()
+    run(151, 160)
+    check("ten safe samples ending exactly at 2 s qualify", bool(env._recovery_succeeded()[0]))
+    setup()
+    run(152, 161)
+    check("ten safe samples ending after 2 s fail", not bool(env._recovery_succeeded()[0]))
+    setup()
+    run(100, 108)
+    env.contact_forces[:, env.right_wheel_body, 2] = 0.
+    sample(109)
+    env.contact_forces[:, env.right_wheel_body, 2] = 100.
+    run(110, 118)
+    check("one unsafe frame breaks the continuous hold", not bool(env._recovery_succeeded()[0]))
+    sample(119)
+    check("ten new safe frames after interruption qualify", bool(env._recovery_succeeded()[0]))
+    env.root_states[:, 2] = 0.19
+    sample(120)
+    check("later fall revokes recovery and mission success",
+          not bool(env._recovery_succeeded()[0]) and not bool(env._mission_success_mask()[0]))
+    env.root_states[:, 2] = 0.40
+    run(121, 140)
+    check("a fallen attempt cannot recover its success latch", not bool(env._recovery_succeeded()[0]))
+
+    setup()
+    env.recovery_outcome = ["NORMAL_HANDOFF"] * env.num_envs
+    env.handoff_step[:] = 80
+    env.recovery_best_hold_steps[:] = 10
+    env.recovery_grounded_steps[:] = 10
+    check("NORMAL_HANDOFF within 0.40 s is fast recovery", bool(env._fast_recovery_succeeded()[0]))
+    env.handoff_step[:] = 81
+    check("NORMAL_HANDOFF after 0.40 s is not fast recovery", not bool(env._fast_recovery_succeeded()[0]))
+    run(100, 109)
+    env._begin_new_obstacle_cycle(torch.ones(env.num_envs, device=env.device, dtype=torch.bool))
+    check("new obstacle cycle clears recovery evidence", not bool(env._recovery_succeeded()[0]))
+    setup()
+    run(100, 109)
+    env.reset_idx(ids)
+    check("episode reset clears recovery evidence", not bool(env._recovery_succeeded()[0]))
+    env.common_step_counter = saved_step
 
 
 # ---------------------------------------------------------------------------
@@ -1466,6 +1603,20 @@ def test_separated_envelopes(env):
           % (ws4['overlaps_footprint'][0].tolist(),
              ws4['above_top'][0].tolist(), ws4['danger'][0].tolist()))
 
+    # A landing over the footprint cannot be relabelled safe once it rolls away.
+    env.task_took_off[0] = True
+    env.task_touchdown_step[0] = -1
+    env.has_touched_down[0] = True
+    env.landing_safe[0] = False
+    env.compute_obstacle_metrics()
+    check("touchdown over the box is not a clear landing", not bool(env.landing_safe[0]))
+    env.root_states[0, 1] += 0.6
+    env.gym.set_actor_root_state_tensor(
+        env.sim, gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    env.compute_obstacle_metrics()
+    check("later departure cannot relabel an obstructed landing", not bool(env.landing_safe[0]))
+
     # ---- (5) every step publishes all four required records ----
     env._reset_dofs(ids)
     env._reset_root_states(ids)
@@ -1511,6 +1662,7 @@ def main():
     test_metric_timing(env)
     test_termination(env)
     test_mission_success_gate(env)
+    test_end_to_end_recovery(env)
     test_contact_point_frame(env)
     test_geometry(env)
     test_geometry_counter_examples(env)

@@ -451,6 +451,11 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.wheel_pass_clean = torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.bool)
         self.landing_safe = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.whole_body_passed = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        # Task recovery continues through BALANCE, independently of the FSM timer.
+        self.e2e_hold_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        self.e2e_best_hold_steps = torch.zeros_like(self.e2e_hold_steps)
+        self.e2e_success_step = torch.full_like(self.e2e_hold_steps, -1)
+        self.e2e_fall_seen = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.whole_body_rear_margin = torch.full((self.num_envs,), -1.0, device=self.device, dtype=torch.float)
 
         # --- One-shot event flags -------------------------------------------
@@ -468,7 +473,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         #   clear_success_event  : the full mission succeeded -- real liftoff, full
         #                          passage, no obstacle contact at any time, a
         #                          landing, and a sustained forward cruise in the
-        #                          recovery window that ended in NORMAL_HANDOFF.
+        #                          2.0 s task recovery window, including BALANCE.
         #
         # A collision at ANY point permanently disarms `success_armed`, so an
         # attempt that passes and then hits the box can never collect tier 2.
@@ -822,6 +827,10 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.wheel_pass_clean[env_ids] = False
         self.landing_safe[env_ids] = False
         self.whole_body_passed[env_ids] = False
+        self.e2e_hold_steps[env_ids] = 0
+        self.e2e_best_hold_steps[env_ids] = 0
+        self.e2e_success_step[env_ids] = -1
+        self.e2e_fall_seen[env_ids] = False
         self.whole_body_rear_margin[env_ids] = -1.0
 
         # 6. Reset one-shot event / task-state buffers.
@@ -1147,7 +1156,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.wheel_danger_seen |= wheel_state['danger']
         clean_now = wheel_state['passed_rear'] & (~self.wheel_danger_seen)
         self.wheel_pass_clean |= clean_now
-        landing_now = (self.has_touched_down & (~self.landing_safe)
+        landing_now = (self.has_touched_down & (self.task_touchdown_step < 0)
                        & (~wheel_state['overlaps_footprint'].any(dim=1)))
         if landing_now.any():
             self.landing_safe |= landing_now
@@ -1286,13 +1295,14 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             self.success_armed |= pass_clean
 
         # --- Clearing evaluation: TIER 2, full mission success ----------------
+        self._update_end_to_end_recovery()
         # Every clause is a separate physical fact, and the reward is paid on the
         # step all of them are simultaneously true, at most once per episode:
         #   1. real liftoff            -> has_taken_off / takeoff_step latched
         #   2. full passage            -> obstacle_cleared (rear envelope past face)
         #   3. no obstacle contact     -> has_obstacle_collision must be False
         #   4. successful landing      -> touchdown_step latched, not a fall
-        #   5. sustained forward cruise in the recovery window, ending in NORMAL_HANDOFF
+        #   5. sustained safe cruise within 2.0 s of touchdown, in RECOVER or BALANCE
         # Clauses 3 and 5 are the ones that the Phase A event omitted, which is
         # exactly why a pass-then-collide attempt could still collect the reward.
         recovered_sustained = self._recovery_succeeded()
@@ -1384,7 +1394,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
     # Task hooks consumed by MyRobotRunningJump.step()
     # =========================================================================
 
-    def _recovery_succeeded(self):
+    def _fast_recovery_succeeded(self):
         """True only for a genuinely recovered forward cruise.
 
         Requires ALL of:
@@ -1410,9 +1420,55 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         regress_ok = regress <= 1
         grounded_ok = grounded_steps > 0
         event_mask = torch.tensor(event_ok, device=self.device, dtype=torch.bool)
-        return event_mask & hold_ok & regress_ok & grounded_ok
+        latency = (self.handoff_step - self.task_touchdown_step) * self.dt
+        within_fast_window = ((self.task_touchdown_step >= 0)
+                              & (self.handoff_step >= self.task_touchdown_step)
+                              & (latency <= 0.40 + 1e-6))
+        return event_mask & hold_ok & regress_ok & grounded_ok & within_fast_window
 
-    def _mission_success_mask(self, recovered_sustained=None):
+    def _update_end_to_end_recovery(self):
+        """Require ten consecutive safe cruise samples, completed by TD + 2 s.
+
+        Reuse running RECOVER limits: two loads >20 N, |vz|<0.20,
+        horizontal speed <1.20, knee rates <1.5, and the same Euler axes
+        (x rotation <6 deg, y rotation <12 deg). Apply its 0.50 rad/s
+        angular-rate limit to all three axes so fast pitch/roll cannot qualify.
+        The touchdown frame is excluded: ten subsequent control steps = 0.20 s.
+        """
+        x, y, _ = get_euler_xyz(self.base_quat)
+        x = torch.atan2(torch.sin(x), torch.cos(x))
+        y = torch.atan2(torch.sin(y), torch.cos(y))
+        fallen = ((self.root_states[:, 2] < 0.20)
+                  | (x.abs() > np.radians(45.0)) | (y.abs() > np.radians(40.0)))
+        self.e2e_fall_seen |= fallen
+        elapsed = (self.common_step_counter - self.task_touchdown_step) * self.dt
+        in_window = ((self.task_touchdown_step >= 0) & (elapsed > 0)
+                     & (elapsed <= 2.0 + 1e-6))
+        grounded = ((self.contact_forces[:, self.left_wheel_body, 2] > 20.0)
+                    & (self.contact_forces[:, self.right_wheel_body, 2] > 20.0)
+                    & (~self.is_airborne))
+        stable = ((x.abs() < np.radians(6.0)) & (y.abs() < np.radians(12.0))
+                  & (self.base_ang_vel.abs() < 0.50).all(dim=1)
+                  & (self.base_lin_vel[:, 2].abs() < 0.20)
+                  & (torch.norm(self.base_lin_vel[:, :2], dim=1) < 1.20)
+                  & (self.dof_vel[:, self.left_knee_idx].abs() < 1.5)
+                  & (self.dof_vel[:, self.right_knee_idx].abs() < 1.5)
+                  & (self.root_states[:, 2] >= 0.300))
+        qualifying = (in_window & grounded & stable & (~self.e2e_fall_seen)
+                      & (self._get_world_forward_velocity()
+                         >= self.RECOVERY_SPEED_FRACTION * self.target_forward_vel))
+        self.e2e_hold_steps[:] = torch.where(
+            qualifying, self.e2e_hold_steps + 1, torch.zeros_like(self.e2e_hold_steps))
+        self.e2e_best_hold_steps[:] = torch.maximum(
+            self.e2e_best_hold_steps, self.e2e_hold_steps)
+        first = (self.e2e_hold_steps >= self.RECOVERY_HOLD_STEPS) & (self.e2e_success_step < 0)
+        self.e2e_success_step[first] = self.common_step_counter
+
+    def _recovery_succeeded(self):
+        """Task recovery evidence; a handoff event alone proves nothing."""
+        return (self.e2e_success_step >= 0) & (~self.e2e_fall_seen)
+
+    def _mission_completed_mask(self, recovered_sustained=None):
         """TIER 2: the full mission actually succeeded.
 
         Extracted from `compute_obstacle_metrics` so the counter-example tests can
@@ -1438,17 +1494,25 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                                   new jump request, and the dual task owns it.
           recovered_sustained  -- a genuine sustained forward cruise followed the
                                   landing (see `_recovery_succeeded`)
-          not already paid     -- at most one payment per episode
         """
         if recovered_sustained is None:
             recovered_sustained = self._recovery_succeeded()
         return (self.success_armed
                 & self.obstacle_cleared
+                & self.task_took_off
+                & self.wheel_pass_clean.all(dim=1)
+                & self.landing_safe
+                & self.whole_body_passed
+                & (self.whole_body_rear_margin > 0.005)
                 & (~self.has_obstacle_collision)
                 & (~self.task_failed)
                 & (self.task_takeoff_step >= 0)
                 & (self.task_touchdown_step >= 0)
-                & recovered_sustained
+                & recovered_sustained)
+
+    def _mission_success_mask(self, recovered_sustained=None):
+        """The shared physical verdict, gated to pay only once."""
+        return (self._mission_completed_mask(recovered_sustained)
                 & (~self.final_success_paid))
 
     def _update_task_metrics(self, post_reset=False):
@@ -1639,6 +1703,15 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         snap['recovery_grounded_steps'][reset_mask] = \
             self.recovery_grounded_steps[reset_mask]
         snap['recovered_sustained'][reset_mask] = self._recovery_succeeded()[reset_mask]
+        for name in ('e2e_hold_steps', 'e2e_best_hold_steps', 'e2e_success_step',
+                     'e2e_fall_seen'):
+            value = getattr(self, name)
+            snap.setdefault(name, torch.zeros_like(value))
+            snap[name][reset_mask] = value[reset_mask]
+        snap.setdefault('fast_recovered', torch.zeros_like(self.e2e_fall_seen))
+        snap['fast_recovered'][reset_mask] = self._fast_recovery_succeeded()[reset_mask]
+        snap.setdefault('mission_completed', torch.zeros_like(self.e2e_fall_seen))
+        snap['mission_completed'][reset_mask] = self._mission_completed_mask()[reset_mask]
         for idx in reset_mask.nonzero(as_tuple=False).flatten().tolist():
             snap['failure_reason'][idx] = self.failure_reason[idx]
             snap['first_contact_source'][idx] = self.first_contact_source[idx]
@@ -1789,6 +1862,10 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.wheel_pass_clean[env_mask] = False
         self.landing_safe[env_mask] = False
         self.whole_body_passed[env_mask] = False
+        self.e2e_hold_steps[env_mask] = 0
+        self.e2e_best_hold_steps[env_mask] = 0
+        self.e2e_success_step[env_mask] = -1
+        self.e2e_fall_seen[env_mask] = False
         self.whole_body_rear_margin[env_mask] = -1.0
         self.takeoff_front_y[env_mask] = 0.0
         self.takeoff_rear_y[env_mask] = 0.0
@@ -1941,8 +2018,8 @@ class MyRobotObstacleJump(MyRobotRunningJump):
           `_reward_obstacle_geometric_pass`. It is NOT success.
         * `clear_success_event` (this function) -- full mission success: real
           liftoff, complete passage, no obstacle contact at any point, a landing,
-          and a sustained forward cruise in the recovery window that ended in
-          NORMAL_HANDOFF. Paid at most once per episode.
+          and safe sustained forward cruise within 2.0 s of touchdown.
+          Paid once per episode.
 
         The Phase A version paid this on the `cleared` latch alone. On seed 15 that
         banked the bonus at step 118 and the robot hit the box at step 120 -- the
