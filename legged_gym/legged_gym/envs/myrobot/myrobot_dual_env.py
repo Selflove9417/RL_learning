@@ -13,7 +13,7 @@ import os
 import math
 import isaacgym
 from isaacgym import gymtorch
-from isaacgym.torch_utils import get_euler_xyz
+from isaacgym.torch_utils import get_euler_xyz, quat_rotate
 import torch
 import numpy as np
 
@@ -166,7 +166,35 @@ class MyRobotDualEnv(MyRobotJump):
         self.abort_step = torch.full((self.num_envs,), -1, dtype=torch.long, device=self.device)
         self.last_transition_event = ["INIT_BALANCE"] * self.num_envs
         self.stopping_start_pos = torch.zeros(self.num_envs, 2, device=self.device)
+
+        # Recovery quality tracking (task 4.3 / 4.4).
+        # A recovery is only a genuine success when the robot is not merely calm but
+        # is actually still travelling forward at >= RECOVERY_SPEED_FRACTION of the
+        # commanded target speed, without sustained regression, inside the
+        # observation window.
+        self.RECOVERY_SPEED_FRACTION = 0.70
+        self.recovery_speed_ratio = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.recovery_speed_good_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        self.recovery_regression_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        self.recovery_window_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        self.recovery_sustained = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+
         self._refresh_physical_state(update_has_taken_off=False)
+
+    def _world_forward_velocity(self):
+        """Forward velocity projected on the horizontal heading, world frame.
+
+        body Y is the longitudinal (travel) axis for MyRobot. This mirrors
+        MyRobotRunningJump._get_world_forward_velocity so the recovery gate behaves
+        identically for every subclass.
+        """
+        body_fwd = torch.zeros(self.num_envs, 3, device=self.device)
+        body_fwd[:, 1] = 1.0
+        world_fwd = quat_rotate(self.base_quat, body_fwd)
+        fwd_xy = world_fwd[:, :2]
+        heading_norm = torch.norm(fwd_xy, dim=-1, keepdim=True).clamp(min=1e-6)
+        heading_xy = fwd_xy / heading_norm
+        return torch.sum(self.root_states[:, 7:9] * heading_xy, dim=-1)
 
     def reset_idx(self, env_ids):
         if len(env_ids) == 0:
@@ -223,6 +251,13 @@ class MyRobotDualEnv(MyRobotJump):
         self.handoff_step[env_ids] = -1
         self.abort_step[env_ids] = -1
         self.stopping_start_pos[env_ids] = 0.0
+
+        # Reset recovery quality gate
+        self.recovery_speed_ratio[env_ids] = 0.0
+        self.recovery_speed_good_steps[env_ids] = 0
+        self.recovery_regression_steps[env_ids] = 0
+        self.recovery_window_steps[env_ids] = 0
+        self.recovery_sustained[env_ids] = False
 
         for eid in env_ids.tolist():
             self.last_transition_event[eid] = "INIT_BALANCE"
@@ -297,6 +332,9 @@ class MyRobotDualEnv(MyRobotJump):
         knee_vel = torch.maximum(torch.abs(self.dof_vel[:, self.left_knee_idx]), torch.abs(self.dof_vel[:, self.right_knee_idx]))
         air = self.is_airborne
         bz = self.root_states[:, 2]
+        # World-frame forward speed, used by the recovery quality gate. Computed
+        # here (not in a subclass) so the gate also works for plain MyRobotDualEnv.
+        v_fwd = self._world_forward_velocity()
 
         # 1. Finite State Machine (FSM) Transitions
         for i in range(self.num_envs):
@@ -432,6 +470,32 @@ class MyRobotDualEnv(MyRobotJump):
                     joint_calm = (knee_vel[i] < 0.8)
                     yaw_calm = (abs(self.base_ang_vel[i, 2].item()) < 0.25)
 
+                # ---- Recovery quality gate (task 4.3/4.4) -------------------
+                # "Recovered" is NOT merely "FSM reached BALANCE". The robot must be
+                # actually moving forward again at >= 70% of the commanded target
+                # speed, with no sustained regression, throughout the window.
+                v_fwd_i = float(v_fwd[i].item()) if v_fwd is not None else 0.0
+                cmd_vy_i = max(float(self.user_cmd_vy[i].item()),
+                               float(self.actual_cmd_vy[i].item()))
+                self.recovery_window_steps[i] += 1
+                if is_running_jump and cmd_vy_i > 0.05:
+                    ratio = v_fwd_i / cmd_vy_i
+                    self.recovery_speed_ratio[i] = ratio
+                    if ratio >= self.RECOVERY_SPEED_FRACTION:
+                        self.recovery_speed_good_steps[i] += 1
+                    if v_fwd_i < 0.0:
+                        self.recovery_regression_steps[i] += 1
+                    else:
+                        self.recovery_regression_steps[i] = 0
+                    # Sustained: has ever reached the speed threshold, and is not
+                    # currently in a run of backward motion.
+                    reached = self.recovery_speed_good_steps[i].item() >= 2
+                    not_regressing = self.recovery_regression_steps[i].item() <= 1
+                    self.recovery_sustained[i] = bool(reached and not_regressing)
+                else:
+                    self.recovery_speed_ratio[i] = 1.0
+                    self.recovery_sustained[i] = True
+
                 all_settle_calm = cushion_time and cushion_complete and grounded and vz_calm and vxy_calm and att_calm and joint_calm and yaw_calm
                 if all_settle_calm:
                     self.settle_stable_steps[i] += 1
@@ -439,13 +503,21 @@ class MyRobotDualEnv(MyRobotJump):
                     self.settle_stable_steps[i] = 0
 
                 if is_running_jump:
-                    normal_handoff = (self.settle_stable_steps[i].item() >= 3)
-                    timeout_handoff = (self.fsm_state_timer[i].item() >= 0.40) and grounded
-                    hard_timeout_abort = (self.fsm_state_timer[i].item() >= 0.60)
+                    # A NORMAL handoff additionally requires the forward-speed gate.
+                    normal_handoff = ((self.settle_stable_steps[i].item() >= 3)
+                                      and bool(self.recovery_sustained[i].item()))
+                    # A timeout handoff is NOT a success: it is recorded as such.
+                    timeout_handoff = ((self.fsm_state_timer[i].item() >= 0.40) and grounded
+                                       and (not normal_handoff))
+                    hard_timeout_abort = ((self.fsm_state_timer[i].item() >= 0.60)
+                                          and (not normal_handoff) and (not timeout_handoff))
                 else:
                     normal_handoff = (self.settle_stable_steps[i].item() >= 5)
-                    timeout_handoff = (self.fsm_state_timer[i].item() >= 1.50) and (self.settle_stable_steps[i].item() >= 2)
-                    hard_timeout_abort = (self.fsm_state_timer[i].item() >= 2.00)
+                    timeout_handoff = ((self.fsm_state_timer[i].item() >= 1.50)
+                                       and (self.settle_stable_steps[i].item() >= 2)
+                                       and (not normal_handoff))
+                    hard_timeout_abort = ((self.fsm_state_timer[i].item() >= 2.00)
+                                          and (not normal_handoff) and (not timeout_handoff))
 
                 if normal_handoff or timeout_handoff or hard_timeout_abort:
                     self.fsm_state[i] = self.STATE_BALANCE

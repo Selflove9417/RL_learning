@@ -46,6 +46,7 @@ from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 from rsl_rl.modules import ActorCritic
 from legged_gym.envs.myrobot.myrobot_dual_env import STATE_NAMES, compute_exact_cylinder_clearance
+from legged_gym.envs.myrobot import obstacle_geometry as geo
 
 
 class NonBlockingKeyboard:
@@ -162,6 +163,16 @@ def play_obstacle_viewer(args):
     cam_mode = 0  # 0: Fixed side-view, 1: Tracking side-view, 2: 45 deg chase view
 
     obs_front_y = env.obstacle_py - 0.5 * env.obstacle_w
+    # NOTE: `obs_front_y` above is the correct box face (the box is axis aligned),
+    # but every distance measured FROM the robot must use the URDF-derived
+    # envelope. `pos_y + wheel_radius` omitted the ~0.114 m longitudinal offset of
+    # the wheel centres and the forward extent of the legs, under-reporting the
+    # robot's front edge by up to 0.22 m. See the telemetry block below.
+    #
+    # Also note `env.obstacle_py` is now a read-only compatibility property that
+    # reports environment 0's obstacle offset; the authoritative per-environment
+    # value lives in `env.obstacle_py_t`. This script is single-environment, so
+    # the two agree here.
     step = 0
 
     try:
@@ -244,7 +255,12 @@ def play_obstacle_viewer(args):
             vw_y = env.root_states[0, 8].item()
             clr_cm = env.bilateral_clearance[0].item() * 100.0
             fsm_str = STATE_NAMES.get(env.fsm_state[0].item(), "UNKNOWN")
-            dist_to_obs = obs_front_y - (pos_y + env.wheel_radius)
+            # True front edge (URDF envelope clipped to geometry that can reach
+            # the box top), not `pos_y + wheel_radius`.
+            obs_front, _, obs_top_z = geo.obstacle_y_interval(env)
+            envelope = geo.robot_forward_interval(env, z_ceiling=obs_top_z)
+            robot_front = envelope['front_y'][0].item()
+            dist_to_obs = obs_front_y - robot_front
             is_collision = env.has_obstacle_collision[0].item()
             obs_fn = env.peak_obstacle_contact_force[0].item()
 

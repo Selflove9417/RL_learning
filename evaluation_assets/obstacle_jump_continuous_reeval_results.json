@@ -1,0 +1,4633 @@
+{
+  "evaluation": "obstacle_jump_continuous_reeval",
+  "note": "Multi-cycle continuous evaluation. Every cycle record is closed out independently; episode outcomes come from env.episode_snapshot. Historic continuous_obstacle_jump_results.json is left untouched.",
+  "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+  "seeds": [
+    11,
+    13,
+    15,
+    20,
+    25,
+    27,
+    31,
+    35
+  ],
+  "steps_per_seed": 600,
+  "lead_dist_m": 0.6,
+  "summary": {
+    "n_seeds": 8,
+    "n_cycles": 87,
+    "cycles_collision": 79,
+    "cycles_cleared": 9,
+    "cycles_cleared_and_clean": 0,
+    "cycles_took_off": 82,
+    "mean_peak_force_N": 391.87,
+    "mean_recovery_ratio": 0.3028,
+    "n_recovery_measured": 10,
+    "episode_resets": 79,
+    "reset_reasons": {
+      "OBSTACLE_COLLISION": 79
+    },
+    "falls": 0,
+    "cycle_outcomes": {
+      "EPISODE_RESET:OBSTACLE_COLLISION": 79,
+      "STEP_LIMIT": 8
+    }
+  },
+  "runs": [
+    {
+      "seed": 11,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00595,
+          "obstacle_y": 0.3,
+          "trigger_step": 33,
+          "takeoff_step": 41,
+          "takeoff_rear_y": 0.1112,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 1013.11,
+          "min_clearance_m": 5.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 61,
+            "body": "link_004",
+            "force_N": 1013.11,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43769,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 59,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 60,
+          "open_root_y": -0.00058,
+          "obstacle_y": 0.3,
+          "trigger_step": 90,
+          "takeoff_step": 99,
+          "takeoff_rear_y": 0.10208,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 75.84,
+          "min_clearance_m": 5.7e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 118,
+            "body": "link_004",
+            "force_N": 73.74,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44217,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 116,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 117,
+          "open_root_y": -0.00044,
+          "obstacle_y": 0.3,
+          "trigger_step": 147,
+          "takeoff_step": 156,
+          "takeoff_rear_y": 0.10162,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 140.68,
+          "min_clearance_m": 7.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 175,
+            "body": "link_004",
+            "force_N": 1.84,
+            "source": "contact_pair",
+            "world_pos": [
+              0.442,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 173,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 174,
+          "open_root_y": -0.00046,
+          "obstacle_y": 0.3,
+          "trigger_step": 204,
+          "takeoff_step": 213,
+          "takeoff_rear_y": 0.10184,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 141.98,
+          "min_clearance_m": 7.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 232,
+            "body": "link_004",
+            "force_N": 136.08,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44211,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 230,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 231,
+          "open_root_y": -0.00046,
+          "obstacle_y": 0.3,
+          "trigger_step": 261,
+          "takeoff_step": 270,
+          "takeoff_rear_y": 0.10184,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 145.51,
+          "min_clearance_m": 6.7e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 289,
+            "body": "link_004",
+            "force_N": 7.59,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4421,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 287,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 288,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": 318,
+          "takeoff_step": 327,
+          "takeoff_rear_y": 0.1019,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 146.5,
+          "min_clearance_m": 6.7e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 346,
+            "body": "link_004",
+            "force_N": 0.04,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44212,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 344,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 345,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": 375,
+          "takeoff_step": 384,
+          "takeoff_rear_y": 0.1019,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 146.29,
+          "min_clearance_m": 6.7e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 403,
+            "body": "link_004",
+            "force_N": 8.34,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44213,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 401,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 402,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": 432,
+          "takeoff_step": 441,
+          "takeoff_rear_y": 0.1019,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 146.29,
+          "min_clearance_m": 6.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 460,
+            "body": "link_004",
+            "force_N": 1.05,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44212,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 458,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 459,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": 489,
+          "takeoff_step": 498,
+          "takeoff_rear_y": 0.1019,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 146.53,
+          "min_clearance_m": 6.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 517,
+            "body": "link_004",
+            "force_N": 132.94,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44212,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 515,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 516,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": 546,
+          "takeoff_step": 555,
+          "takeoff_rear_y": 0.10191,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 146.34,
+          "min_clearance_m": 6.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 574,
+            "body": "link_004",
+            "force_N": 0.1,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4421,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 572,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 573,
+          "open_root_y": -0.00048,
+          "obstacle_y": 0.3,
+          "trigger_step": null,
+          "takeoff_step": null,
+          "takeoff_rear_y": null,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 59,
+          "step_counter": 61,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 1013.11
+        },
+        {
+          "step": 116,
+          "step_counter": 118,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 75.84
+        },
+        {
+          "step": 173,
+          "step_counter": 175,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 140.68
+        },
+        {
+          "step": 230,
+          "step_counter": 232,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 141.98
+        },
+        {
+          "step": 287,
+          "step_counter": 289,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 145.51
+        },
+        {
+          "step": 344,
+          "step_counter": 346,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 146.5
+        },
+        {
+          "step": 401,
+          "step_counter": 403,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 146.29
+        },
+        {
+          "step": 458,
+          "step_counter": 460,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 146.29
+        },
+        {
+          "step": 515,
+          "step_counter": 517,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 146.53
+        },
+        {
+          "step": 572,
+          "step_counter": 574,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 146.34
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 39,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.08562
+        },
+        {
+          "step": 97,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10208
+        },
+        {
+          "step": 154,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10162
+        },
+        {
+          "step": 211,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10184
+        },
+        {
+          "step": 268,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10184
+        },
+        {
+          "step": 325,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1019
+        },
+        {
+          "step": 382,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1019
+        },
+        {
+          "step": 439,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1019
+        },
+        {
+          "step": 496,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1019
+        },
+        {
+          "step": 553,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10191
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 204.46,
+        "max_peak_force_N": 1013.11,
+        "mean_recovery_ratio": null,
+        "n_recovery_measured": 0,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 13,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00583,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.11306,
+          "touchdown_step": 62,
+          "touchdown_y": 0.26431,
+          "peak_force_N": 323.07,
+          "min_clearance_m": 5.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 65,
+            "body": "link_004",
+            "force_N": 240.89,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43643,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 63,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1314,
+          "recovery_ratio": 0.3753
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 64,
+          "open_root_y": 0.00155,
+          "obstacle_y": 0.3,
+          "trigger_step": 94,
+          "takeoff_step": 102,
+          "takeoff_rear_y": 0.10435,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 49.86,
+          "min_clearance_m": 0.000506,
+          "collision": true,
+          "first_contact": {
+            "step": 123,
+            "body": "link_004",
+            "force_N": 0.03,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44352,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 121,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 122,
+          "open_root_y": -0.00066,
+          "obstacle_y": 0.3,
+          "trigger_step": 151,
+          "takeoff_step": 159,
+          "takeoff_rear_y": 0.10691,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 52.82,
+          "min_clearance_m": 0.00045,
+          "collision": true,
+          "first_contact": {
+            "step": 180,
+            "body": "link_004",
+            "force_N": 50.31,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44275,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 178,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 179,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 208,
+          "takeoff_step": 216,
+          "takeoff_rear_y": 0.10701,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 51.55,
+          "min_clearance_m": 0.000456,
+          "collision": true,
+          "first_contact": {
+            "step": 237,
+            "body": "link_004",
+            "force_N": 49.19,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44245,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 235,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 236,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 265,
+          "takeoff_step": 273,
+          "takeoff_rear_y": 0.10706,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 52.23,
+          "min_clearance_m": 0.00045,
+          "collision": true,
+          "first_contact": {
+            "step": 294,
+            "body": "link_004",
+            "force_N": 0.09,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44248,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 292,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 293,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 322,
+          "takeoff_step": 330,
+          "takeoff_rear_y": 0.10703,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 52.43,
+          "min_clearance_m": 0.000449,
+          "collision": true,
+          "first_contact": {
+            "step": 351,
+            "body": "link_004",
+            "force_N": 49.86,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44245,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 349,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 350,
+          "open_root_y": -0.00068,
+          "obstacle_y": 0.3,
+          "trigger_step": 379,
+          "takeoff_step": 387,
+          "takeoff_rear_y": 0.107,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 52.68,
+          "min_clearance_m": 0.000448,
+          "collision": true,
+          "first_contact": {
+            "step": 408,
+            "body": "link_004",
+            "force_N": 50.08,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44246,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 406,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 407,
+          "open_root_y": -0.00068,
+          "obstacle_y": 0.3,
+          "trigger_step": 436,
+          "takeoff_step": 444,
+          "takeoff_rear_y": 0.10739,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 38.36,
+          "min_clearance_m": 0.00054,
+          "collision": true,
+          "first_contact": {
+            "step": 465,
+            "body": "link_004",
+            "force_N": 0.02,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4434,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 463,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 464,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 493,
+          "takeoff_step": 501,
+          "takeoff_rear_y": 0.1077,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 38.09,
+          "min_clearance_m": 0.000544,
+          "collision": true,
+          "first_contact": {
+            "step": 522,
+            "body": "link_004",
+            "force_N": 0.02,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44375,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 520,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 521,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 550,
+          "takeoff_step": 558,
+          "takeoff_rear_y": 0.10723,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 52.36,
+          "min_clearance_m": 0.000448,
+          "collision": true,
+          "first_contact": {
+            "step": 579,
+            "body": "link_004",
+            "force_N": 0.05,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4428,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 577,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 578,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": null,
+          "takeoff_step": null,
+          "takeoff_rear_y": null,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 63,
+          "step_counter": 65,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 323.07
+        },
+        {
+          "step": 121,
+          "step_counter": 123,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 49.86
+        },
+        {
+          "step": 178,
+          "step_counter": 180,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 52.82
+        },
+        {
+          "step": 235,
+          "step_counter": 237,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 51.55
+        },
+        {
+          "step": 292,
+          "step_counter": 294,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 52.23
+        },
+        {
+          "step": 349,
+          "step_counter": 351,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 52.43
+        },
+        {
+          "step": 406,
+          "step_counter": 408,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 52.68
+        },
+        {
+          "step": 463,
+          "step_counter": 465,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 38.36
+        },
+        {
+          "step": 520,
+          "step_counter": 522,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 38.09
+        },
+        {
+          "step": 577,
+          "step_counter": 579,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 52.36
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09398
+        },
+        {
+          "step": 61,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.26585
+        },
+        {
+          "step": 100,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09667
+        },
+        {
+          "step": 157,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09944
+        },
+        {
+          "step": 214,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09916
+        },
+        {
+          "step": 271,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09919
+        },
+        {
+          "step": 328,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09914
+        },
+        {
+          "step": 385,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09913
+        },
+        {
+          "step": 442,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09914
+        },
+        {
+          "step": 499,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09968
+        },
+        {
+          "step": 556,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0997
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 69.4,
+        "max_peak_force_N": 323.07,
+        "mean_recovery_ratio": 0.3753,
+        "n_recovery_measured": 1,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 15,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00582,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.1112,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 361.19,
+          "min_clearance_m": 0.00119,
+          "collision": true,
+          "first_contact": {
+            "step": 61,
+            "body": "link_004",
+            "force_N": 361.19,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43505,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 59,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 60,
+          "open_root_y": -0.00056,
+          "obstacle_y": 0.3,
+          "trigger_step": 89,
+          "takeoff_step": 97,
+          "takeoff_rear_y": 0.109,
+          "touchdown_step": 119,
+          "touchdown_y": 0.27662,
+          "peak_force_N": 448.18,
+          "min_clearance_m": -1.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 122,
+            "body": "link_004",
+            "force_N": 22.88,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44276,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 120,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1219,
+          "recovery_ratio": 0.3482
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 121,
+          "open_root_y": 0.00126,
+          "obstacle_y": 0.3,
+          "trigger_step": 151,
+          "takeoff_step": 159,
+          "takeoff_rear_y": 0.10609,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 38.68,
+          "min_clearance_m": 0.000554,
+          "collision": true,
+          "first_contact": {
+            "step": 180,
+            "body": "link_004",
+            "force_N": 37.72,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44397,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 178,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 179,
+          "open_root_y": -0.00061,
+          "obstacle_y": 0.3,
+          "trigger_step": 208,
+          "takeoff_step": 216,
+          "takeoff_rear_y": 0.10855,
+          "touchdown_step": 238,
+          "touchdown_y": 0.2766,
+          "peak_force_N": 148.21,
+          "min_clearance_m": 0.000147,
+          "collision": true,
+          "first_contact": {
+            "step": 241,
+            "body": "link_004",
+            "force_N": 0.74,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44231,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 239,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1233,
+          "recovery_ratio": 0.3522
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 240,
+          "open_root_y": 0.00101,
+          "obstacle_y": 0.3,
+          "trigger_step": 270,
+          "takeoff_step": 278,
+          "takeoff_rear_y": 0.1068,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 11.08,
+          "min_clearance_m": 0.000636,
+          "collision": true,
+          "first_contact": {
+            "step": 299,
+            "body": "link_004",
+            "force_N": 10.93,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44446,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 297,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 298,
+          "open_root_y": -0.00058,
+          "obstacle_y": 0.3,
+          "trigger_step": 327,
+          "takeoff_step": 335,
+          "takeoff_rear_y": 0.10867,
+          "touchdown_step": 357,
+          "touchdown_y": 0.27749,
+          "peak_force_N": 129.03,
+          "min_clearance_m": 3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 360,
+            "body": "link_004",
+            "force_N": 11.01,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44224,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 358,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1248,
+          "recovery_ratio": 0.3567
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 359,
+          "open_root_y": 0.00102,
+          "obstacle_y": 0.3,
+          "trigger_step": 389,
+          "takeoff_step": 397,
+          "takeoff_rear_y": 0.10484,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 86.35,
+          "min_clearance_m": 0.000318,
+          "collision": true,
+          "first_contact": {
+            "step": 418,
+            "body": "link_004",
+            "force_N": 0.23,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44855,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 416,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 417,
+          "open_root_y": -0.0007,
+          "obstacle_y": 0.3,
+          "trigger_step": 446,
+          "takeoff_step": 454,
+          "takeoff_rear_y": 0.10826,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 10.62,
+          "min_clearance_m": 0.000623,
+          "collision": true,
+          "first_contact": {
+            "step": 475,
+            "body": "link_004",
+            "force_N": 10.62,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44214,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 473,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 474,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 503,
+          "takeoff_step": 511,
+          "takeoff_rear_y": 0.10868,
+          "touchdown_step": 533,
+          "touchdown_y": 0.27797,
+          "peak_force_N": 55.14,
+          "min_clearance_m": 0.000141,
+          "collision": true,
+          "first_contact": {
+            "step": 540,
+            "body": "link_004",
+            "force_N": 9.48,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44115,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 538,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.0691,
+          "recovery_ratio": 0.1975
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 539,
+          "open_root_y": 0.00041,
+          "obstacle_y": 0.3,
+          "trigger_step": 569,
+          "takeoff_step": 577,
+          "takeoff_rear_y": 0.10579,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 216.6,
+          "min_clearance_m": 0.00035,
+          "collision": true,
+          "first_contact": {
+            "step": 598,
+            "body": "link_004",
+            "force_N": 0.11,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44751,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 596,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 597,
+          "open_root_y": -0.00068,
+          "obstacle_y": 0.3,
+          "trigger_step": null,
+          "takeoff_step": null,
+          "takeoff_rear_y": null,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 59,
+          "step_counter": 61,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 361.19
+        },
+        {
+          "step": 120,
+          "step_counter": 122,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 448.18
+        },
+        {
+          "step": 178,
+          "step_counter": 180,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 38.68
+        },
+        {
+          "step": 239,
+          "step_counter": 241,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 148.21
+        },
+        {
+          "step": 297,
+          "step_counter": 299,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 11.08
+        },
+        {
+          "step": 358,
+          "step_counter": 360,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 129.03
+        },
+        {
+          "step": 416,
+          "step_counter": 418,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 86.35
+        },
+        {
+          "step": 473,
+          "step_counter": 475,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 10.62
+        },
+        {
+          "step": 538,
+          "step_counter": 540,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 55.14
+        },
+        {
+          "step": 596,
+          "step_counter": 598,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 216.6
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09217
+        },
+        {
+          "step": 95,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10138
+        },
+        {
+          "step": 118,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.27877
+        },
+        {
+          "step": 157,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09905
+        },
+        {
+          "step": 214,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10055
+        },
+        {
+          "step": 237,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.27877
+        },
+        {
+          "step": 276,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10019
+        },
+        {
+          "step": 333,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10082
+        },
+        {
+          "step": 356,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.27982
+        },
+        {
+          "step": 395,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09972
+        },
+        {
+          "step": 452,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09975
+        },
+        {
+          "step": 509,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10035
+        },
+        {
+          "step": 532,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.27987
+        },
+        {
+          "step": 575,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10091
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 4,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 136.83,
+        "max_peak_force_N": 448.18,
+        "mean_recovery_ratio": 0.3137,
+        "n_recovery_measured": 4,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 20,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00587,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.1101,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 100.51,
+          "min_clearance_m": 0.000329,
+          "collision": true,
+          "first_contact": {
+            "step": 61,
+            "body": "link_004",
+            "force_N": 100.51,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44118,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 59,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 60,
+          "open_root_y": -0.00053,
+          "obstacle_y": 0.3,
+          "trigger_step": 89,
+          "takeoff_step": 97,
+          "takeoff_rear_y": 0.10555,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 75.92,
+          "min_clearance_m": 0.000382,
+          "collision": true,
+          "first_contact": {
+            "step": 118,
+            "body": "link_004",
+            "force_N": 4.2,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44291,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 116,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 117,
+          "open_root_y": -0.0007,
+          "obstacle_y": 0.3,
+          "trigger_step": 146,
+          "takeoff_step": 154,
+          "takeoff_rear_y": 0.10618,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 75.06,
+          "min_clearance_m": 0.000386,
+          "collision": true,
+          "first_contact": {
+            "step": 175,
+            "body": "link_004",
+            "force_N": 70.94,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44286,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 173,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 174,
+          "open_root_y": -0.0007,
+          "obstacle_y": 0.3,
+          "trigger_step": 203,
+          "takeoff_step": 211,
+          "takeoff_rear_y": 0.10624,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 75.31,
+          "min_clearance_m": 0.000385,
+          "collision": true,
+          "first_contact": {
+            "step": 232,
+            "body": "link_004",
+            "force_N": 71.18,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4429,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 230,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 231,
+          "open_root_y": -0.0007,
+          "obstacle_y": 0.3,
+          "trigger_step": 260,
+          "takeoff_step": 268,
+          "takeoff_rear_y": 0.10622,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 77.25,
+          "min_clearance_m": 0.000374,
+          "collision": true,
+          "first_contact": {
+            "step": 289,
+            "body": "link_004",
+            "force_N": 4.35,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44285,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 287,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 288,
+          "open_root_y": -0.00071,
+          "obstacle_y": 0.3,
+          "trigger_step": 317,
+          "takeoff_step": 325,
+          "takeoff_rear_y": 0.10613,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 77.65,
+          "min_clearance_m": 0.000372,
+          "collision": true,
+          "first_contact": {
+            "step": 346,
+            "body": "link_004",
+            "force_N": 72.91,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44279,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 344,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 345,
+          "open_root_y": -0.00071,
+          "obstacle_y": 0.3,
+          "trigger_step": 374,
+          "takeoff_step": 382,
+          "takeoff_rear_y": 0.10608,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 77.91,
+          "min_clearance_m": 0.000371,
+          "collision": true,
+          "first_contact": {
+            "step": 403,
+            "body": "link_004",
+            "force_N": 73.14,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44279,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 401,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 402,
+          "open_root_y": -0.00071,
+          "obstacle_y": 0.3,
+          "trigger_step": 431,
+          "takeoff_step": 439,
+          "takeoff_rear_y": 0.10609,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 80.03,
+          "min_clearance_m": 0.000358,
+          "collision": true,
+          "first_contact": {
+            "step": 460,
+            "body": "link_004",
+            "force_N": 0.35,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44279,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 458,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 459,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 488,
+          "takeoff_step": 496,
+          "takeoff_rear_y": 0.10606,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 79.84,
+          "min_clearance_m": 0.000359,
+          "collision": true,
+          "first_contact": {
+            "step": 517,
+            "body": "link_004",
+            "force_N": 0.21,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44266,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 515,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 516,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 545,
+          "takeoff_step": 553,
+          "takeoff_rear_y": 0.106,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 79.84,
+          "min_clearance_m": 0.000358,
+          "collision": true,
+          "first_contact": {
+            "step": 574,
+            "body": "link_004",
+            "force_N": 74.76,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4427,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 572,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 573,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": null,
+          "takeoff_step": null,
+          "takeoff_rear_y": null,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 59,
+          "step_counter": 61,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 100.51
+        },
+        {
+          "step": 116,
+          "step_counter": 118,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 75.92
+        },
+        {
+          "step": 173,
+          "step_counter": 175,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 75.06
+        },
+        {
+          "step": 230,
+          "step_counter": 232,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 75.31
+        },
+        {
+          "step": 287,
+          "step_counter": 289,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 77.25
+        },
+        {
+          "step": 344,
+          "step_counter": 346,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 77.65
+        },
+        {
+          "step": 401,
+          "step_counter": 403,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 77.91
+        },
+        {
+          "step": 458,
+          "step_counter": 460,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 80.03
+        },
+        {
+          "step": 515,
+          "step_counter": 517,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 79.84
+        },
+        {
+          "step": 572,
+          "step_counter": 574,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 79.84
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09234
+        },
+        {
+          "step": 95,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09588
+        },
+        {
+          "step": 152,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0963
+        },
+        {
+          "step": 209,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09631
+        },
+        {
+          "step": 266,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09629
+        },
+        {
+          "step": 323,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0962
+        },
+        {
+          "step": 380,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09621
+        },
+        {
+          "step": 437,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0962
+        },
+        {
+          "step": 494,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09606
+        },
+        {
+          "step": 551,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09608
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 72.67,
+        "max_peak_force_N": 100.51,
+        "mean_recovery_ratio": null,
+        "n_recovery_measured": 0,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 25,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00582,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.10987,
+          "touchdown_step": 62,
+          "touchdown_y": 0.26969,
+          "peak_force_N": 53.01,
+          "min_clearance_m": 1.2e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 70,
+            "body": "link_004",
+            "force_N": 7.09,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43445,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 68,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.0842,
+          "recovery_ratio": 0.2405
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 69,
+          "open_root_y": 0.00035,
+          "obstacle_y": 0.3,
+          "trigger_step": 99,
+          "takeoff_step": 107,
+          "takeoff_rear_y": 0.10859,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 237.94,
+          "min_clearance_m": 0.000738,
+          "collision": true,
+          "first_contact": {
+            "step": 128,
+            "body": "link_004",
+            "force_N": 0.24,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44345,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 126,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 127,
+          "open_root_y": -0.00058,
+          "obstacle_y": 0.3,
+          "trigger_step": 156,
+          "takeoff_step": 164,
+          "takeoff_rear_y": 0.1092,
+          "touchdown_step": 186,
+          "touchdown_y": 0.27828,
+          "peak_force_N": 247.8,
+          "min_clearance_m": 4.6e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 189,
+            "body": "link_004",
+            "force_N": 231.54,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44285,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 187,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1268,
+          "recovery_ratio": 0.3623
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 188,
+          "open_root_y": 0.00119,
+          "obstacle_y": 0.3,
+          "trigger_step": 218,
+          "takeoff_step": 226,
+          "takeoff_rear_y": 0.10647,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 28.97,
+          "min_clearance_m": 0.000601,
+          "collision": true,
+          "first_contact": {
+            "step": 247,
+            "body": "link_004",
+            "force_N": 0.0,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44467,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 245,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 246,
+          "open_root_y": -0.00058,
+          "obstacle_y": 0.3,
+          "trigger_step": 275,
+          "takeoff_step": 283,
+          "takeoff_rear_y": 0.10866,
+          "touchdown_step": 305,
+          "touchdown_y": 0.27866,
+          "peak_force_N": 63.7,
+          "min_clearance_m": 8.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 312,
+            "body": "link_004",
+            "force_N": 12.91,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44033,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 310,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.0848,
+          "recovery_ratio": 0.2424
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 311,
+          "open_root_y": 0.00044,
+          "obstacle_y": 0.3,
+          "trigger_step": 341,
+          "takeoff_step": 349,
+          "takeoff_rear_y": 0.10821,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 174.65,
+          "min_clearance_m": 0.000384,
+          "collision": true,
+          "first_contact": {
+            "step": 370,
+            "body": "link_004",
+            "force_N": 0.08,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44659,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 368,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 369,
+          "open_root_y": -0.00064,
+          "obstacle_y": 0.3,
+          "trigger_step": 398,
+          "takeoff_step": 406,
+          "takeoff_rear_y": 0.10846,
+          "touchdown_step": 428,
+          "touchdown_y": 0.27852,
+          "peak_force_N": 436.99,
+          "min_clearance_m": 9e-06,
+          "collision": true,
+          "first_contact": {
+            "step": 435,
+            "body": "link_004",
+            "force_N": 2.41,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43991,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 433,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.0785,
+          "recovery_ratio": 0.2244
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 434,
+          "open_root_y": 0.00055,
+          "obstacle_y": 0.3,
+          "trigger_step": 464,
+          "takeoff_step": 472,
+          "takeoff_rear_y": 0.1068,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 222.01,
+          "min_clearance_m": 0.000402,
+          "collision": true,
+          "first_contact": {
+            "step": 493,
+            "body": "link_004",
+            "force_N": 44.4,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44717,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 491,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 492,
+          "open_root_y": -0.00069,
+          "obstacle_y": 0.3,
+          "trigger_step": 521,
+          "takeoff_step": 529,
+          "takeoff_rear_y": 0.10861,
+          "touchdown_step": 551,
+          "touchdown_y": 0.27943,
+          "peak_force_N": 882.03,
+          "min_clearance_m": 0.000122,
+          "collision": true,
+          "first_contact": {
+            "step": 554,
+            "body": "link_004",
+            "force_N": 145.15,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44226,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": true,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 552,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": 0.1151,
+          "recovery_ratio": 0.3288
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 553,
+          "open_root_y": 0.00095,
+          "obstacle_y": 0.3,
+          "trigger_step": 583,
+          "takeoff_step": 591,
+          "takeoff_rear_y": 0.1064,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 68,
+          "step_counter": 70,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 53.01
+        },
+        {
+          "step": 126,
+          "step_counter": 128,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 237.94
+        },
+        {
+          "step": 187,
+          "step_counter": 189,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 247.8
+        },
+        {
+          "step": 245,
+          "step_counter": 247,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 28.97
+        },
+        {
+          "step": 310,
+          "step_counter": 312,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 63.7
+        },
+        {
+          "step": 368,
+          "step_counter": 370,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 174.65
+        },
+        {
+          "step": 433,
+          "step_counter": 435,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 436.99
+        },
+        {
+          "step": 491,
+          "step_counter": 493,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 222.01
+        },
+        {
+          "step": 552,
+          "step_counter": 554,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": true,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 882.03
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09113
+        },
+        {
+          "step": 61,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.27151
+        },
+        {
+          "step": 105,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10188
+        },
+        {
+          "step": 162,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10143
+        },
+        {
+          "step": 185,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.28057
+        },
+        {
+          "step": 224,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09976
+        },
+        {
+          "step": 281,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10085
+        },
+        {
+          "step": 304,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.28094
+        },
+        {
+          "step": 347,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10131
+        },
+        {
+          "step": 404,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10009
+        },
+        {
+          "step": 427,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.28077
+        },
+        {
+          "step": 470,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10079
+        },
+        {
+          "step": 527,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10029
+        },
+        {
+          "step": 550,
+          "event": "TOUCHDOWN_ENTER_RECOVER",
+          "fsm": "RECOVER",
+          "root_y": 0.28135
+        },
+        {
+          "step": 589,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10042
+        }
+      ],
+      "summary": {
+        "n": 10,
+        "collision": 9,
+        "cleared": 5,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 234.71,
+        "max_peak_force_N": 882.03,
+        "mean_recovery_ratio": 0.2797,
+        "n_recovery_measured": 5,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 9,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 27,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.0059,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.10817,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 598.7,
+          "min_clearance_m": -6.8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 60,
+            "body": "link_004",
+            "force_N": 582.26,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43953,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 58,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 59,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 88,
+          "takeoff_step": 96,
+          "takeoff_rear_y": 0.10331,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 885.68,
+          "min_clearance_m": -7.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 116,
+            "body": "link_004",
+            "force_N": 861.54,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44293,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 114,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 115,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 144,
+          "takeoff_step": 152,
+          "takeoff_rear_y": 0.10339,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 888.98,
+          "min_clearance_m": -6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 172,
+            "body": "link_004",
+            "force_N": 864.75,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4427,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 170,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 171,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 200,
+          "takeoff_step": 208,
+          "takeoff_rear_y": 0.10335,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 911.57,
+          "min_clearance_m": 7.5e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 228,
+            "body": "link_004",
+            "force_N": 48.8,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44279,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 226,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 227,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 256,
+          "takeoff_step": 264,
+          "takeoff_rear_y": 0.1034,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 910.43,
+          "min_clearance_m": 6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 284,
+            "body": "link_004",
+            "force_N": 840.59,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44292,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 282,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 283,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 312,
+          "takeoff_step": 320,
+          "takeoff_rear_y": 0.10336,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 911.12,
+          "min_clearance_m": 6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 340,
+            "body": "link_004",
+            "force_N": 840.61,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44297,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 338,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 339,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 368,
+          "takeoff_step": 376,
+          "takeoff_rear_y": 0.10336,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 911.45,
+          "min_clearance_m": 6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 396,
+            "body": "link_004",
+            "force_N": 839.65,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44293,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 394,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 395,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 424,
+          "takeoff_step": 432,
+          "takeoff_rear_y": 0.10337,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 911.65,
+          "min_clearance_m": 6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 452,
+            "body": "link_004",
+            "force_N": 839.5,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44289,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 450,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 451,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 480,
+          "takeoff_step": 488,
+          "takeoff_rear_y": 0.10339,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 912.0,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 508,
+            "body": "link_004",
+            "force_N": 838.57,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4429,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 506,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 507,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 536,
+          "takeoff_step": 544,
+          "takeoff_rear_y": 0.10339,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 910.15,
+          "min_clearance_m": 6.9e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 564,
+            "body": "link_004",
+            "force_N": 839.98,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44292,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 562,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 563,
+          "open_root_y": -0.00067,
+          "obstacle_y": 0.3,
+          "trigger_step": 592,
+          "takeoff_step": 600,
+          "takeoff_rear_y": 0.10337,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 58,
+          "step_counter": 60,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 598.7
+        },
+        {
+          "step": 114,
+          "step_counter": 116,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 885.68
+        },
+        {
+          "step": 170,
+          "step_counter": 172,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 888.98
+        },
+        {
+          "step": 226,
+          "step_counter": 228,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 911.57
+        },
+        {
+          "step": 282,
+          "step_counter": 284,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 910.43
+        },
+        {
+          "step": 338,
+          "step_counter": 340,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 911.12
+        },
+        {
+          "step": 394,
+          "step_counter": 396,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 911.45
+        },
+        {
+          "step": 450,
+          "step_counter": 452,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 911.65
+        },
+        {
+          "step": 506,
+          "step_counter": 508,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 912.0
+        },
+        {
+          "step": 562,
+          "step_counter": 564,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 910.15
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.08951
+        },
+        {
+          "step": 94,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.093
+        },
+        {
+          "step": 150,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09273
+        },
+        {
+          "step": 206,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09284
+        },
+        {
+          "step": 262,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09306
+        },
+        {
+          "step": 318,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09311
+        },
+        {
+          "step": 374,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0931
+        },
+        {
+          "step": 430,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09304
+        },
+        {
+          "step": 486,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09303
+        },
+        {
+          "step": 542,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09307
+        },
+        {
+          "step": 598,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09308
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 11,
+        "mean_peak_force_N": 795.61,
+        "max_peak_force_N": 912.0,
+        "mean_recovery_ratio": null,
+        "n_recovery_measured": 0,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 31,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.00593,
+          "obstacle_y": 0.3,
+          "trigger_step": 33,
+          "takeoff_step": 41,
+          "takeoff_rear_y": 0.11529,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 987.25,
+          "min_clearance_m": 5.5e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 61,
+            "body": "link_004",
+            "force_N": 959.58,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43755,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 59,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 60,
+          "open_root_y": -0.00052,
+          "obstacle_y": 0.3,
+          "trigger_step": 90,
+          "takeoff_step": 99,
+          "takeoff_rear_y": 0.10428,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 896.84,
+          "min_clearance_m": 8e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 118,
+            "body": "link_004",
+            "force_N": 872.41,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44319,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 116,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 117,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 147,
+          "takeoff_step": 156,
+          "takeoff_rear_y": 0.1048,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 898.68,
+          "min_clearance_m": 8.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 175,
+            "body": "link_004",
+            "force_N": 874.21,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44329,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 173,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 174,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 204,
+          "takeoff_step": 213,
+          "takeoff_rear_y": 0.10477,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 889.37,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 232,
+            "body": "link_004",
+            "force_N": 834.28,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44322,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 230,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 231,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 261,
+          "takeoff_step": 270,
+          "takeoff_rear_y": 0.10481,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 889.73,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 289,
+            "body": "link_004",
+            "force_N": 832.89,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44327,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 287,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 288,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 318,
+          "takeoff_step": 327,
+          "takeoff_rear_y": 0.10481,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 889.34,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 346,
+            "body": "link_004",
+            "force_N": 6.23,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44325,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 344,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 345,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 375,
+          "takeoff_step": 384,
+          "takeoff_rear_y": 0.10482,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 893.95,
+          "min_clearance_m": 7.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 403,
+            "body": "link_004",
+            "force_N": 8.09,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44327,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 401,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 402,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 432,
+          "takeoff_step": 441,
+          "takeoff_rear_y": 0.1048,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 890.39,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 460,
+            "body": "link_004",
+            "force_N": 53.96,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44326,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 458,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 459,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 489,
+          "takeoff_step": 498,
+          "takeoff_rear_y": 0.10481,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 894.26,
+          "min_clearance_m": 7.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 517,
+            "body": "link_004",
+            "force_N": 6.44,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44329,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 515,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 516,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": 546,
+          "takeoff_step": 555,
+          "takeoff_rear_y": 0.10479,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 890.26,
+          "min_clearance_m": 7.4e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 574,
+            "body": "link_004",
+            "force_N": 31.65,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44325,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 572,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 573,
+          "open_root_y": -0.00072,
+          "obstacle_y": 0.3,
+          "trigger_step": null,
+          "takeoff_step": null,
+          "takeoff_rear_y": null,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 59,
+          "step_counter": 61,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 987.25
+        },
+        {
+          "step": 116,
+          "step_counter": 118,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 896.84
+        },
+        {
+          "step": 173,
+          "step_counter": 175,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 898.68
+        },
+        {
+          "step": 230,
+          "step_counter": 232,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 889.37
+        },
+        {
+          "step": 287,
+          "step_counter": 289,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 889.73
+        },
+        {
+          "step": 344,
+          "step_counter": 346,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 889.34
+        },
+        {
+          "step": 401,
+          "step_counter": 403,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 893.95
+        },
+        {
+          "step": 458,
+          "step_counter": 460,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 890.39
+        },
+        {
+          "step": 515,
+          "step_counter": 517,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 894.26
+        },
+        {
+          "step": 572,
+          "step_counter": 574,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 890.26
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 39,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09277
+        },
+        {
+          "step": 97,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10428
+        },
+        {
+          "step": 154,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1048
+        },
+        {
+          "step": 211,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10477
+        },
+        {
+          "step": 268,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10481
+        },
+        {
+          "step": 325,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10481
+        },
+        {
+          "step": 382,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10482
+        },
+        {
+          "step": 439,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.1048
+        },
+        {
+          "step": 496,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10481
+        },
+        {
+          "step": 553,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.10479
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 10,
+        "mean_peak_force_N": 820.01,
+        "max_peak_force_N": 987.25,
+        "mean_recovery_ratio": null,
+        "n_recovery_measured": 0,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    },
+    {
+      "seed": 35,
+      "pipeline": "cpu",
+      "model_path": "legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt",
+      "steps": 600,
+      "lead_dist_m": 0.6,
+      "per_env_obstacle_state": true,
+      "cycles": [
+        {
+          "cycle_idx": 1,
+          "open_step": 0,
+          "open_root_y": -0.0059,
+          "obstacle_y": 0.3,
+          "trigger_step": 32,
+          "takeoff_step": 40,
+          "takeoff_rear_y": 0.1086,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 409.4,
+          "min_clearance_m": -1.7e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 60,
+            "body": "link_004",
+            "force_N": 409.4,
+            "source": "contact_pair",
+            "world_pos": [
+              0.43926,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 58,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 2,
+          "open_step": 59,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 88,
+          "takeoff_step": 96,
+          "takeoff_rear_y": 0.10377,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 921.4,
+          "min_clearance_m": 6.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 116,
+            "body": "link_004",
+            "force_N": 54.72,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44177,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 114,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 3,
+          "open_step": 115,
+          "open_root_y": -0.00066,
+          "obstacle_y": 0.3,
+          "trigger_step": 144,
+          "takeoff_step": 152,
+          "takeoff_rear_y": 0.10382,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 921.16,
+          "min_clearance_m": 6.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 172,
+            "body": "link_004",
+            "force_N": 866.63,
+            "source": "contact_pair",
+            "world_pos": [
+              0.4417,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 170,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 4,
+          "open_step": 171,
+          "open_root_y": -0.00066,
+          "obstacle_y": 0.3,
+          "trigger_step": 200,
+          "takeoff_step": 208,
+          "takeoff_rear_y": 0.10384,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 921.3,
+          "min_clearance_m": 6.3e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 228,
+            "body": "link_004",
+            "force_N": 866.85,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44171,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 226,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 5,
+          "open_step": 227,
+          "open_root_y": -0.00066,
+          "obstacle_y": 0.3,
+          "trigger_step": 256,
+          "takeoff_step": 264,
+          "takeoff_rear_y": 0.10384,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 914.43,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 284,
+            "body": "link_004",
+            "force_N": 16.12,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44172,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 282,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 6,
+          "open_step": 283,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 312,
+          "takeoff_step": 320,
+          "takeoff_rear_y": 0.10383,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 914.76,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 340,
+            "body": "link_004",
+            "force_N": 871.44,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44183,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 338,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 7,
+          "open_step": 339,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 368,
+          "takeoff_step": 376,
+          "takeoff_rear_y": 0.10385,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 915.45,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 396,
+            "body": "link_004",
+            "force_N": 872.76,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44181,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 394,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 8,
+          "open_step": 395,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 424,
+          "takeoff_step": 432,
+          "takeoff_rear_y": 0.10383,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 912.52,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 452,
+            "body": "link_004",
+            "force_N": 11.95,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44181,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 450,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 9,
+          "open_step": 451,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 480,
+          "takeoff_step": 488,
+          "takeoff_rear_y": 0.10385,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 913.86,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 508,
+            "body": "link_004",
+            "force_N": 873.52,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44184,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 506,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 10,
+          "open_step": 507,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 536,
+          "takeoff_step": 544,
+          "takeoff_rear_y": 0.10382,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 912.62,
+          "min_clearance_m": 6.1e-05,
+          "collision": true,
+          "first_contact": {
+            "step": 564,
+            "body": "link_004",
+            "force_N": 872.4,
+            "source": "contact_pair",
+            "world_pos": [
+              0.44185,
+              0.32,
+              0.05
+            ]
+          },
+          "cleared": false,
+          "failure_reason": "OBSTACLE_COLLISION",
+          "recovery_event": null,
+          "close_step": 562,
+          "outcome": "EPISODE_RESET:OBSTACLE_COLLISION",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        },
+        {
+          "cycle_idx": 11,
+          "open_step": 563,
+          "open_root_y": -0.00065,
+          "obstacle_y": 0.3,
+          "trigger_step": 592,
+          "takeoff_step": 600,
+          "takeoff_rear_y": 0.10383,
+          "touchdown_step": null,
+          "touchdown_y": null,
+          "peak_force_N": 0.0,
+          "min_clearance_m": null,
+          "collision": false,
+          "first_contact": null,
+          "cleared": false,
+          "failure_reason": "NONE",
+          "recovery_event": null,
+          "close_step": 599,
+          "outcome": "STEP_LIMIT",
+          "recovery_mean_vel": null,
+          "recovery_ratio": null
+        }
+      ],
+      "resets": [
+        {
+          "step": 58,
+          "step_counter": 60,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 409.4
+        },
+        {
+          "step": 114,
+          "step_counter": 116,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 921.4
+        },
+        {
+          "step": 170,
+          "step_counter": 172,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 921.16
+        },
+        {
+          "step": 226,
+          "step_counter": 228,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 921.3
+        },
+        {
+          "step": 282,
+          "step_counter": 284,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 914.43
+        },
+        {
+          "step": 338,
+          "step_counter": 340,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 914.76
+        },
+        {
+          "step": 394,
+          "step_counter": 396,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 915.45
+        },
+        {
+          "step": 450,
+          "step_counter": 452,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 912.52
+        },
+        {
+          "step": 506,
+          "step_counter": 508,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 913.86
+        },
+        {
+          "step": 562,
+          "step_counter": 564,
+          "source": "episode_snapshot",
+          "root_y": -0.0,
+          "root_z": 0.4,
+          "obstacle_y": 0.3,
+          "reason": "OBSTACLE_COLLISION",
+          "collision": true,
+          "cleared": false,
+          "fell": false,
+          "cycles_completed": 0.0,
+          "peak_force_N": 912.62
+        }
+      ],
+      "fsm_events": [
+        {
+          "step": 38,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09002
+        },
+        {
+          "step": 94,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09378
+        },
+        {
+          "step": 150,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09376
+        },
+        {
+          "step": 206,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09375
+        },
+        {
+          "step": 262,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09375
+        },
+        {
+          "step": 318,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0939
+        },
+        {
+          "step": 374,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.0939
+        },
+        {
+          "step": 430,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09391
+        },
+        {
+          "step": 486,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09393
+        },
+        {
+          "step": 542,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09393
+        },
+        {
+          "step": 598,
+          "event": "LIFTOFF",
+          "fsm": "JUMP",
+          "root_y": 0.09393
+        }
+      ],
+      "summary": {
+        "n": 11,
+        "collision": 10,
+        "cleared": 0,
+        "cleared_and_clean": 0,
+        "took_off": 11,
+        "mean_peak_force_N": 786.99,
+        "max_peak_force_N": 921.4,
+        "mean_recovery_ratio": null,
+        "n_recovery_measured": 0,
+        "outcomes": {
+          "EPISODE_RESET:OBSTACLE_COLLISION": 10,
+          "STEP_LIMIT": 1
+        }
+      }
+    }
+  ]
+}

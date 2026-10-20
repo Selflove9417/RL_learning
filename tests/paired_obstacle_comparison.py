@@ -4,6 +4,24 @@
 #
 # Paired Physical Control Experiment: With Obstacle vs Without Obstacle
 # Evaluates model_3.pt under identical random seeds and identical takeoff spatial triggering.
+#
+# ============================================================================
+# SUPERSEDED -- HISTORIC SCRIPT, KEPT FOR REPRODUCING THE OLD BASELINE ONLY.
+# Do not quote its output as evidence about the current task:
+#   * the "without obstacle" arm only moves the box to y = 10 m; the box stays in
+#     the scene, so it is not a free run;
+#   * the wheel front is `pos_y + wheel_radius`, which is up to 0.22 m behind the
+#     true URDF envelope, so both the trigger distance and the margins are wrong;
+#   * it counts any contact record as a hit, including zero-impulse speculative
+#     proximity records (a real 9.885 mm near-miss was reported as a 577-2333 N
+#     strike);
+#   * it reads flags after env.step() returned, i.e. after reset_idx cleared them;
+#   * hence its claim that all 8 seeds make first contact BEFORE liftoff does not
+#     reproduce under the corrected geometry: 2 of 8 do (seeds 25 and 31).
+# For current results use:
+#   python tests/evaluate_obstacle_jump.py --pipeline cpu
+#   python tests/analyze_first_contact.py --pipeline cpu
+# ============================================================================
 
 import os
 import sys

@@ -4,6 +4,23 @@
 #
 # Physical Obstacle Clearance Benchmark for MyRobot (model_3.pt)
 # Rigorous physics evaluation across 8 benchmark seeds with Phase 2 strict criteria.
+#
+# ============================================================================
+# SUPERSEDED -- HISTORIC SCRIPT, KEPT FOR REPRODUCING THE OLD BASELINE ONLY.
+# Its geometry is wrong and its numbers cannot be compared with current runs:
+#   * it measures the wheel front as `pos_y + wheel_radius`, omitting the ~0.114 m
+#     longitudinal offset of the wheel centres and the forward extent of the legs
+#     (the true front is up to 0.22 m further ahead);
+#   * it reads per-episode flags AFTER env.step() returned, i.e. after reset_idx
+#     already cleared them, which is where `touchdown_pos_y = 0.0` and the
+#     impossible `flight_dist = -0.106 m` came from;
+#   * it counts any Isaac Gym contact record as a collision, including
+#     speculative proximity records with `lambda == 0` that carry no impulse;
+#   * its recovery criterion accepts 65 % of the commanded speed.
+# For current results use:
+#   python tests/evaluate_obstacle_jump.py --pipeline cpu
+#   python tests/evaluate_obstacle_jump_continuous.py --pipeline cpu
+# ============================================================================
 
 import os
 import sys

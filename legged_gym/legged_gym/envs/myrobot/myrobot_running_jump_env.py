@@ -217,6 +217,11 @@ class MyRobotRunningJump(MyRobotDualEnv):
                     self.takeoff_step[idx] = self.common_step_counter
                     self.last_transition_event[idx] = "LIFTOFF"
 
+        # 4b. Task-specific metrics must be refreshed BEFORE termination and reward,
+        # otherwise rewards/termination consume one-step-stale values. No-op at this
+        # level; overridden by MyRobotObstacleJump.
+        self._update_task_metrics()
+
         # 5. Check termination (fall / tilt > 45 deg / timeout)
         # Note: In MyRobot, X is lateral (wheel axle), Y is longitudinal (forward travel).
         # get_euler_xyz returns (x_rot, y_rot, z_rot).
@@ -227,6 +232,12 @@ class MyRobotRunningJump(MyRobotDualEnv):
         roll = torch.atan2(torch.sin(p_raw), torch.cos(p_raw))
 
         fall = (self.root_states[:, 2] < 0.20) | (torch.abs(pitch) > math.radians(45.0)) | (torch.abs(roll) > math.radians(40.0))
+        # Recorded so evaluators can distinguish a physical fall from a timeout
+        # or a task-level abort, all of which share reset_buf.
+        self.fall_buf = fall.clone()
+        # Task-level failure (e.g. obstacle collision / mission abort). No-op here.
+        task_fail = self._task_failure_mask()
+        fall = fall | task_fail
         continuous_mode = getattr(self.cfg.env, 'continuous_mode', False)
         if continuous_mode:
             timeout = torch.zeros_like(fall)
@@ -250,9 +261,19 @@ class MyRobotRunningJump(MyRobotDualEnv):
         self.extras["terminal_observation"] = pre_reset_obs.clone()
 
         # 8. Reset terminated envs
+        # 8a. Last chance to record pre-reset state. Everything below this line
+        #     (reset_idx, then _update_task_metrics(post_reset=True)) intentionally
+        #     clears the per-episode flags, so an evaluator that reads them AFTER
+        #     step() returns sees clean zeros and would report a robot that
+        #     "never took off" on every failed episode. No-op at this level.
+        self._capture_episode_snapshot()
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         if len(env_ids) > 0:
             self.reset_idx(env_ids)
+
+        # 8b. Post-reset, task metrics must be recomputed so the NEXT step does not
+        # read pre-reset state. Also lets us flag "reset finished here". No-op here.
+        self._update_task_metrics(post_reset=True)
 
         # 9. Compute observations for next step AFTER reset (returns clean s_0 for reset envs)
         self.compute_observations()
@@ -269,6 +290,32 @@ class MyRobotRunningJump(MyRobotDualEnv):
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
 
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
+
+    # =========================================================================
+    # Task Hooks (no-ops here, overridden by task-specific subclasses)
+    # =========================================================================
+
+    def _update_task_metrics(self, post_reset=False):
+        """Refresh task-specific derived buffers.
+
+        Called twice per step: once after physics/FSM update but BEFORE
+        termination and reward (post_reset=False), and once after reset_idx
+        so the next step never reads pre-reset state (post_reset=True).
+        """
+        pass
+
+    def _task_failure_mask(self):
+        """Boolean (N,) mask of task-level failures that must terminate the episode."""
+        return torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+
+    def _capture_episode_snapshot(self):
+        """Record pre-reset episode state for evaluation. No-op at this level.
+
+        Called immediately before reset_idx, while the terminating episode's
+        flags are still live. Evaluators must read the snapshot, not the live
+        buffers, because reset_idx clears them on the same step.
+        """
+        pass
 
     # =========================================================================
     # Reward Functions: Explicitly Tailored for In-Motion Running Jump
