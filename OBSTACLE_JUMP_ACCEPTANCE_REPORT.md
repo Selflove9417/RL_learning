@@ -128,6 +128,19 @@ base_y base_z | gap_L    gap_R    | new_clr      | OLD      | verdict
 - 导入补 `quat_rotate`（原只有 `get_euler_xyz`）。新增 `_world_forward_velocity()`。
 - **RECOVER 出口三事件改为互斥**。原代码 `if normal_handoff or timeout_handoff or hard_timeout_abort:` 后用 `elif` 链写事件名，`TIMEOUT_HANDOFF` 与 `RECOVER_ABORT` 会被 `normal_handoff` 掩盖。现改为每个判据自带 `and not <prior>`。
 - **70% 速度门槛**：`RECOVERY_SPEED_FRACTION = 0.70`；`ratio = v_fwd / cmd_vy`；`recovery_sustained = (good_steps >= 2) and (regression_steps <= 1)`；`normal_handoff` 现在额外要求 `recovery_sustained`。原 `vxy_calm < 1.20` 完全没有速度门槛。
+
+  **运行时证据（16 个 run 的 `last_transition_event` 分布）**：
+
+  ```
+  TIMEOUT_HANDOFF          8     ← 全部 8 个 free-run 恢复都是超时交还，无一是 NORMAL_HANDOFF
+  LIFTOFF                  4
+  TOUCHDOWN_ENTER_RECOVER  2
+  ENTER_RUNNING_JUMP       2
+  NORMAL_HANDOFF           0     ← 70% 门槛生效：没有任何恢复被判为正常交还
+  RECOVER_ABORT            0
+  ```
+
+  这正是判据生效的直接证据：在旧代码下这 8 次恢复都会走 `normal_handoff`（因为 `settle_stable_steps >= 3` 就够），事件名会被误报为 `NORMAL_HANDOFF`，即「恢复成功」。现在它们诚实地标为 `TIMEOUT_HANDOFF`——**恢复是超时兜底，不是恢复成功**。
 - `reset_idx` 清零 5 个 recovery 缓冲。
 - **每次真实碰撞周期独立峰值**：`_begin_new_obstacle_cycle` 在每次触发时清零 `peak_obstacle_contact_force`，不复用历史峰值。
 - **reset 后状态陈旧根治**（本轮最隐蔽的 bug）：`reset_idx` 用 `set_actor_root_state_tensor_indexed` 写入新位姿，但 **Isaac Gym 不会自动刷新 state 张量**，故 reset 之后的 `_update_task_metrics(post_reset=True)` 读到上一回合末位姿（`front_y≈0.2825` 在障碍区间内、轮底 0、盒顶 0.05 ⇒ `clearance = -0.05`、`overlap_below_top=True` 且 `has_taken_off=False` ⇒ 幻影 `CROSSED_WITHOUT_LIFTOFF`）。修法：`reset_idx` 末尾补 `refresh_actor_root_state_tensor` / `refresh_rigid_body_state_tensor` / `refresh_dof_state_tensor`。修复前后对比 `minclr=-0.0500 reason=CROSSED_WITHOUT_LIFTOFF` → `minclr=1.0000 reason=NONE`。
