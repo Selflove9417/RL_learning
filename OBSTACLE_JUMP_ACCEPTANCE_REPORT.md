@@ -144,7 +144,7 @@ base_y base_z | gap_L    gap_R    | new_clr      | OLD      | verdict
 - `reset_idx` 清零 5 个 recovery 缓冲。
 - **每次真实碰撞周期独立峰值**：`_begin_new_obstacle_cycle` 在每次触发时清零 `peak_obstacle_contact_force`，不复用历史峰值。
 - **reset 后状态陈旧根治**（本轮最隐蔽的 bug）：`reset_idx` 用 `set_actor_root_state_tensor_indexed` 写入新位姿，但 **Isaac Gym 不会自动刷新 state 张量**，故 reset 之后的 `_update_task_metrics(post_reset=True)` 读到上一回合末位姿（`front_y≈0.2825` 在障碍区间内、轮底 0、盒顶 0.05 ⇒ `clearance = -0.05`、`overlap_below_top=True` 且 `has_taken_off=False` ⇒ 幻影 `CROSSED_WITHOUT_LIFTOFF`）。修法：`reset_idx` 末尾补 `refresh_actor_root_state_tensor` / `refresh_rigid_body_state_tensor` / `refresh_dof_state_tensor`。修复前后对比 `minclr=-0.0500 reason=CROSSED_WITHOUT_LIFTOFF` → `minclr=1.0000 reason=NONE`。
-- **pre-reset 快照**（`_capture_episode_snapshot`，43 字段）：在 `reset_idx` 之前冻结上一回合的全部判据。没有它，「at first contact」读到的是新回合的干净站姿（`y=0.0 gap=0.0979`）—— 历史脚本的 `touchdown_pos_y = 0.0`、`flight_dist = -0.106 m` 正是此因。
+- **pre-reset 快照**（`_capture_episode_snapshot`，快照字典 38 个字段，其中 5 个终止帧几何量由 `compute_obstacle_metrics` 的 `_last_geometry` 提供）：在 `reset_idx` 之前冻结上一回合的全部判据。没有它，「at first contact」读到的是新回合的干净站姿（`y=0.0 gap=0.0979`）—— 历史脚本的 `touchdown_pos_y = 0.0`、`flight_dist = -0.106 m` 正是此因。
 
 ### 1.5 任务五：评测器
 
