@@ -45,7 +45,7 @@
 | # | 问题 | 判据 |
 |---|---|---|
 | Q1 | 从 `model_3.pt` 热启动，能否在有限步数内提高无障臂的**落地后速度保持**？ | 无障碍臂 `recovery_sustained` 从 0/8 上升；`mean_recovery_ratio` 由 −14% 转正 |
-| Q2 | 跳跃的**水平位移**能否增加？ | `mean_flight_m` 从 0.174 m 上升，`mean_shortfall_m` 下降 |
+| Q2 | 跳跃的**滞空时长**能否增加（不是速度，速度已达标）？ | 有障臂 `mean_flight_m` 从 0.174 m 上升、`mean_shortfall_m` 下降；等价地看 `flight_steps` 从 21–22 步向 27 步靠拢 |
 | Q3 | 重新初始化 Jump Actor（不热启动）是否比热启动更快获得这两项能力？ | 两臂在同一预算下对比 Q1/Q2 指标 |
 | Q4 | 新奖励分档是否按设计生效（几何通过不再等于成功）？ | 训练日志中 `obstacle_geometric_pass` 与 `obstacle_cleared_success` 的出现次数与累计值可区分 |
 
@@ -71,7 +71,21 @@ legged_gym/logs/myrobot_obstacle_jump/trial_a2_warm_tuned/
 legged_gym/logs/myrobot_obstacle_jump/trial_b1_scratch_baseline/
 legged_gym/logs/myrobot_obstacle_jump/trial_b2_scratch_tuned/
 ```
-实现方式：新增 4 个 `CfgPPO` 子类（各设 `run_name` 与 `warm_start`），或在 `train.py` 加一个 `--run_name` 覆盖。**推荐前者**，因为 `run_name` 已由 `task_registry` 拼接进 `log_dir`，不需要改训练脚本。
+实现方式（**已在源码中核实，比初稿更简单**）：`--run_name` 本来就是 CLI 覆盖项
+（参数表在 `legged_gym/legged_gym/utils/helpers.py:202` 的 `get_args()` 里，
+应用在 `helpers.py:155-156`：`cfg_train.runner.run_name = args.run_name`），
+`--warm_start` / `--warm_start_optimizer` / `--warm_start_path` 也都是现成的 CLI 开关
+（`helpers.py:196-199` 定义，`helpers.py:161-167` 应用，实际加载在
+`legged_gym/legged_gym/utils/task_registry.py:168-176`）。
+
+因此：
+- **A1 不需要任何新配置类** —— 现有 `MyRobotObstacleJumpCfgPPO` 默认就是 `warm_start=True` + `model_3.pt`；
+- **B1/B2 需要子类** —— 因为 `--warm_start` 只有 `store_true` 语义（`helpers.py:197`），
+  `helpers.py:161-162` 只会在真值时把它设为 `True`，**没有把默认 True 改回 False 的命令行路径**；
+- **A2/B2 需要子类** —— 奖励 scale 不在 CLI 覆盖范围内。
+
+合计需要 **3 个** `CfgPPO` 子类（A2 一个、B1 一个、B2 一个），不是初稿写的 4 个（A1 白算了一个），
+也不是我在上一段临时改口的 1 个（漏掉了 B 臂关不掉 `warm_start` 这件事）。
 
 ---
 
@@ -93,22 +107,85 @@ legged_gym/logs/myrobot_obstacle_jump/trial_b2_scratch_tuned/
        backward = torch.clamp(-self._get_world_forward_velocity(), min=0.0)
        return backward * (self.has_touched_down & (~self.task_failed)).float()
    ```
-   理由：现状 `post_touchdown_forward = 2.5` 只奖励正速度，对负速度没有梯度压力；实测 8/8 后滑说明这个缺口是真实的。
+   理由（**这是量化过的，不是猜测**）：现状 `_reward_post_touchdown_forward = 2.5 × exp(-err²/(2σ²))`，`σ = tracking_sigma = 0.08`、`cmd_vy = 0.35`。把实测的后滑速度代进去：
 
-2. **水平飞行距奖励**（新增，或提高现有 `forward_progress_across_obstacle` 权重）：
+   ```
+   v_fwd    err      reward    d(reward)/dv
+    0.000  -0.350   0.00007     0.0038
+   -0.050  -0.400   0.00000     0.0002
+   -0.130  -0.480   0.00000     0.0000   ← 实测的典型后滑速度
+   -0.180  -0.530   0.00000     0.0000   ← 实测最差后滑
+    0.200  -0.150   0.17242     4.0411
+    0.350   0.000   1.00000    -0.0000
+   ```
+
+   即：**策略真正后滑时（−0.13 至 −0.18 m/s），这一项的奖励值和梯度都已经是 0**，它在运行点上完全平坦，
+   对"停下来"没有任何拉力。8/8 后滑不是巧合，是这个奖励形状的必然结果。
+   新增项提供的是**线性**梯度（`backward` 对 `v_fwd` 的导数恒为 −1），在后滑区间内持续有效。
+
+2. **越障净距奖励**（新增），把奖励从「速度」改为「距离」：
    ```python
-   def _reward_flight_horizontal_progress(self):
-       # Reward forward travel measured from liftoff, while airborne only.
-       # `takeoff_pos_y` is the pre-existing liftoff snapshot
-       # (myrobot_dual_env.py:142, written at :469).
+   def _reward_obstacle_rear_clearance_progress(self):
+       # Progress of the REAR envelope toward the box rear face, normalised by
+       # the root travel still owed at liftoff. This is the quantity that decides
+       # success; the existing terms reward a per-step velocity ratio instead.
+       #
+       # `takeoff_rear_y`  : rear envelope at liftoff (myrobot_obstacle_jump_env.py:482, written :1130)
+       # `robot_rear_margin`: rear envelope minus box rear face (:403, written :1058)
+       # Both already exist; no new env buffer is needed.
+       #
+       # At liftoff: robot_rear_margin == takeoff_rear_y - obs_rear_y == -owed,
+       # so `travelled` starts at exactly 0 and reaches `owed` when the rear
+       # envelope passes the rear face.
        airborne = self.has_taken_off & (~self.has_touched_down)
-       travelled = self.root_states[:, 1] - self.takeoff_pos_y
-       return torch.clamp(travelled, min=0.0) * airborne.float()
+       obs_rear_y = self.obstacle_root_states[:, 1] + 0.5 * self.obstacle_w
+       owed = torch.clamp(obs_rear_y - self.takeoff_rear_y, min=0.05)
+       travelled = torch.clamp(self.robot_rear_margin + owed, min=0.0)
+       return torch.clamp(travelled / owed, 0.0, 2.0) * airborne.float()
    ```
    ```python
-   flight_horizontal_progress = 1.5
+   obstacle_rear_clearance_progress = 1.0
    ```
-   理由：现状奖励在离地/触地两端都有项，但空中水平推进没有独立项；实测飞行距 0.174 m 对 5 cm 障碍够用、对所需 0.209 m 不够，需要给这一段单独梯度。
+
+   **理由（必须先说清现有奖励已经做了什么，否则会重复计奖）**：
+
+   现有两项都是**逐速度**形式的：
+   ```
+   forward_progress_across_obstacle = 2.5 * clamp(v_fwd / cmd, 0, 1.25)   空中
+   forward_velocity_retention       = 2.5 * exp(-(v_fwd-cmd)^2/(2*0.08^2))  全周期
+   ```
+   - 它们是**逐步**奖励，所以滞空越久累计越多 —— **现有奖励并非没有延长滞空的激励**。我最初写的"空中水平推进没有独立项"是不准确的。
+   - 真正的问题是**在运行点已经饱和**：实测空中速度 0.385 m/s（> 0.35 指令），
+     `clamp(0.385/0.35, 0, 1.25) = 1.10`，距上限 1.25 只剩 12% 余量。也就是说策略**已经拿满了这一项**，
+     再往前飞几乎没有额外奖励，剩下的行为差异（少 5.7 步滞空）落在这一项的盲区里。
+   - 距离型奖励没有这个上限：它以「还欠多少位移」为尺度，直接度量成败判据本身。
+
+   > **诚实标注**：这一项是**待验证的假设**，不是已证实的必要修复。
+   > 它之所以值得试，是因为现有两项在 0.385 m/s 处几乎饱和；但它也可能与现有项高度相关而无效。
+   > 这正是 A1/B1（现有奖励）作为**对照臂**存在的原因 —— 若 A2/B2 相对 A1/B1 没有改善，
+   > 就说明问题不在奖励形状，而在别处（例如探索不足或 FSM 时序），届时应当停下来重新诊断，而不是加更多项。
+
+   **用现有 8 种子数据离线验算过这个形状**（不是纸面推导）：
+
+   ```
+   seed  takeoff_rear  owed   margin@liftoff  travelled@liftoff  margin@end  frac@end
+    11     0.1112     0.2088     -0.2088            0.0000        -0.0572    0.7261
+    13     0.1131     0.2069     -0.2069            0.0000        -0.0367    0.8227
+    15     0.1112     0.2088     -0.2088            0.0000        -0.0337    0.8388
+    20     0.1101     0.2099     -0.2099            0.0000        -0.0389    0.8145
+    25     0.1099     0.2101     -0.2101            0.0000        -0.0319    0.8484
+    27     0.1082     0.2118     -0.2118            0.0000        -0.0507    0.7605
+    31     0.1153     0.2047     -0.2047            0.0000        -0.0500    0.7558
+    35     0.1086     0.2114     -0.2114            0.0000        -0.0490    0.7680
+   ```
+
+   两条性质都成立：
+   - `travelled@liftoff` **恒为 0.0000**（起跳时刻没有白送奖励，不会奖励"跳起来"本身）；
+   - 现有策略落地时只走到 **0.73–0.85**（不是 1.0，更没有撞上 `clamp` 上限 2.0），
+     即**该项在真实运行点上未饱和、仍有 15–27% 的可提升梯度** —— 这正是它相对速度型的优势。
+     速度型在 0.385 m/s 处已到 `1.10 / 1.25`（88%），只余 12%。
+   （`frac@end` 是在**无障臂**的飞行距离上算的，因为它在 8/8 回合都有真实触地；
+   有障臂 6/8 空中就撞上、`touchdown_step=-1`，没有可信的落地时刻可用。）
 
 **不做的事**：不动 `obstacle_collision` 符号、不动 `obstacle_cleared_success` 分档、不动触发几何、不动 URDF/执行器限幅、不改冻结模型。
 
@@ -161,21 +238,34 @@ TEST_SEEDS = [101, 103, 107, 109, 113, 127, 131, 137]
 cd /home/xy/IsaacTu_jump
 source ./activate_jump.sh
 
-# A1 热启动 + 现有奖励
+# A1 热启动 + 现有奖励（现有 CfgPPO 默认就是 warm_start=True + model_3.pt，无需额外开关）
 python -u legged_gym/legged_gym/scripts/train.py \
   --task myrobot_obstacle_jump \
   --headless --num_envs 64 --seed 11 --max_iterations 150 \
   --experiment_name myrobot_obstacle_jump \
   --run_name trial_a1_warm_baseline
 
-# A2 热启动 + §4 两项奖励
-#  (需先落地 §4 的 rewards 子类，例如 myrobot_obstacle_jump_tuned_cfg)
+# B1 不热启动 + 现有奖励
+#  ⚠ 这条命令现在跑不了：必须先按 §3 落地 b1 的 CfgPPO 子类（warm_start = False），
+#    然后才有 --task myrobot_obstacle_jump_b1。保留在此仅为说明目标命令形状。
+python -u legged_gym/legged_gym/scripts/train.py \
+  --task myrobot_obstacle_jump_b1 \
+  --headless --num_envs 64 --seed 11 --max_iterations 150 \
+  --experiment_name myrobot_obstacle_jump \
+  --run_name trial_b1_scratch_baseline
+
+# ⚠ 为什么不能直接用 --task myrobot_obstacle_jump 跑 B1：
+#   warm_start 默认是 True（myrobot_obstacle_jump_config.py:113-114）
+#   且 --warm_start 只有 store_true 语义（helpers.py:197），
+#   helpers.py:161-162 只在真值时把它设为 True，没有把默认 True 改回 False 的命令行路径。
+#   所以 B1/B2 必须用 CfgPPO 子类置 warm_start = False。
+#   这修正了 §3 的结论：A1 免配置，B1/B2 与 A2 都需要子类（共 3 个，而非初稿的 4 个，也不是 1 个）。
+
+# A2 热启动 + §4 两项奖励（需先落地 §4 的 rewards 子类）
 python -u legged_gym/legged_gym/scripts/train.py \
   --task myrobot_obstacle_jump_tuned \
   --headless --num_envs 64 --seed 11 --max_iterations 150 \
   --run_name trial_a2_warm_tuned
-
-# B1 / B2 同上，但 CfgPPO 里设 warm_start = False
 
 # 每 10 iteration 的确定性评测（不覆盖历史结果）
 python -u tests/evaluate_obstacle_jump.py \
