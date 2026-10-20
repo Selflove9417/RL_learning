@@ -7,6 +7,12 @@
 - 评测对象：冻结策略 `legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt`
 - 约束遵守情况：**未启动任何 PPO 训练**；**未改动 URDF / 执行器物理限幅 / 冻结模型权重**；**未覆盖任何历史基准 JSON**（旧脚本保留原样，仅加 `SUPERSEDED` 说明，结果写入全新文件名）。
 
+> **本报告分两个阶段。**
+> 第 0–8 节是 **Phase A**（基线 `d245fef` → `2eccf1c`）：建立可信判据与评测器，结论「0/8 成功」。
+> **第 9 节是 Phase B**（基线 `2eccf1c` → `1253960`）：按后续任务书修复五项训练语义缺陷。
+> Phase B 修正了 Phase A 若干数字的口径（采样动作 → 确定性动作、`lambda` 单位、几何误差界），
+> **两者不得混算均值**；以第 9 节为准，第 0–8 节保留作为历史记录。
+
 ---
 
 ## 0. 结论先行
@@ -430,3 +436,280 @@ seed 27: trigger=33 liftoff=40 touchdown=61 first_contact=66   ← 落地后才�
 9. **`env.cfg.rewards.scales` 不支持下标**，须 `getattr(...)`。
 10. **`gymapi.SimParams()` 默认重力为零**：手写探针必须 `sp.gravity = gymapi.Vec3(0, 0, -9.81)`。
 11. **本机 headless only**：无 `/dev/dri`、无 X11，不能用交互 viewer 录屏。
+
+---
+
+# Phase B：五项训练语义修复
+
+- 基线：`2eccf1c303b477068c8562421c1ac9bf88ec5805`
+- 交付提交：**`1253960796a89ab6719c20fedfe51e7ca6a54bcd`**（11 文件，+47239 / −135）
+- 试验方案提交：`a4c3fe1`（`PPO_TRIAL_PLAN.md`，只描述方案，未训练）
+- 约束：**未启动 PPO 训练**；**未改 URDF / 执行器限幅 / 冻结模型**；**未改历史基准 JSON**
+
+## 9.0 Phase B 结论
+
+**判据侧：通过。策略侧：仍然 0/8，但结论比 Phase A 更硬、更可信。**
+
+| 指标 | Phase A（采样动作） | **Phase B（确定性 `act_inference`）** |
+|---|---|---|
+| 完整成功 | 0/8 | **0/8** |
+| 障碍碰撞 | 8/8 | **8/8** |
+| 干净跨越 `cleared` | 0/8 | 1/8 |
+| 真正离地 | 6/8 | **8/8** |
+| 落地 | 2/8 | **2/8** |
+| 平均飞行距 | 0.1916 m (n=2) | 0.1744 m (n=2) |
+| 跨障所需位移 | 0.2284 m (n=6) | 0.2091 m (n=8) |
+| 恢复达 70% | 0/8 | **0/8** |
+
+确定性模式让 `took_off` 从 6/8 升到 8/8 —— **采样噪声此前掩盖了真实的离地行为**。这是 Phase B 必须重跑的核心理由。
+
+## 9.1 任务一：成功奖励分档（先通过后碰撞不得提前领奖）
+
+**改动**：`obstacle_cleared_success` 从「几何通过即发满额 5.0」拆成两档。
+
+```python
+        pass_clean = (self.has_taken_off & self.has_touched_down
+                      & (rear_margin > 0.005)
+                      & (~self.has_obstacle_collision) & (~self.obstacle_cleared))
+        if pass_clean.any():
+            self.obstacle_cleared |= pass_clean
+            self.geometric_pass_event |= pass_clean      # TIER 1: 0.6
+            self.success_armed |= pass_clean
+
+        recovered_sustained = self._recovery_succeeded()
+        mission_success = (self.success_armed
+                           & self.obstacle_cleared
+                           & (~self.has_obstacle_collision)
+                           & (~self.task_failed)
+                           & (self.takeoff_step >= 0)
+                           & (self.touchdown_step >= 0)
+                           & recovered_sustained
+                           & (~self.final_success_paid))       # TIER 2: 5.0
+```
+
+- **TIER 1**（`obstacle_geometric_pass = 0.6`，约满额 1/8）：只证明几何通过。
+- **TIER 2**（`obstacle_cleared_success = 5.0`）：还要求真实离地、落地、持续巡航、`NORMAL_HANDOFF`，每回合至多一次。
+- **永久解除**：`self.success_armed &= ~self.has_obstacle_collision`，并在首次碰撞时写入
+  `success_disarmed_reason ∈ {'COLLISION_AFTER_PASSAGE', 'COLLISION_BEFORE_PASSAGE'}`。
+
+**反例测试（E 组 11 项全 PASS）**：`pass-then-collide is NOT a success`、`re-arming cannot resurrect a collided episode`、`pass without sustained recovery is NOT a success`、`tier-1 passage pays on its own event tier1=1.000 tier2=0.000`。
+
+## 9.2 任务二：连续恢复判据（`>= 2` 步不能证明持续）
+
+**改动**（`myrobot_dual_env.py`）：从「窗口内累计 2 步」改为**连续 run 计数器**。
+
+```python
+        RECOVERY_SPEED_FRACTION = 0.70
+        RECOVERY_HOLD_STEPS = 10          # 0.20 s 不间断
+        RECOVERY_CURVE_LEN = 50           # 原始速度环形缓冲
+        qualifying = (ratio >= 0.70 and att_calm and yaw_calm
+                      and joint_calm and grounded)
+```
+
+任何一步不达标 → `recovery_hold_steps` 归零。三个出口写入
+`recovery_outcome ∈ {'NORMAL_HANDOFF', 'TIMEOUT_HANDOFF', 'RECOVER_ABORT'}`，
+`_recovery_succeeded()` 只认 `NORMAL_HANDOFF`，即 **TIMEOUT / ABORT 明确不算成功**。
+
+**原始速度曲线**已进入评测 JSON（`derived.recovery_curve` + `recovery_curve_samples`，来自 env 侧环形缓冲，非评测器重构）。
+判据来源标注为 `recovery_verdict_source = 'env._recovery_succeeded'`，旧的均值启发式降级为并列参考项 `recovery_mean_window_heuristic`。
+
+**实测效果**（无障臂 seed 11）：`recovery_outcome = TIMEOUT_HANDOFF`、`best_hold_steps = 0`、`grounded_steps = 20`，
+曲线末段持续为负 `[-0.0853, -0.1015, -0.1166, -0.1305]` m/s —— **旧判据会把这类回合全部算作恢复成功。**
+
+## 9.3 任务三：几何包络精度（三项诚实化）
+
+### (a) 零填充幻影点（真实 bug，已修）
+
+`register_link_points` 用 `torch.zeros` 把点云 pad 到 K，旧 `link_y_extents` 只按 body 有效性过滤，
+**pad 的零点是活点**，会落回 `rb_states[b, 0:3]`（body 原点）。对 `link_003`/`link_006`（髋部安装、原点在碰撞体外）会静默拉偏 min/max。
+修法：新增 `env.link_point_mask`（`(num_bodies, K)` bool），逐点过滤。
+
+### (b) 支撑点削减被证伪 → 改用凸包
+
+96 方向 Fibonacci 采样在 4000 次随机旋转下的**最大低估**实测：
+
+```
+base_link 8.896 mm   link_005 4.505 mm   link_002 4.308 mm
+link_003 1.730 mm    link_006 1.166 mm   wheels 0 mm
+```
+
+`base_link` 低估 8.9 mm 与障碍高度 50 mm 同量级，不可接受。
+改用 `scipy.spatial.ConvexHull` 顶点（394452 → **443 点**）：线性泛函在凸包顶点取极值，故**任意旋转精确**。
+旧误差值保留为常量 `REDUCTION_MEASURED_UNDERESTIMATE_M` 备查。
+
+### (c) 采样误差界更正（旧声称 0.2 mm，实际 0.691 mm）
+
+轴线 65 点采样步长 `h = 0.0885/64 = 1.383 mm`；距离沿线段凸 ⟹ 采样最小值**高估**真实最小值最多 `h/2 = 0.691 mm`。
+旧 docstring 声称 ~0.2 mm，**错 3.5 倍**。
+
+> **这条更正有实质影响**：Phase A 报告的首接触净空（−0.00033 ~ +0.00065 m）**全部低于该分辨率**，
+> 因此只能报**符号**，不能报量值。`wheel_clearance_above_box_top` 已显式标注为 NOT "EXACT"。
+
+### 三类反例（H 组，全 PASS）
+
+- **姿态变化**：400 组随机四元数 × 7 link，凸包 vs 未缩减原始点云，`worst_under < 1e-6`；旧 Fibonacci 点集回归锚 `old_under > 1e-3`。
+- **障碍边角接近**：左/右角各 6 mm 净空与 4 mm 重叠，解析 gap 与 **4001 点轴线扫描**和**独立表面点云**（17×72×37）三方一致。
+- **非车轮连杆**：`link_y_extents` 对全部 7 link 保持**外包围**性质（`violations == 0`），并断言源码含
+  `EXACT SUPPORT FUNCTION OVER A CONSERVATIVE OUTER BOUND` 与 `never used as a penetration depth`。
+
+## 9.4 任务四：接触单位与坐标系（一处重大自我更正）
+
+### `lambda` 是**力 N**，不是冲量 N·s
+
+我在 Phase B 中途曾按任务书措辞把 `lambda` 改标为冲量并加「1/dt = 200 倍单位错误」的注释。
+**这个判断是错的**，用实验推翻了它（`tests/test_contact_force_units.py`，已固化为回归测试）：
+
+隔离场景：0.2 m 立方体、density 1000 → m = 8.0 kg、`m·g = 78.4800 N`，自由落体至静止后读接触记录：
+
+```
+        dt     lambda sum        m*g [N]      lam/(m*g)   lam/(m*g*dt)
+  0.005000       78.47963       78.48000       0.999995        199.999
+  0.010000       78.47991       78.48000       0.999999        100.000
+  0.002500       78.48085       78.48000       1.000011        400.004
+spread of lambda across dt (relative) = 1.552e-05
+VERDICT: lambda is a FORCE in N
+```
+
+`lambda` 与 dt 无关且等于 `m·g` ⟹ **它是接触力，单位牛顿**。旧代码把 `lambda` 命名 `force` 是正确的。
+当前代码保留两个字段并澄清语义：`force_n`（该接触对）与 `net_force_n`（刚体净力）。
+
+### 接触点坐标系（真实 bug，已修）
+
+`localPos0` 是 `body0` 局部系的点，第一版直接当世界坐标上报，导致每次接触 `y` 恒为盒半宽 ±0.02。
+修法：新增模块级
+
+```python
+def contact_point_world(contact, obstacle_root_state, obstacle_is_body0,
+                        obstacle_body_index, device=None):
+    # 按障碍实际所在 slot 选 localPos0/localPos1
+    # p_world = p_obs + R_obs @ local
+    # 返回 (None, 'flag_mismatch') / (None, 'obstacle_not_in_pair') 做交叉校验
+```
+
+**顺序反转测试（F 组）**：同一物理点，障碍在 `body0` 与在 `body1` 两种排列下解出**同一世界坐标**（< 1e-6），
+`point_frame` 分别为 `'obstacle_local0'` / `'obstacle_local1'`；错 flag → `'flag_mismatch'`；无障对 → `'obstacle_not_in_pair'`。
+
+### 首次接触归因（8 种子确定性，全部落地之后）
+
+```
+seed step body      world_pos                    pair_force_N  net_force_N  before_liftoff
+11   61   link_004  [0.4377, 0.32, 0.05]          1013.1        1013.1       False
+13   65   link_004  [0.4364, 0.32, 0.05]            68.4         328.8       False
+15   61   link_004  [0.4350, 0.32, 0.05]           361.2         361.2       False
+20   61   link_004  [0.4412, 0.32, 0.05]           100.5         100.5       False
+25   70   link_004  [0.4344, 0.32, 0.05]             7.6          22.1       False
+27   60   link_004  [0.4395, 0.32, 0.05]           582.3         598.7       False
+31   61   link_004  [0.4375, 0.32, 0.05]           959.6         987.3       False
+35   60   link_004  [0.4393, 0.32, 0.05]           409.4         409.4       False
+```
+
+**与 Phase A 的分歧必须如实披露**：Phase A（采样动作）报「2/8 早于离地」；Phase B（确定性）报 **0/8 早于离地**，
+全部 `before_liftoff = False`。两者是不同动作模式的轨迹，不可混算。
+
+### 冲突辨伪：speculative contact ≠ collision
+
+Phase A 遗留的关键缺陷是 `_collect_obstacle_contacts` 把**任何**含障碍的 `RigidContact` 都当碰撞。
+实测反例（真实策略 step 59，轮子与盒仍有 **9.885 mm 解析间隙**）：
+
+```
+  b0=7 b1=3 lambda=0.000 minDist=0.02000 initialOverlap=True
+```
+
+`lambda=0` + `minDist == contact_offset` + `initialOverlap=True` 是 PhysX 的 **speculative（推测性近邻）记录**。
+现要求 `lambda > IMPULSE_EPS (1e-3)` 才算接触正证据；近邻记录只驱动 `is_crossing_obstacle`，**不驱动终止与惩罚**。
+另有独立几何证据源 `_geometric_wheel_intersection()`（解析胶囊-盒，不依赖接触列表，GPU 下也可用）。
+
+## 9.5 任务五：统一动作模式
+
+`tests/evaluate_obstacle_jump.py` 与 `tests/analyze_first_contact.py` 改为 `policy.act_inference(obs)`（确定性）。
+随机 `policy.act(obs)` 保留为独立测试模式（`--action_mode stochastic`）。
+
+- 模式写入 JSON（`action_mode` + `action_mode_note`）**与文件名**（默认 `..._<mode>_results.json`）；
+- `--overwrite` 不显式给出时**拒绝覆盖**已存在文件；
+- **新旧采样模式不得混合算均值** —— Phase A 的 `obstacle_jump_reeval_results.json` 零改动。
+
+## 9.6 本轮修复的一个 GPU 训练致命缺陷（Phase A 遗留）
+
+`reset_idx` 后 `rb_states` 在 **GPU pipeline 上仍是上一回合末的位姿**（CPU 上会立即发布）。实测 2 env @ `base_y = 0.62`：
+
+```
+######## GPU ########
+  post_reset: task_failed=[True, True] reason=['CROSSED_WITHOUT_LIFTOFF', 'CROSSED_WITHOUT_LIFTOFF']
+              rear_margin=[0.0924, 0.0923]
+######## CPU ########
+  post_reset: task_failed=[False, False] reason=['NONE', 'NONE']
+```
+
+旧代码在 `post_reset=True` 时重新评估几何 ⟹ **每次成功穿过障碍，下一回合会在第一步被判失败并终止**。
+修法：`_update_task_metrics(post_reset=True)` 直接 return，不评估任何几何（`reset_idx` 已清零全部缓冲）。
+`step()` 的第一次真实调用会在终止与奖励之前重算全部指标。
+
+## 9.7 测试与数据
+
+| 测试 | Phase A | **Phase B** |
+|---|---|---|
+| `tests/test_obstacle_jump_semantics.py` | 29 项 | **75 项全 PASS** |
+| `tests/test_ppo_smoke.py --pipeline gpu` | 无 | **41/41 PASS** |
+| `tests/test_ppo_smoke.py --pipeline cpu --rl_device cpu` | 无 | **38/38 PASS** |
+| `tests/test_contact_force_units.py` | 无 | **PASS**（3 个 dt） |
+
+**PPO 数据链路 smoke test（不更新权重）**：真实障碍环境、8 env × 48 step 的收缩 rollout（`runner.num_steps_per_env` 与 `alg.init_storage` 同步缩小，`make_alg_runner(..., log_root=None)` 保证不建 run 目录、不存 checkpoint），Actor 35 / Critic 35 / Action 6，
+验证 `RolloutStorage` 形状 `(T, N, 1)`、GAE 递推（`lhs = rhs`）、done 步 return == 存储 reward（bootstrap 已折入 reward）、
+`actor_loss_mask` 二值进 storage、`time_outs`/`terminal_observation` 生效、奖励含正负号、update 返回 `(value_loss, surrogate_loss)`
+与 39 个诊断 key 全有限、梯度有限且参数确实移动。
+**GPU pipeline 专项**：确认 `GymGetEnvRigidContactCount` 不可用（预期）时，解析几何仍能独立检出重叠
+（`n_env_intersecting=8 deepest gap=-0.07000 m`），**不依赖 CPU-only 接口**。
+
+**8 种子确定性评测**（`evaluation_assets/obstacle_jump_reeval_deterministic_results.json`，新文件名，1.11 MB）：
+
+```
+obstacle   n=8  success=0  collision=8  cleared=1  took_off=8  touched_down=2
+           mean_flight_m=0.1744 (n=2)  mean_required_m=0.2091 (n=8)  mean_shortfall_m=0.0341 (n=2)
+           mean_min_clearance_m=0.0002  mean_peak_force_N=477.6
+           mean_recovery_ratio=+0.0602  recovery_70pct=0
+           reasons={'OBSTACLE_COLLISION': 8}
+free_run   n=8  success=0  collision=0  cleared=0  took_off=8  touched_down=8
+           mean_flight_m=0.1656 (n=8)  mean_recovery_ratio=-0.1389  recovery_70pct=0
+           reasons={'NONE': 8}
+```
+
+逐种子（有障臂）：
+
+```
+seed  reason               cleared  min_clr_m  flight_m  required_m  recovery_ratio
+ 11   OBSTACLE_COLLISION   False    +0.0001    n/a       0.2088      0.000
+ 13   OBSTACLE_COLLISION   False    +0.0000    0.1703    0.2069      0.286
+ 15   OBSTACLE_COLLISION   False    +0.0012    n/a       0.2088      0.000
+ 20   OBSTACLE_COLLISION   False    +0.0003    n/a       0.2099      0.000
+ 25   OBSTACLE_COLLISION   True     +0.0000    0.1786    0.2101      0.196
+ 27   OBSTACLE_COLLISION   False    -0.0001    n/a       0.2118      0.000
+ 31   OBSTACLE_COLLISION   False    +0.0001    n/a       0.2047      0.000
+ 35   OBSTACLE_COLLISION   False    -0.0000    n/a       0.2114      0.000
+```
+
+> `min_clr_m` 的绝对值全部落在 §9.3(c) 的 0.691 mm 分辨率以内 ⟹ **只能读符号，不能读量值**。7/8 为非负、1/8 略负。
+
+## 9.8 冻结模型的真实能力边界（Phase B 最终判读）
+
+**高度够，横向不够，而且落地后倒退。**
+
+- 峰值飞行净空 **21.7 cm** vs 障碍 **5 cm** —— 高度从来不是瓶颈。
+- `flight_dist` 0.174 m vs `required` 0.209 m —— 缺 3.4 cm，但更严重的是：
+- **无障碍臂 8/8 恢复速度为负（均值 −13.9%，最差 −18.1%）**，落地后整体后滑 13–18 cm；
+- **8/8 `TIMEOUT_HANDOFF`、`recovery_best_hold_steps = 0`** —— 从未连续 10 步维持 70% 速度；
+- 起跳后 base_y 仅前进约 **9 cm**，基本是原地垂直起落。
+
+**结论**：冻结 `model_3.pt` 学到的是「垂直起落」，不是「跨障」。作为 PPO 热启动是有价值的研究起点，
+但**不能把它当作已具备跨障能力**。试验方案见 `PPO_TRIAL_PLAN.md`。
+
+## 9.9 Phase B 踩坑补充（承接 §8）
+
+12. **`--pipeline cpu` 时须同时 `--rl_device cpu`**：否则 `env.device='cpu'` 而 policy 在 cuda，env 会把 cuda 动作写进 CPU 缓冲并崩在 `filtered_actions[jump_active]`（仓库既有行为，非本轮引入）。
+13. **GPU 下 `rb_states` 需要 `simulate()` 才重新发布**：`set_actor_root_state_tensor` + 两次 refresh 不够；CPU 下两次 refresh 即可。
+14. **每进程只能建一个 Foundation**，故跨 dt 的实验必须用子进程（`tests/test_contact_force_units.py` 的 `--single <dt>` 模式）。
+15. **`PPO.update()` 返回 tuple `(value_loss, surrogate_loss)`**，丰富诊断在 `self.last_update_diagnostics`（39 key）。
+16. **`RolloutStorage` 张量形状是 `(num_steps, num_envs, 1)`**，不是 `(T, N)`。
+17. **`advantages` 在 `compute_returns` 末尾被原地归一化**，要验 GAE 递推必须用 `raw_adv = returns - values` 复原。
+18. **`task_registry.make_alg_runner(..., log_root=None)` 是无日志入口**：可保证 smoke test 不会建 run 目录或存 checkpoint。
+19. **两轮是 bicycle 纵向布局**（y/z 相同、x 不同），`wheel_box_signed_gap` 取两轮 min，单轮断言必须读列 0/1 而非 `.min()`。
+20. **位姿四元数约定是 `(x, y, z, w)`**，写在 `root_states[3:7]`；yaw 的分量在 `qz/qw`。
