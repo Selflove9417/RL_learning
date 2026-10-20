@@ -167,17 +167,54 @@ class MyRobotDualEnv(MyRobotJump):
         self.last_transition_event = ["INIT_BALANCE"] * self.num_envs
         self.stopping_start_pos = torch.zeros(self.num_envs, 2, device=self.device)
 
-        # Recovery quality tracking (task 4.3 / 4.4).
-        # A recovery is only a genuine success when the robot is not merely calm but
-        # is actually still travelling forward at >= RECOVERY_SPEED_FRACTION of the
-        # commanded target speed, without sustained regression, inside the
-        # observation window.
+        # Recovery quality tracking (task 4.3 / 4.4, revised in Phase B task 2).
+        #
+        # A recovery is only genuine when the robot is not merely calm but is
+        # actually still travelling forward at >= RECOVERY_SPEED_FRACTION of the
+        # commanded target speed, CONTINUOUSLY, for at least RECOVERY_HOLD_STEPS
+        # control steps, with attitude/rate stability and both wheels loaded.
+        #
+        # The Phase A version counted discrete "good" samples anywhere in the
+        # window (`recovery_speed_good_steps >= 2`). Two isolated samples prove that
+        # the threshold was reached twice, not that forward cruise was restored:
+        # a robot that lunges twice and then stalls satisfied it. REPEATED is not
+        # SUSTAINED, so the counter below is a CONSECUTIVE-run counter that any
+        # single violating step resets to zero.
         self.RECOVERY_SPEED_FRACTION = 0.70
+        # 10 control steps at dt=0.02 s = 0.20 s of unbroken qualifying cruise.
+        # Chosen to fit inside the 0.40 s RECOVER timeout of the running-jump
+        # branch, so a genuinely recovered robot can still hand off normally.
+        self.RECOVERY_HOLD_STEPS = 10
+        self.RECOVERY_HOLD_TIME_S = self.RECOVERY_HOLD_STEPS * float(self.dt)
+        # Ring buffer length: 1.0 s of control steps, enough to show the whole
+        # approach-to-cruise transition in the trace.
+        self.RECOVERY_CURVE_LEN = 50
         self.recovery_speed_ratio = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
-        self.recovery_speed_good_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        # Consecutive qualifying steps (resets to 0 on any violating step).
+        self.recovery_hold_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        # Longest consecutive run ever achieved in this jump. Kept separate from
+        # `recovery_hold_steps` so a late disturbance cannot erase the evidence.
+        self.recovery_best_hold_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        # Consecutive backwards steps (forward velocity < 0), reset on any
+        # non-negative step. A long run here is "sustained regression".
         self.recovery_regression_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.recovery_window_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        # Steps inside the recovery window on which BOTH wheels carried load. A
+        # recovery that never re-establishes bilateral ground contact is not a
+        # restored gait, so a zero here disqualifies the recovery.
+        self.recovery_grounded_steps = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.recovery_sustained = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        # How the recovery ended, recorded as data (not inferred by the caller):
+        # 'NONE' until the RECOVER state exits, then 'NORMAL_HANDOFF',
+        # 'TIMEOUT_HANDOFF' or 'RECOVER_ABORT'. Only 'NORMAL_HANDOFF' may be
+        # counted as a recovered cruise by an evaluator.
+        self.recovery_outcome = ["NONE"] * self.num_envs
+        # Raw forward-velocity curve of the RECOVER phase (ring buffer), so the
+        # acceptance report can show the actual speed trace instead of a summary
+        # statistic. Unfilled slots hold NaN and are filtered by the reader.
+        self.recovery_curve = torch.full((self.num_envs, self.RECOVERY_CURVE_LEN),
+                                         float('nan'), device=self.device, dtype=torch.float)
+        self.recovery_curve_head = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
 
         self._refresh_physical_state(update_has_taken_off=False)
 
@@ -254,12 +291,17 @@ class MyRobotDualEnv(MyRobotJump):
 
         # Reset recovery quality gate
         self.recovery_speed_ratio[env_ids] = 0.0
-        self.recovery_speed_good_steps[env_ids] = 0
+        self.recovery_hold_steps[env_ids] = 0
+        self.recovery_best_hold_steps[env_ids] = 0
         self.recovery_regression_steps[env_ids] = 0
         self.recovery_window_steps[env_ids] = 0
+        self.recovery_grounded_steps[env_ids] = 0
         self.recovery_sustained[env_ids] = False
+        self.recovery_curve[env_ids] = float('nan')
+        self.recovery_curve_head[env_ids] = 0
 
         for eid in env_ids.tolist():
+            self.recovery_outcome[eid] = "NONE"
             self.last_transition_event[eid] = "INIT_BALANCE"
 
     def set_teleop_targets(self, vy=None, yaw=None, height=None):
@@ -470,31 +512,57 @@ class MyRobotDualEnv(MyRobotJump):
                     joint_calm = (knee_vel[i] < 0.8)
                     yaw_calm = (abs(self.base_ang_vel[i, 2].item()) < 0.25)
 
-                # ---- Recovery quality gate (task 4.3/4.4) -------------------
+                # ---- Recovery quality gate (task 2, Phase B) -----------------
                 # "Recovered" is NOT merely "FSM reached BALANCE". The robot must be
-                # actually moving forward again at >= 70% of the commanded target
-                # speed, with no sustained regression, throughout the window.
+                # cruising forward again at >= 70% of the commanded target speed
+                # CONTINUOUSLY for RECOVERY_HOLD_STEPS steps, with attitude/rate
+                # stability and both wheels loaded, without sustained regression.
+                #
+                # Why a consecutive counter rather than a running total: the Phase A
+                # gate was `good_steps >= 2`, i.e. two qualifying samples anywhere in
+                # the window. A robot that lurches forward twice and then stalls
+                # passed that gate while never restoring cruise. Here any single
+                # violating step zeroes the counter, so only an unbroken run
+                # qualifies, and `recovery_best_hold_steps` preserves the longest run
+                # ever achieved even if a later disturbance resets the live counter.
                 v_fwd_i = float(v_fwd[i].item()) if v_fwd is not None else 0.0
                 cmd_vy_i = max(float(self.user_cmd_vy[i].item()),
                                float(self.actual_cmd_vy[i].item()))
                 self.recovery_window_steps[i] += 1
+                # Raw speed curve is always recorded, even for static jumps, so the
+                # acceptance report can show the actual trace.
+                head = int(self.recovery_curve_head[i].item()) % self.RECOVERY_CURVE_LEN
+                self.recovery_curve[i, head] = v_fwd_i
+                self.recovery_curve_head[i] = (head + 1) % self.RECOVERY_CURVE_LEN
+                if grounded:
+                    self.recovery_grounded_steps[i] += 1
                 if is_running_jump and cmd_vy_i > 0.05:
                     ratio = v_fwd_i / cmd_vy_i
                     self.recovery_speed_ratio[i] = ratio
-                    if ratio >= self.RECOVERY_SPEED_FRACTION:
-                        self.recovery_speed_good_steps[i] += 1
+                    # "Sustained cruise" = speed gate AND attitude/rate stability AND
+                    # both wheels carrying load. Speed alone is not a restored gait.
+                    qualifying = (ratio >= self.RECOVERY_SPEED_FRACTION
+                                  and att_calm and yaw_calm and joint_calm and grounded)
+                    if qualifying:
+                        self.recovery_hold_steps[i] += 1
+                        if self.recovery_hold_steps[i].item() > self.recovery_best_hold_steps[i].item():
+                            self.recovery_best_hold_steps[i] = self.recovery_hold_steps[i]
+                    else:
+                        self.recovery_hold_steps[i] = 0
+                    # Sustained regression = a long unbroken run of backwards motion.
                     if v_fwd_i < 0.0:
                         self.recovery_regression_steps[i] += 1
                     else:
                         self.recovery_regression_steps[i] = 0
-                    # Sustained: has ever reached the speed threshold, and is not
-                    # currently in a run of backward motion.
-                    reached = self.recovery_speed_good_steps[i].item() >= 2
-                    not_regressing = self.recovery_regression_steps[i].item() <= 1
-                    self.recovery_sustained[i] = bool(reached and not_regressing)
+                    sustained_now = (self.recovery_hold_steps[i].item() >= self.RECOVERY_HOLD_STEPS)
+                    self.recovery_sustained[i] = bool(
+                        sustained_now
+                        and self.recovery_regression_steps[i].item() <= 1)
                 else:
-                    self.recovery_speed_ratio[i] = 1.0
-                    self.recovery_sustained[i] = True
+                    # Static jump: no forward cruise is commanded, so the speed gate
+                    # is not applicable and is not used to claim success either.
+                    self.recovery_speed_ratio[i] = 0.0
+                    self.recovery_sustained[i] = False
 
                 all_settle_calm = cushion_time and cushion_complete and grounded and vz_calm and vxy_calm and att_calm and joint_calm and yaw_calm
                 if all_settle_calm:
@@ -503,10 +571,24 @@ class MyRobotDualEnv(MyRobotJump):
                     self.settle_stable_steps[i] = 0
 
                 if is_running_jump:
-                    # A NORMAL handoff additionally requires the forward-speed gate.
+                    # A NORMAL handoff additionally requires the SUSTAINED forward
+                    # cruise gate (RECOVERY_HOLD_STEPS consecutive qualifying steps).
+                    #
+                    # Timing budget, so this gate is demanding but not impossible by
+                    # construction (dt = decimation * sim_dt = 4 * 0.005 = 0.02 s):
+                    #   * `all_settle_calm` cannot be true before cushion_time
+                    #     (0.25 s = 13 steps), by which point a robot that had been
+                    #     cruising correctly since touchdown already has
+                    #     hold_steps == 13 >= 10;
+                    #   * settle_stable_steps then needs 3 more steps  -> handoff at
+                    #     ~step 16, timer ~0.32 s;
+                    #   * timeout_handoff fires at 0.40 s  -> a ~4-step margin.
+                    # So a genuinely recovered robot can still hand off normally, while
+                    # a robot that lunges and stalls cannot.
                     normal_handoff = ((self.settle_stable_steps[i].item() >= 3)
                                       and bool(self.recovery_sustained[i].item()))
-                    # A timeout handoff is NOT a success: it is recorded as such.
+                    # A timeout handoff is NOT a success: it is recorded as such and
+                    # evaluators must reject it.
                     timeout_handoff = ((self.fsm_state_timer[i].item() >= 0.40) and grounded
                                        and (not normal_handoff))
                     hard_timeout_abort = ((self.fsm_state_timer[i].item() >= 0.60)
@@ -547,10 +629,13 @@ class MyRobotDualEnv(MyRobotJump):
 
                     if normal_handoff:
                         self.last_transition_event[i] = "NORMAL_HANDOFF"
+                        self.recovery_outcome[i] = "NORMAL_HANDOFF"
                     elif timeout_handoff:
                         self.last_transition_event[i] = "TIMEOUT_HANDOFF"
+                        self.recovery_outcome[i] = "TIMEOUT_HANDOFF"
                     elif hard_timeout_abort:
                         self.last_transition_event[i] = "RECOVER_ABORT"
+                        self.recovery_outcome[i] = "RECOVER_ABORT"
                         if self.abort_step[i].item() == -1:
                             self.abort_step[i] = self.common_step_counter
 

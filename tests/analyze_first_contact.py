@@ -93,7 +93,10 @@ def run_worker():
 
     for step_i in range(known.steps + 1):
         with torch.no_grad():
-            actions = policy.act(obs)
+            # Deterministic actions, so the attributed frames belong to the same
+            # trajectory that evaluate_obstacle_jump.py measures. Sampling here
+            # would explain a run nobody is being asked to accept.
+            actions = policy.act_inference(obs)
         obs, _, _, dones, _ = env.step(actions)
         done = bool(dones[0].item())
 
@@ -144,13 +147,17 @@ def run_worker():
                                          'first_contact_body').item())
                 cforce = float(live_or_snap('first_contact_force',
                                             'first_contact_force').item())
+                cnet = float(live_or_snap('first_contact_net_force',
+                                          'first_contact_net_force').item())
                 cpos = live_or_snap('first_contact_pos', 'first_contact_pos')
                 csrc = (snap['first_contact_source'][0] if snap is not None
                         else env.first_contact_source[0])
                 evt['contact'] = {
                     'step': cstep,
                     'body_index': cbody,
-                    'force_N': round(cforce, 1),
+                    'pair_force_N': round(cforce, 1),
+                    'net_force_N': round(cnet, 1),
+                    'force_unit': 'N',
                     'source': csrc,
                     'world_pos': [round(float(v), 5) for v in cpos],
                 }

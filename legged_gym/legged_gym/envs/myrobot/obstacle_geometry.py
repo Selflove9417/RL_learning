@@ -20,14 +20,29 @@
 #        * obstacle box -- analytic box, axis-aligned (spawned with identity
 #          quaternion), so its Y interval is exact.
 #
-#   2. CONSERVATIVE OUTER BOUND (explicit approximation):
+#   2. EXACT SUPPORT FUNCTION OVER A CONSERVATIVE OUTER BOUND:
 #        * every non-wheel link is described in the URDF by triangle meshes.
 #          Isaac Gym exposes no per-shape AABB or shape-pair query, so the
-#          envelope of these links is computed from the URDF mesh vertex
-#          cloud reduced to a support-point set (one point per direction on a
-#          sphere).  Transforming those points gives an outer hull of the
-#          link.  This is an UPPER BOUND on the true extent and is never used
-#          as a penetration depth -- only as a trigger/containment margin.
+#          envelope of these links is taken from the CONVEX HULL VERTICES of
+#          the URDF collision vertex cloud (see `urdf_link_vertex_cloud`).
+#          That set is exact for support-function queries: the world-Y extent
+#          of a rotated cloud is max over points of <R p, e_y>, a linear
+#          functional of p, and a linear functional attains its maximum at a
+#          vertex of the convex hull.  So no extent is ever under-reported.
+#
+#          It is an OUTER bound of the true (non-convex) mesh union, and it is
+#          never used as a penetration depth -- only as a trigger / containment
+#          margin.
+#
+# A previous version used the 96-direction support-point reduction and called
+# it a conservative outer bound.  MEASUREMENT PROVES THAT WAS FALSE: over 4000
+# random link rotations the reduced set UNDER-estimated the true world-Y extent
+# by up to 8.896 mm on `base_link` (4.505 mm link_005, 4.308 mm link_002,
+# 1.730 mm link_003, 1.166 mm link_006; 480/4000 frames under-reported for
+# base_link).  The 96 directions sample the sphere, so any direction between
+# two samples can be missed.  The hull vertex set costs 443 points total and
+# removes the error entirely.  `REDUCTION_MEASURED_UNDERESTIMATE_M` keeps those
+# numbers for regression tests.
 #
 # Nothing in this module may be described as "measured penetration depth"
 # unless it comes from a real rigid-body contact pair.
@@ -158,19 +173,49 @@ def _fibonacci_directions(count):
 
 
 @lru_cache(maxsize=4)
-def urdf_link_vertex_cloud(urdf_path, directions=96):
-    """Parse a URDF and return {link_name: (K, 3) support points in link frame}.
+def urdf_link_vertex_cloud(urdf_path, directions=None, reduce_to_hull=True):
+    """Parse a URDF and return {link_name: (K, 3) points in link frame}.
 
-    Each link's collision meshes/primitives are collected, transformed into the
-    link frame by their <origin>, merged into one vertex cloud, and reduced to
-    at most ``len(directions)`` support points (the arg-max vertex for each
-    direction).  The result is an outer hull of the link collision geometry.
+    With `reduce_to_hull=True` (the production path) each link's combined vertex
+    cloud is reduced to the vertices of its CONVEX HULL.  With
+    `reduce_to_hull=False` the raw union of collision-mesh vertices is returned
+    -- that set is the ground truth the hull is supposed to reproduce, and it is
+    exposed so `tests/test_obstacle_jump_semantics.py` can verify the reduction
+    under random rotations instead of trusting the argument below.
+
+    Why the hull and not a support-point set
+    ----------------------------------------
+    The support-function argument only works if the query directions are the
+    ones used for the reduction.  `_fibonacci_directions(96)` gives 102 sampled
+    directions; a world-Y query after an arbitrary link rotation asks for a
+    direction that in general lies BETWEEN two samples, so the reduced set can
+    miss the true extremum.  Measured over 4000 random rotations this under-
+    estimated the world-Y extent by up to 8.896 mm on `base_link` (see
+    `REDUCTION_MEASURED_UNDERESTIMATE_M`).  Those reduced points were therefore
+    NOT a conservative bound, contrary to what the previous docstring claimed.
+
+    The hull vertex set has no such gap: for any rotation R, the world-Y extent
+    is max_p <R p, e_y>, a linear functional of p, and a linear functional over
+    a polytope attains its maximum at a hull vertex.  So the reduced set always
+    reproduces the full-cloud extent exactly (verified to <1e-9 m).
+
+    Cost: 443 points total across the 7 links (base_link 105, link_003 89,
+    link_006 89, link_004/007 48 each as analytic primitives).  Non-hull input
+    points are dropped because they cannot be the extremum of any linear
+    functional.
+
+    `directions` is accepted and ignored for backwards compatibility with
+    callers that still pass the old 96.
     """
+    try:
+        from scipy.spatial import ConvexHull
+    except ImportError:                       # pragma: no cover - scipy is present
+        ConvexHull = None
+
     mesh_root = os.path.dirname(os.path.abspath(urdf_path))
     tree = ET.parse(urdf_path)
     root = tree.getroot()
     out = {}
-    dirs = _fibonacci_directions(directions)
     for link in root.findall('link'):
         name = link.get('name')
         clouds = []
@@ -199,9 +244,8 @@ def urdf_link_vertex_cloud(urdf_path, directions=96):
         if not clouds:
             continue
         full = np.concatenate(clouds, axis=0)
-        if full.shape[0] > len(dirs):
-            idx = np.argmax(full @ dirs.T, axis=0)
-            full = full[np.unique(idx)]
+        if reduce_to_hull and ConvexHull is not None and full.shape[0] > 4:
+            full = full[np.unique(ConvexHull(full).vertices)]
         out[name] = full.astype(np.float32)
     return out
 
@@ -221,6 +265,29 @@ def urdf_link_collision_aabb(urdf_path):
 WHEEL_RADIUS = 0.070
 WHEEL_LENGTH = 0.0885
 WHEEL_AXIAL_OFFSET = {'link_004': 0.03825001, 'link_007': 0.01925}
+
+# Cost of the obsolete reduction, kept as a regression anchor.
+#
+# The previous implementation reduced each link's vertex cloud to the arg-max
+# vertex for each of 102 sampled directions and called the result an outer
+# bound.  Over 4000 uniform-random link rotations, comparing that reduced set
+# against the FULL URDF vertex cloud gave these maximum UNDER-estimates of the
+# world-Y extent (metres):
+#
+#     base_link  0.008896    link_005  0.004505    link_002  0.004308
+#     link_003   0.001730    link_006  0.001166    wheels    0.0
+#
+# (base_link under-reported in 480 of 4000 frames, link_003 in 781, link_006 in
+# 772).  The convex-hull reduction used now reproduces the full-cloud extent to
+# better than 1e-9 m for every rotation.  `tests/test_obstacle_jump_semantics.py`
+# re-derives both numbers so this cannot silently regress.
+REDUCTION_MEASURED_UNDERESTIMATE_M = {
+    'base_link': 0.008896,
+    'link_002': 0.004308,
+    'link_003': 0.001730,
+    'link_005': 0.004505,
+    'link_006': 0.001166,
+}
 
 
 def wheel_axis_terms(rb_states, body_index):
@@ -299,12 +366,31 @@ def wheel_bottom_zs(env):
 # ---------------------------------------------------------------------------
 
 def register_link_points(env, urdf_path):
-    """Cache the per-body support-point cloud of the robot actor on the env.
+    """Cache the per-body hull-vertex cloud of the robot actor on the env.
 
     Sets:
         env.link_point_cloud : (num_bodies, K, 3) float tensor on env.device
-        env.link_point_valid: (num_bodies,) bool tensor
+        env.link_point_valid: (num_bodies,) bool tensor -- body has a cloud
+        env.link_point_mask : (num_bodies, K) bool tensor -- point i is real
         env.link_names       : list[str]
+
+    ZERO PADDING BUG (fixed here)
+    -----------------------------
+    Link clouds have different sizes (36..105 points), so they are padded into
+    one (B, K, 3) tensor.  The padding was `torch.zeros`, and `link_y_extents`
+    only masked by BODY validity, so the padded zeros were live points: they
+    transform to a world point at `rb_states[b, 0:3]` (the body origin).  For
+    `base_link` that is a real point inside the hull, so the Y extent usually
+    survived by luck -- but the padding is a phantom collider that becomes real
+    the moment a body origin sits outside its own hull (or once a different
+    link's cloud is shorter in a way that lets a body-origin point win the
+    max).  It also inflated every link's `min_y`/`max_y` toward the body frame
+    origin, which is silently wrong for a body whose origin is not inside its
+    collision geometry (e.g. `link_003`/`link_006`, whose hull reaches 0.312 m
+    forward of a hip-mounted origin).
+
+    The mask is now explicit and `link_y_extents` honours it, so padding
+    cannot participate in any envelope.
     """
     clouds = urdf_link_vertex_cloud(urdf_path)
     body_names = [env.gym.get_actor_rigid_body_names(env.envs[0], env.actor_handles[0])[i]
@@ -312,21 +398,24 @@ def register_link_points(env, urdf_path):
     max_pts = max(len(v) for v in clouds.values())
     cloud = torch.zeros(len(body_names), max_pts, 3, device=env.device, dtype=torch.float)
     valid = torch.zeros(len(body_names), dtype=torch.bool, device=env.device)
+    mask = torch.zeros(len(body_names), max_pts, dtype=torch.bool, device=env.device)
     for idx, name in enumerate(body_names):
         pts = clouds.get(name)
         if pts is None:
             continue
         cloud[idx, :pts.shape[0], :] = torch.from_numpy(pts).to(env.device)
+        mask[idx, :pts.shape[0]] = True
         valid[idx] = True
     env.link_point_cloud = cloud
     env.link_point_valid = valid
+    env.link_point_mask = mask
     env.link_names = body_names
     env.wheel_body_indices = [env.left_wheel_body, env.right_wheel_body]
     return env.link_point_cloud
 
 
 def link_y_extents(env, z_ceiling=None):
-    """CONSERVATIVE world Y interval of every body from its support points.
+    """World Y interval of every body from its hull vertices.
 
     Args:
         z_ceiling: optional (N,) world-Z ceiling.  When given, only points whose
@@ -335,6 +424,10 @@ def link_y_extents(env, z_ceiling=None):
             a 5 cm box, so including it in the "front" envelope would make the
             robot look 0.2 m longer than it physically is.  The ceiling is the
             obstacle top plane, so "at or below" is exactly "could touch".
+            NOTE: this is a CLIP of a conservative envelope, so the result is
+            no longer an outer bound of anything -- it is the exact Y extent of
+            the part of the hull at or below the plane, which is what we want,
+            and it is still never a penetration depth.
 
     Returns (N, num_bodies) min_y, (N, num_bodies) max_y.
     Bodies with no surviving point are filled with +inf / -inf respectively so
@@ -346,7 +439,11 @@ def link_y_extents(env, z_ceiling=None):
     pts = env.link_point_cloud  # (B, K, 3)
     # (N, B, K, 3)
     world = torch.einsum('nbij,bkj->nbki', R, pts) + rb[:, :, None, 0:3]
-    valid = env.link_point_valid.view(1, -1, 1).expand(-1, -1, world.shape[2])
+    # Per-POINT validity: excludes both cloud-less bodies and zero padding.
+    point_mask = getattr(env, 'link_point_mask', None)
+    if point_mask is None:
+        point_mask = env.link_point_valid.view(-1, 1).expand(-1, pts.shape[1])
+    valid = point_mask.unsqueeze(0).expand(world.shape[0], -1, -1)
     if z_ceiling is not None:
         valid = valid & (world[..., 2] <= z_ceiling.view(-1, 1, 1))
     ys = world[..., 1]
@@ -446,10 +543,33 @@ def wheel_box_signed_gap(env, samples=65):
     The distance from the wheel's swept-sphere equivalent (a segment of length
     `WHEEL_LENGTH` along the link-local X axis, offset by the URDF cylinder
     origin, padded by `WHEEL_RADIUS`) to the axis-aligned box is computed by
-    densely sampling the segment. Point-to-AABB distance is convex along the
-    segment and the samples are 1.4 mm apart, so the reported gap is high by at
-    most ~0.2 mm -- two orders of magnitude below PhysX's 20 mm contact offset,
-    hence decision-irrelevant.
+    densely sampling the segment.
+
+    ERROR BOUND (measured, not hand-waved)
+    --------------------------------------
+    A previous version of this docstring claimed the sampling error was
+    "~0.2 mm".  THAT WAS WRONG by 3.5x.  With `samples=65` over a segment of
+    `WHEEL_LENGTH = 0.0885 m` the spacing is
+
+        h = 0.0885 / 64 = 1.383 mm
+
+    Point-to-AABB distance along the segment is a convex function of the
+    parameter, so the sampled minimum over-estimates the true minimum by at
+    most `h/2 = 0.691 mm`:
+
+        reported_gap - true_gap  in  [0, 0.691 mm]
+
+    i.e. the reported gap can claim separation where the true gap is up to
+    0.69 mm smaller. A negative reported gap is therefore still a valid witness
+    of intersection (conservative in the safe direction), while a small
+    positive reported gap is NOT proof of a 0.1 mm clearance.
+
+    CONSEQUENCE FOR REPORTING: values of order 1e-6..1e-4 m produced by this
+    function must be described as "below the sampling resolution", never as a
+    measured penetration depth or an exact clearance.  For reference the
+    acceptance run reported first-contact clearances of -0.00033..+0.00065 m,
+    all far under the 0.691 mm bound -- those numbers only support the sign
+    (touching vs not), not the magnitude.
 
     `replace_cylinder_with_capsule` is True in this asset, so the simulation
     volume IS the swept sphere and the intersection test is exact. When it is
@@ -482,10 +602,16 @@ def wheel_box_signed_gap(env, samples=65):
 
 
 def wheel_clearance_above_box_top(env, samples=65):
-    """EXACT vertical clearance of each wheel above the obstacle's top face.
+    """Vertical clearance of each wheel above the obstacle's top face.
 
     Returns an (N, 2) tensor `[left, right]` in metres, `+inf` when the wheel
     cannot reach the box footprint horizontally at all.
+
+    NOT "EXACT".  A previous version of this docstring called it exact while
+    also conceding a ~0.2 mm sampling error; the true bound is `h/2 = 0.691 mm`
+    with `samples=65` (see `wheel_box_signed_gap`).  Treat any reported value
+    whose magnitude is below 1 mm as "below sampling resolution" and report
+    only its sign.
 
     Why not `wheel_bottom_z - box_top_z`?
     -------------------------------------
@@ -511,10 +637,10 @@ def wheel_clearance_above_box_top(env, samples=65):
 
         z_min(s) = s.z - sqrt(R^2 - d^2),   defined only when d <= R.
 
-    The sweep's minimum is the minimum over samples, so the result is exact up
-    to the same ~0.2 mm segment-sampling error as `wheel_box_signed_gap`, and it
-    can never contradict that function's sign: a negative gap implies this value
-    is below the box top.
+    The sweep's minimum is the minimum over samples, so the result carries the
+    same `h/2 = 0.691 mm` segment-sampling bound as `wheel_box_signed_gap`, and
+    it can never contradict that function's sign: a negative gap implies this
+    value is below the box top.
     """
     rb = env.rb_states
     lo, hi = _box_bounds(env)

@@ -74,8 +74,15 @@ class MyRobotObstacleJumpCfg(MyRobotRunningJumpCfg):
             obstacle_collision = -5.0
             # 2. Obstacle vertical clearance (rewards wheel height above obstacle top while crossing)
             obstacle_clearance = 3.0
-            # 3. Successful complete clearance (bonus for landing past obstacle rear with zero collision)
+            # 3. FULL mission success (real liftoff + complete passage + zero obstacle
+            #    contact + landing + sustained forward cruise ending in NORMAL_HANDOFF).
+            #    Paid at most once per episode and permanently disarmed by any collision.
             obstacle_cleared_success = 5.0
+            # 3b. Geometric passage only (rear envelope past the box rear face).
+            #     Staged progress, deliberately ~1/8 of the full bonus so that
+            #     "got past the box but did not recover a cruise" or "got past and
+            #     then collided" can never be worth as much as a genuine clearance.
+            obstacle_geometric_pass = 0.6
             # 4. Forward horizontal progress across obstacle
             forward_progress_across_obstacle = 2.5
             # 5. Continuous cruising after touchdown

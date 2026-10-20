@@ -226,7 +226,9 @@ def run_worker():
                     'step': int(fc_step),
                     'body': (env.link_names[body_idx]
                              if 0 <= body_idx < len(env.link_names) else str(body_idx)),
-                    'force_N': round(float(env.first_contact_force[0].item()), 2),
+                    'pair_force_N': round(float(env.first_contact_force[0].item()), 2),
+                    'net_force_N': round(float(env.first_contact_net_force[0].item()), 2),
+                    'force_unit': 'N',
                     'source': env.first_contact_source[0],
                     'world_pos': [round(float(v), 5) for v in
                                   env.first_contact_pos[0].tolist()],
@@ -303,8 +305,11 @@ def run_worker():
                             'body': (env.link_names[body_idx]
                                      if 0 <= body_idx < len(env.link_names)
                                      else str(body_idx)),
-                            'force_N': round(
+                            'pair_force_N': round(
                                 float(snap['first_contact_force'][0].item()), 2),
+                            'net_force_N': round(
+                                float(snap['first_contact_net_force'][0].item()), 2),
+                            'force_unit': 'N',
                             'source': snap['first_contact_source'][0],
                             'world_pos': [round(float(v), 5) for v in
                                           snap['first_contact_pos'][0].tolist()],

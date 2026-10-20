@@ -81,6 +81,8 @@ def run_worker():
     p.add_argument('--model_path', default=DEFAULT_MODEL)
     p.add_argument('--with_obstacle', type=int, default=1)
     p.add_argument('--steps', type=int, default=200)
+    p.add_argument('--action_mode', default='deterministic',
+                   choices=['deterministic', 'stochastic'])
     known, _ = p.parse_known_args()
 
     sys.argv = [sys.argv[0], '--task', known.task, '--headless',
@@ -93,6 +95,7 @@ def run_worker():
     cfg.env.episode_length_s = 4.0
     cfg.trigger.mode = 'spatial'
     with_obstacle = bool(known.with_obstacle)
+    action_mode = known.action_mode
 
     if not with_obstacle:
         # CONTROL ARM: no obstacle in the world, but the SAME spatial trigger
@@ -125,6 +128,7 @@ def run_worker():
 
     history = []          # per-step trace, pre-reset
     recovery_vels = []
+    recovery_curve_row = []   # raw env-side ring buffer, filled at episode end
     pre_jump_vel = None
     first_contact = None
     outcome = None
@@ -150,7 +154,19 @@ def run_worker():
                 print('  [control] virtual trigger fired at step %d, dist=%.4f' % (step_i, dist))
 
         with torch.no_grad():
-            actions = policy.act(obs)
+            if action_mode == 'deterministic':
+                # BENCHMARK MODE: the deterministic mean action. This is the only
+                # mode the acceptance numbers are computed from, because sampling
+                # injects run-to-run variance that has nothing to do with the
+                # policy's competence and would make cross-run comparison
+                # meaningless.
+                actions = policy.act_inference(obs)
+            else:
+                # STOCHASTIC MODE: the sampled action from the Gaussian policy.
+                # Kept as an INDEPENDENT test condition (robustness / variance
+                # study). Its numbers are NEVER averaged together with the
+                # deterministic ones.
+                actions = policy.act(obs)
         obs, _, _, dones, infos = env.step(actions)
 
         # Forward speed at the moment the FSM commits to a jump. Captured live
@@ -236,7 +252,41 @@ def run_worker():
                     'pass_step': int(snap['pass_step'][0].item()),
                     'root_y': round(float(snap['root_y'][0]), 5),
                     'root_z': round(float(snap['root_z'][0]), 5),
+                    # --- recovery evidence (task 2) -------------------------
+                    # The env's own verdict, computed from a CONSECUTIVE-run
+                    # counter over a 0.20 s window that must end in
+                    # NORMAL_HANDOFF. TIMEOUT_HANDOFF and RECOVER_ABORT are
+                    # explicitly NOT success, so the evaluator must not
+                    # re-derive success from a mean velocity: an average cannot
+                    # distinguish a sustained 0.70x cruise from a lunge followed
+                    # by a roll-back, and it cannot see which FSM event closed
+                    # the window.
+                    'recovery_outcome': snap['recovery_outcome'][0],
+                    'recovery_best_hold_steps': int(
+                        snap['recovery_best_hold_steps'][0].item()),
+                    'recovery_regression_steps': int(
+                        snap['recovery_regression_steps'][0].item()),
+                    'recovery_grounded_steps': int(
+                        snap['recovery_grounded_steps'][0].item()),
+                    'recovered_sustained': bool(
+                        snap['recovered_sustained'][0].item()),
                 }
+                # Raw forward-velocity curve in time order. The ring buffer is
+                # head-indexed and NaN-padded, so it is rotated and trimmed here
+                # rather than handed over raw: the acceptance requirement is that
+                # the REAL curve is kept, not a summary of it.
+                curve = snap.get('recovery_curve')
+                if curve is not None:
+                    row = curve[0].tolist()
+                    head = 0
+                    if 'recovery_curve_head' in snap:
+                        head = int(snap['recovery_curve_head'][0].item())
+                    if head > 0:
+                        row = row[head:] + row[:head]
+                    recovery_curve_row = [round(float(v), 5) for v in row
+                                          if math.isfinite(float(v))]
+                else:
+                    recovery_curve_row = []
                 # The authoritative first-contact record also lives in the
                 # snapshot: `env.first_contact_*` has already been cleared by
                 # reset_idx when step() returns.
@@ -249,7 +299,15 @@ def run_worker():
                                       if 0 <= fb < len(env.link_names) else 'unknown'),
                         'world_pos': [round(float(v), 5)
                                       for v in snap['first_contact_pos'][0]],
-                        'force_N': round(float(snap['first_contact_force'][0]), 1),
+                        # Both Newtons, different questions. `pair_force_N` is the
+                        # solver's lambda for THIS contact pair; `net_force_N` is
+                        # the net force on the whole obstacle body (all its pairs
+                        # summed). lambda was measured to be a force, not an
+                        # impulse: tests/test_contact_force_units.py sees it match
+                        # m*g for a settled known mass at three different dt.
+                        'pair_force_N': round(float(snap['first_contact_force'][0]), 1),
+                        'net_force_N': round(float(snap['first_contact_net_force'][0]), 1),
+                        'force_unit': 'N',
                         'source': outcome['first_contact_source'],
                         'before_liftoff': outcome['first_contact_step'] < outcome['takeoff_step'],
                     }
@@ -319,6 +377,15 @@ def run_worker():
             outcome['takeoff_margin_m'] = None
             outcome['landing_margin_m'] = None
 
+        # The env's own verdict is authoritative (task 2). It is computed from a
+        # CONSECUTIVE-run counter that must end in NORMAL_HANDOFF, so it cannot be
+        # satisfied by a lunge-then-roll-back, and TIMEOUT_HANDOFF /
+        # RECOVER_ABORT are rejected by construction. The mean window below is
+        # kept only as SUPPORTING EVIDENCE and is never used for the verdict:
+        # a 40-step average can hide a 10-step collapse.
+        derived['recovery_sustained'] = bool(outcome['recovered_sustained'])
+        derived['recovery_verdict_source'] = 'env._recovery_succeeded'
+
         vels = recovery_vels[-RECOVERY_WINDOW:] if recovery_vels else []
         if vels:
             mean_v = sum(vels) / len(vels)
@@ -326,13 +393,23 @@ def run_worker():
             derived['recovery_ratio'] = round(mean_v / cmd_vy, 4)
             derived['recovery_declining_steps'] = sum(
                 1 for a, b in zip(vels, vels[1:]) if b < a - 1e-3)
-            derived['recovery_sustained'] = bool(
+            # The Phase A heuristic, retained under an honest name so the two
+            # numbers can be compared side by side instead of one silently
+            # standing in for the other.
+            derived['recovery_mean_window_heuristic'] = bool(
                 mean_v >= RECOVERY_SPEED_FRACTION * cmd_vy
                 and derived['recovery_declining_steps'] <= len(vels) // 4)
+            derived['recovery_window_vels'] = [round(v, 5) for v in vels]
         else:
             derived['recovery_mean_vel'] = 0.0
             derived['recovery_ratio'] = 0.0
-            derived['recovery_sustained'] = False
+            derived['recovery_declining_steps'] = 0
+            derived['recovery_mean_window_heuristic'] = False
+            derived['recovery_window_vels'] = []
+        # Raw curve straight from the env's ring buffer (task 2 requirement: keep
+        # the original velocity curve, not just a statistic about it).
+        derived['recovery_curve'] = recovery_curve_row
+        derived['recovery_curve_samples'] = len(recovery_curve_row)
 
         criteria = {
             # Derived from the latched step counters, not from the live flags:
@@ -411,7 +488,7 @@ def run_worker():
 # Driver
 # ---------------------------------------------------------------------------
 
-def run_all(seeds, steps, model_path, pipeline):
+def run_all(seeds, steps, model_path, pipeline, action_mode='deterministic'):
     results = []
     for seed in seeds:
         for with_obs in (1, 0):
@@ -421,6 +498,7 @@ def run_all(seeds, steps, model_path, pipeline):
                    '--seed', str(seed), '--steps', str(steps),
                    '--model_path', model_path, '--pipeline', pipeline,
                    '--with_obstacle', str(with_obs),
+                   '--action_mode', action_mode,
                    '--task', 'myrobot_obstacle_jump', '--headless']
             proc = subprocess.run(cmd, cwd=WORKSPACE, capture_output=True, text=True)
             payload = None
@@ -509,20 +587,43 @@ def main():
     ap.add_argument('--with_obstacle', type=int, default=1)
     ap.add_argument('--steps', type=int, default=200)
     ap.add_argument('--seeds', type=int, nargs='+', default=DEFAULT_SEEDS)
-    ap.add_argument('--out', default='evaluation_assets/obstacle_jump_reeval_results.json')
+    ap.add_argument('--action_mode', default='deterministic',
+                    choices=['deterministic', 'stochastic'],
+                    help='deterministic = act_inference (benchmark); '
+                         'stochastic = sampled act(), an independent test mode '
+                         'whose numbers are never averaged with deterministic ones')
+    ap.add_argument('--overwrite', action='store_true',
+                    help='allow replacing an existing results file')
+    ap.add_argument('--out', default=None,
+                    help='output JSON; defaults to a name that encodes the '
+                         'action mode so one mode can never overwrite the other')
     args = ap.parse_args()
 
     if args.worker:
         run_worker()
         return 0
 
+    if args.out is None:
+        # Phase A was measured with sampled actions. Encoding the mode in the
+        # filename guarantees the new deterministic data lands in a NEW file and
+        # the historical numbers stay readable side by side.
+        args.out = ('evaluation_assets/obstacle_jump_reeval_%s_results.json'
+                    % args.action_mode)
+    out_path = os.path.join(WORKSPACE, args.out)
+    if os.path.exists(out_path) and not args.overwrite:
+        print('refusing to overwrite existing results: %s' % out_path)
+        print('pass --overwrite if you really mean it, or choose another --out')
+        return 2
+
     print('=' * 78)
     print('obstacle-jump physical evaluation (frozen model_3.pt, no training)')
     print('  model  : %s' % args.model_path)
     print('  seeds  : %s' % args.seeds)
     print('  pipe   : %s' % args.pipeline)
+    print('  action : %s' % args.action_mode)
     print('=' * 78)
-    results = run_all(args.seeds, args.steps, args.model_path, args.pipeline)
+    results = run_all(args.seeds, args.steps, args.model_path, args.pipeline,
+                      args.action_mode)
 
     summary = summarise(results)
     payload = {
@@ -532,6 +633,16 @@ def main():
                  'Does not overwrite any historical benchmark.'),
         'model_path': args.model_path,
         'seeds': args.seeds,
+        # The action mode is a property of the measurement, not a detail: a
+        # sampled-action run and a deterministic run are NOT samples of the same
+        # distribution, so the mode must travel with the numbers. Never merge
+        # summaries produced under different modes.
+        'action_mode': args.action_mode,
+        'action_mode_note': (
+            'deterministic = policy.act_inference(obs), the acceptance mode; '
+            'stochastic = policy.act(obs) sampling, kept as an independent '
+            'test condition only. Results from the two modes must not be '
+            'mixed in a single mean.'),
         'commanded_speed': next((r.get('commanded_speed') for r in results
                                  if 'commanded_speed' in r), None),
         'recovery_speed_fraction': RECOVERY_SPEED_FRACTION,
@@ -541,7 +652,6 @@ def main():
         'traces': {('seed%d_%s' % (r['seed'], 'obs' if r['with_obstacle'] else 'free')):
                    r.get('history', []) for r in results},
     }
-    out_path = os.path.join(WORKSPACE, args.out)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w') as fh:
         json.dump(payload, fh, indent=2)

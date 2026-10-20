@@ -19,6 +19,77 @@ from legged_gym.envs.myrobot.myrobot_dual_env import (
 from legged_gym.envs.myrobot.myrobot_running_jump_env import MyRobotRunningJump
 
 
+# ---------------------------------------------------------------------------
+# Contact-pair helpers (module level so they are unit-testable without PhysX)
+# ---------------------------------------------------------------------------
+
+def _read_local_pos(contact, slot):
+    """Read `localPos{slot}` (a gymapi Vec3 struct) as a (3,) float tensor.
+
+    The struct exposes `.x/.y/.z`, not `[0]/[1]/[2]`, and NumPy cannot cast it
+    directly (a structured field of a structured array keeps its own dtype).
+    """
+    key = 'localPos%d' % slot
+    field = contact[key]
+    return torch.tensor([float(field['x']), float(field['y']), float(field['z'])],
+                        dtype=torch.float)
+
+
+def contact_point_world(contact, obstacle_root_state, obstacle_is_body0,
+                        obstacle_body_index, device=None):
+    """World position of the contact point ON THE OBSTACLE surface.
+
+    Isaac Gym reports each pair as (body0, body1) in whatever order PhysX
+    produced, together with `localPos0` in body0's frame and `localPos1` in
+    body1's frame. The obstacle is a single-body actor whose root state is its
+    authoritative pose (identity orientation here, but the maths below does not
+    assume that), so:
+
+        obstacle == body0  ->  p_world = p_obs + R_obs @ localPos0
+        obstacle == body1  ->  p_world = p_obs + R_obs @ localPos1
+
+    Picking the wrong slot silently yields the point expressed in the ROBOT
+    body's frame, transformed as if it were the box's. That is not a small
+    numerical error: on the observed pairs it turned every contact y into
+    +/-0.02 (the box half-width) instead of 0.28/0.32 (the box faces).
+
+    Args:
+        contact: one element of `gym.get_env_rigid_contacts(...)`.
+        obstacle_root_state: (7,) tensor [pos(3), quat_xyzw(4)] of the obstacle.
+        obstacle_is_body0: True when the obstacle occupies `body0`.
+        obstacle_body_index: body index of the obstacle (== env.num_bodies), used
+            only to sanity-check that the caller's flag matches the record.
+        device: torch device for the result.
+
+    Returns:
+        (numpy (3,) float32 world point, point_frame str) or (None, reason).
+        `point_frame` is 'obstacle_local0' or 'obstacle_local1' so downstream
+        logs can prove which slot was used.
+    """
+    body0 = int(contact['body0'])
+    body1 = int(contact['body1'])
+    # Cross-check the flag against the record itself; a mismatch means the caller
+    # built the flag from a different pair.
+    actual_is_body0 = (body0 == obstacle_body_index)
+    actual_is_body1 = (body1 == obstacle_body_index)
+    if not (actual_is_body0 or actual_is_body1):
+        return None, 'obstacle_not_in_pair'
+    if obstacle_is_body0 != actual_is_body0:
+        return None, 'flag_mismatch'
+
+    slot = 0 if actual_is_body0 else 1
+    local = _read_local_pos(contact, slot)
+    if device is not None:
+        local = local.to(device)
+    quat = obstacle_root_state[3:7]
+    if device is not None:
+        quat = quat.to(device)
+    r_world = quat_rotate(quat.unsqueeze(0), local.unsqueeze(0))[0]
+    pos = (obstacle_root_state[0:3].to(r_world.device) + r_world)
+    return pos.detach().cpu().numpy(), ('obstacle_local0' if slot == 0
+                                       else 'obstacle_local1')
+
+
 class MyRobotObstacleJump(MyRobotRunningJump):
     """
     Genuine Physical Obstacle Clearance Running Jump Environment.
@@ -338,9 +409,33 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         # --- One-shot event flags -------------------------------------------
         # These are consumed by the reward function and cleared on the next step,
         # which turns the associated rewards into genuine event rewards instead of
-        # a per-step constant. They are also the only source of `sustained` state.
+        # a per-step constant.
+        #
+        # TWO TIERS (Phase B task 1). The Phase A code paid the full success reward
+        # on a single `cleared` latch and called it done. On seed 15 that paid out at
+        # step 118, two steps before the robot hit the box at step 120 -- the reward
+        # was banked for an attempt that then failed. Success is therefore split:
+        #
+        #   geometric_pass_event : the rear envelope got past the box rear face.
+        #                          PHYSICAL PROGRESS ONLY -- modest staged reward.
+        #   clear_success_event  : the full mission succeeded -- real liftoff, full
+        #                          passage, no obstacle contact at any time, a
+        #                          landing, and a sustained forward cruise in the
+        #                          recovery window that ended in NORMAL_HANDOFF.
+        #
+        # A collision at ANY point permanently disarms `success_armed`, so an
+        # attempt that passes and then hits the box can never collect tier 2.
         self.collision_event = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.geometric_pass_event = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.clear_success_event = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        # Armed by a jump-over passage, cleared forever by any collision.
+        self.success_armed = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        # Paid at most once per episode.
+        self.final_success_paid = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.success_disarmed_reason = ["NONE"] * self.num_envs
+        # Latches on the first frame of collision evidence, so the disarm reason is
+        # written once and stays stable instead of being recomputed every step.
+        self._collision_seen = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.task_failed = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.failure_reason = ["NONE"] * self.num_envs
         # Number of completed jump cycles (used to make the success reward once-per-cycle)
@@ -353,11 +448,29 @@ class MyRobotObstacleJump(MyRobotRunningJump):
 
         # --- Task-level contact / event telemetry ---------------------------
         # First obstacle contact of the CURRENT episode, with the responsible body.
+        # `first_contact_force` is the per-pair contact FORCE in N, taken from
+        # `RigidContact.lambda`; `first_contact_net_force` is the net force on the
+        # whole obstacle body from the force tensor. Both are in Newtons.
+        #
+        # MEASURED, NOT ASSUMED (tests/test_contact_force_units.py): a box of
+        # known mass settled on a plane reports lambda summed over its pairs equal
+        # to m*g = 78.48 N with ratio 0.999995, and that sum is INVARIANT across
+        # dt = 1/200, 1/100, 1/400 (relative spread 1.6e-5) while lambda/(m*g*dt)
+        # tracks 1/dt exactly. A quantity that does not care about the timestep is
+        # a force, not an impulse. An intermediate version of this file declared
+        # lambda to be an impulse in N*s and "corrected" a factor 1/dt = 200 --
+        # that correction was the actual bug, and the pre-existing `force` naming
+        # had been right.
         self.first_contact_step = torch.full((self.num_envs,), -1, device=self.device, dtype=torch.long)
         self.first_contact_body = torch.full((self.num_envs,), -1, device=self.device, dtype=torch.long)
         self.first_contact_pos = torch.zeros(self.num_envs, 3, device=self.device, dtype=torch.float)
         self.first_contact_force = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.first_contact_net_force = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
         self.first_contact_source = ["none"] * self.num_envs
+        # Which localPos slot the world point came from ('obstacle_local0' /
+        # 'obstacle_local1' / 'body_origin' / 'none'), so a reversed pair order is
+        # visible in the JSON instead of silently shifting the reported point.
+        self.first_contact_frame = ["none"] * self.num_envs
         # Liftoff snapshots of the true geometric envelope.
         # `takeoff_rear_y` is what the clearance requirement is measured from: the
         # robot has crossed the box only once its REAR envelope passes the box rear
@@ -405,6 +518,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'first_contact_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
             'first_contact_body': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
             'first_contact_force': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
+            'first_contact_net_force': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
             'first_contact_pos': torch.zeros(self.num_envs, 3, device=self.device, dtype=torch.float),
             'takeoff_front_y': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
             'takeoff_rear_y': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
@@ -427,7 +541,24 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'wheel_clearance_min': torch.full((self.num_envs,), 1.0, device=self.device, dtype=torch.float),
             'failure_reason': ["NONE"] * self.num_envs,
             'first_contact_source': ["none"] * self.num_envs,
+            'first_contact_frame': ["none"] * self.num_envs,
             'last_transition_event': ["INIT_BALANCE"] * self.num_envs,
+            # --- recovery evidence (task 2) -----------------------------------
+            # The scalar summary is not enough to decide whether a cruise was
+            # sustained: an evaluator that only sees a mean cannot tell a steady
+            # 0.70x from a spike followed by a roll-back. The RAW velocity curve
+            # and the run counters ride along so the verdict is reproducible
+            # from the data rather than from a summary statistic.
+            #
+            # `recovery_curve` is NOT allocated here on purpose: the ring buffer
+            # lives in `init_dual_policies`, which runs after `_init_buffers`.
+            # `_capture_episode_snapshot` copies the live curve at capture time,
+            # so the snapshot can never be sized differently from the source.
+            'recovery_best_hold_steps': torch.zeros(self.num_envs, device=self.device, dtype=torch.long),
+            'recovery_regression_steps': torch.zeros(self.num_envs, device=self.device, dtype=torch.long),
+            'recovery_grounded_steps': torch.zeros(self.num_envs, device=self.device, dtype=torch.long),
+            'recovery_outcome': ["NONE"] * self.num_envs,
+            'recovered_sustained': torch.zeros(self.num_envs, device=self.device, dtype=torch.bool),
         }
 
         # --- URDF-derived geometric envelopes -------------------------------
@@ -616,7 +747,11 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         #    This must happen for EVERY reset, unconditionally: a stale event flag
         #    or a stale `task_failed` would otherwise be replayed on the new episode.
         self.collision_event[env_ids] = False
+        self.geometric_pass_event[env_ids] = False
         self.clear_success_event[env_ids] = False
+        self.success_armed[env_ids] = False
+        self.final_success_paid[env_ids] = False
+        self._collision_seen[env_ids] = False
         self.task_failed[env_ids] = False
         self.cycles_completed[env_ids] = 0.0
         self.just_reset[env_ids] = True
@@ -625,6 +760,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.first_contact_body[env_ids] = -1
         self.first_contact_pos[env_ids] = 0.0
         self.first_contact_force[env_ids] = 0.0
+        self.first_contact_net_force[env_ids] = 0.0
         self.takeoff_front_y[env_ids] = 0.0
         self.takeoff_rear_y[env_ids] = 0.0
         self.takeoff_clearance_above_obs[env_ids] = 0.0
@@ -633,6 +769,8 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         for eid in env_ids.tolist():
             self.failure_reason[eid] = "NONE"
             self.first_contact_source[eid] = "none"
+            self.first_contact_frame[eid] = "none"
+            self.success_disarmed_reason[eid] = "NONE"
 
         # 7. Base-class episode bookkeeping.
         #    `extras["episode"]` is created by LeggedRobot.reset_idx(), which this
@@ -690,8 +828,8 @@ class MyRobotObstacleJump(MyRobotRunningJump):
 
         It CANNOT speak for the non-wheel links: those are triangle meshes for
         which no penetration depth is available. A chassis strike is therefore
-        only reported once PhysX publishes an impulse or the obstacle reports a
-        net force; see `_collect_obstacle_contacts()`.
+        only reported once PhysX publishes a non-zero contact force or the
+        obstacle reports a net force; see `_collect_obstacle_contacts()`.
         """
         from legged_gym.envs.myrobot import obstacle_geometry as geo
         gaps = geo.wheel_box_signed_gap(self)
@@ -712,21 +850,67 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         Treating bare record existence as a collision charged a full
         `OBSTACLE_COLLISION` episode failure for a clean pass 1 cm clear of the
         box. A record is therefore only accepted as an impact when the solver
-        actually pushed, i.e. `lambda > IMPULSE_EPS` (N*s). The solver allocates a
-        contact impulse exactly for the pairs it separates, so a non-zero lambda is
-        positive proof of contact; a zero lambda is proof of nothing.
+        actually pushed, i.e. `lambda > FORCE_EPS_N`. The solver allocates a
+        contact force exactly for the pairs it separates, so a non-zero lambda
+        is positive proof of contact; a zero lambda is proof of nothing.
+
+        UNITS (this was got wrong in BOTH directions before it was measured)
+        -------------------------------------------------------------------
+        `RigidContact.lambda` is the contact FORCE in N, not an impulse in N*s.
+        This is measured, not assumed -- `tests/test_contact_force_units.py`
+        settles a box of known mass (8.0 kg, m*g = 78.48 N) on a plane and reads
+        lambda summed over its four contact records: 78.4796 N, i.e.
+        lambda/(m*g) = 0.999995. Repeating at dt = 1/200, 1/100, 1/400 leaves
+        that sum unchanged (relative spread 1.6e-5) while lambda/(m*g*dt) tracks
+        1/dt exactly (199.999 / 100.000 / 400.004, i.e. 1/dt). A quantity that
+        does not depend on the timestep cannot be an impulse.
+
+        History, so the next reader does not repeat it: the field was originally
+        called `force` (correct), then "corrected" to an impulse in N*s with a
+        claimed factor-1/dt = 200 unit error (wrong -- that change WAS the
+        error), and is now `force_n` again, backed by the measurement above.
+
+        A per-pair force and the net force on the whole obstacle body are
+        different quantities and get different keys: `force_n` (this pair's
+        lambda) and `net_force_n` (norm of `obstacle_contact_forces`, all pairs
+        summed). Both are Newtons.
+
+        COORDINATES (this used to be wrong too)
+        ---------------------------------------
+        `localPos0` is expressed in the frame of `body0` and `localPos1` in the
+        frame of `body1`. The obstacle may appear in EITHER slot depending on the
+        order PhysX happened to report the pair, so the point on the obstacle
+        surface must be taken from the slot that actually holds the obstacle:
+
+            obstacle == body0  ->  world = p_obs + R_obs @ localPos0
+            obstacle == body1  ->  world = p_obs + R_obs @ localPos1
+
+        Using `localPos0` unconditionally (as the first version did) silently
+        produced the ROBOT-frame point whenever the order was reversed, and in
+        the observed order it produced numbers like y == +/-0.02 for every
+        contact -- the box's own half-width -- which read as plausible world
+        coordinates but were not.
+
+        `contact_point_world()` implements that choice as a pure function so the
+        reversed-order case is unit-testable without PhysX.
 
         Genuine geometric overlap of a wheel with the box is handled separately and
         independently by `_geometric_wheel_intersection()`, because PhysX publishes
         no records at all for a state that was written into the tensors without a
         simulate() step.
 
-        Returned records are (env_index, body_index, world_pos, force, source)
-        where source is 'contact_pair' (a real impact pair) or
-        'force_attribution' (the obstacle reported force, no pair identity). The
-        latter CANNOT name a contact pair and must never be reported as one.
+        Returns a list of dicts with keys:
+            env_idx, body_idx, world_pos, force_n, net_force_n,
+            body_force_n, point_frame, source
+        `source` is 'contact_pair' (a real impact pair) or 'force_attribution'
+        (the obstacle reported force, no pair identity). The latter CANNOT name a
+        contact pair and must never be reported as one; for it `force_n` is
+        None because no per-pair lambda is attributable.
         """
-        IMPULSE_EPS = 1e-3
+        # A settled mass reports m*g of distributed force; a single recorded pair
+        # carries a share well above 1e-3 N whenever the solver actually pushed.
+        # Zero (or numerically zero) lambda is a speculative proximity record.
+        FORCE_EPS_N = 1e-3
 
         found = []
         if self.contact_pairs_available:
@@ -739,43 +923,43 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                     body1 = int(contact['body1'])
                     # The obstacle actor occupies body index == num_bodies.
                     if body0 == self.num_bodies:
-                        other = body1
+                        other, obstacle_is_body0 = body1, True
                     elif body1 == self.num_bodies:
-                        other = body0
+                        other, obstacle_is_body0 = body0, False
                     else:
                         continue
                     if other < 0:
                         # obstacle against a static/shared collider, no robot body
                         continue
                     lam = float(contact['lambda'])
-                    if lam <= IMPULSE_EPS:
-                        # Speculative proximity record; no impulse was imparted.
+                    if lam <= FORCE_EPS_N:
+                        # Speculative proximity record; the solver pushed nothing.
                         continue
-                    # `localPos0` is expressed in the frame of `body0`. The
-                    # obstacle is spawned with identity orientation and its own
-                    # root state is the authoritative pose, so transforming the
-                    # point back to world is exact:
-                    #     p_world = p_obstacle + R_obstacle @ localPos
-                    # Reporting `localPos0` directly (as the first version of
-                    # this function did) yields numbers like y == +0.02 for every
-                    # contact -- the box's own half-width -- which reads as a
-                    # plausible world coordinate but is not one.
-                    local = torch.tensor(
-                        [float(contact['localPos0']['x']),
-                         float(contact['localPos0']['y']),
-                         float(contact['localPos0']['z'])],
-                        device=self.device, dtype=torch.float)
-                    box_state = self.obstacle_root_states[env_idx, 0:7]
-                    r_box = quat_rotate(
-                        box_state[3:7].unsqueeze(0), local.unsqueeze(0))[0]
-                    pos = (box_state[0:3] + r_box).detach().cpu().numpy()
-                    found.append((env_idx, other, pos, lam, 'contact_pair'))
+                    world_pos, point_frame = contact_point_world(
+                        contact, self.obstacle_root_states[env_idx, 0:7],
+                        obstacle_is_body0=obstacle_is_body0,
+                        obstacle_body_index=self.num_bodies)
+                    if world_pos is None:
+                        continue
+                    found.append({
+                        'env_idx': env_idx,
+                        'body_idx': other,
+                        'world_pos': world_pos,
+                        'force_n': lam,
+                        'net_force_n': float(torch.norm(
+                            self.obstacle_contact_forces[env_idx]).item()),
+                        'body_force_n': float(torch.norm(
+                            self.contact_forces[env_idx, other]).item()),
+                        'point_frame': point_frame,
+                        'source': 'contact_pair',
+                    })
         if found:
             return found
 
         # Fallback: force attribution over robot bodies (no pair identity).
         # `obstacle_contact_forces` is the obstacle's own net force, so a non-zero
-        # value proves something pushed the box. It is still NOT a contact pair.
+        # value proves something pushed the box. It is still NOT a contact pair,
+        # and no per-pair force can be attributed from it.
         obstacle_fn = torch.norm(self.obstacle_contact_forces, dim=-1)
         body_fn = torch.norm(self.contact_forces, dim=-1)
         for env_idx in range(self.num_envs):
@@ -786,8 +970,16 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             if per_body[best].item() <= 2.0:
                 continue
             pos = self.rb_states[env_idx, best, 0:3].detach().cpu().numpy()
-            found.append((env_idx, best, pos, float(per_body[best].item()),
-                          'force_attribution'))
+            found.append({
+                'env_idx': env_idx,
+                'body_idx': best,
+                'world_pos': pos,
+                'force_n': None,
+                'net_force_n': float(obstacle_fn[env_idx].item()),
+                'body_force_n': float(per_body[best].item()),
+                'point_frame': 'body_origin',
+                'source': 'force_attribution',
+            })
         return found
 
     def compute_obstacle_metrics(self, post_reset=False):
@@ -888,15 +1080,25 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             wheel_intersect, gaps = self._geometric_wheel_intersection()
 
         new_collision = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
-        for env_idx, body_idx, pos, force, source in (contacts or []):
+        for rec in (contacts or []):
+            env_idx = rec['env_idx']
             new_collision[env_idx] = True
             if self.first_contact_step[env_idx].item() < 0:
                 self.first_contact_step[env_idx] = self.common_step_counter
-                self.first_contact_body[env_idx] = body_idx
-                self.first_contact_force[env_idx] = force
+                self.first_contact_body[env_idx] = rec['body_idx']
+                # Both fields are Newtons. `force_n` is the impulse solver's
+                # lambda for THIS pair; `net_force_n` is the net force acting on
+                # the whole obstacle body (all of its pairs summed). They answer
+                # different questions -- "how hard did this body hit" versus "how
+                # hard is the box being pushed overall" -- so they stay separate
+                # keys, but they share a unit and a magnitude scale.
+                self.first_contact_force[env_idx] = (
+                    rec['force_n'] if rec['force_n'] is not None else 0.0)
+                self.first_contact_net_force[env_idx] = rec['net_force_n']
                 self.first_contact_pos[env_idx] = torch.as_tensor(
-                    pos, device=self.device, dtype=torch.float)
-                self.first_contact_source[env_idx] = source
+                    rec['world_pos'], device=self.device, dtype=torch.float)
+                self.first_contact_source[env_idx] = rec['source']
+                self.first_contact_frame[env_idx] = rec['point_frame']
         if not post_reset and wheel_intersect.any():
             # Exact capsule/box overlap. Attribute it to the deeper of the two
             # wheels; `gaps` holds a signed distance, so the smaller value is the
@@ -909,7 +1111,9 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                                 else self.right_wheel_body)
                     self.first_contact_step[env_idx] = self.common_step_counter
                     self.first_contact_body[env_idx] = body_idx
-                    self.first_contact_force[env_idx] = float(
+                    # No contact pair exists for a purely geometric overlap, so
+                    # there is no per-pair lambda: only the net force is known.
+                    self.first_contact_net_force[env_idx] = float(
                         torch.norm(self.obstacle_contact_forces[env_idx]).item())
                     self.first_contact_pos[env_idx] = self.rb_states[
                         env_idx, body_idx, 0:3].detach()
@@ -932,20 +1136,41 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             self.takeoff_clearance_above_obs[idx] = lift_clr
             self.takeoff_margin_m[idx] = obs_front_y[idx] - robot_front_y[idx]
 
-        # --- Clearing evaluation ---------------------------------------------
+        # --- Clearing evaluation: TIER 1, geometric passage -------------------
         # `rear_margin > 0.005` proves the whole robot's Y envelope is 5 mm past
-        # the box rear face. Combined with "no genuine impact" and "actually left
-        # the ground" this is a clean clearance, not merely a high apex.
+        # the box rear face. This is PHYSICAL PROGRESS, not mission success: on
+        # seed 15 the robot got here at step 118 and hit the box at step 120.
         rear_margin = robot_rear_y - obs_rear_y
         if self.has_touched_down.any():
             idx = self.has_touched_down.nonzero(as_tuple=False).flatten()
             self.landing_margin_m[idx] = rear_margin[idx]
 
-        cleared_clean = (self.has_touched_down & (rear_margin > 0.005)
-                         & (~self.has_obstacle_collision) & (~self.obstacle_cleared))
-        if cleared_clean.any():
-            self.obstacle_cleared |= cleared_clean
-            self.clear_success_event |= cleared_clean
+        # Passage requires: real liftoff (otherwise the robot walked/ploughed
+        # through the box line), no contact so far, and the rear envelope past the
+        # far face.
+        pass_clean = (self.has_taken_off & self.has_touched_down
+                      & (rear_margin > 0.005)
+                      & (~self.has_obstacle_collision) & (~self.obstacle_cleared))
+        if pass_clean.any():
+            self.obstacle_cleared |= pass_clean
+            self.geometric_pass_event |= pass_clean
+            self.success_armed |= pass_clean
+
+        # --- Clearing evaluation: TIER 2, full mission success ----------------
+        # Every clause is a separate physical fact, and the reward is paid on the
+        # step all of them are simultaneously true, at most once per episode:
+        #   1. real liftoff            -> has_taken_off / takeoff_step latched
+        #   2. full passage            -> obstacle_cleared (rear envelope past face)
+        #   3. no obstacle contact     -> has_obstacle_collision must be False
+        #   4. successful landing      -> touchdown_step latched, not a fall
+        #   5. sustained forward cruise in the recovery window, ending in NORMAL_HANDOFF
+        # Clauses 3 and 5 are the ones that the Phase A event omitted, which is
+        # exactly why a pass-then-collide attempt could still collect the reward.
+        recovered_sustained = self._recovery_succeeded()
+        mission_success = self._mission_success_mask(recovered_sustained)
+        if mission_success.any():
+            self.clear_success_event |= mission_success
+            self.final_success_paid |= mission_success
 
         # --- post-touchdown recovery velocity window -------------------------
         in_recovery_window = (self.has_touched_down & (self.fsm_state_timer >= 0.15)
@@ -980,20 +1205,131 @@ class MyRobotObstacleJump(MyRobotRunningJump):
     # Task hooks consumed by MyRobotRunningJump.step()
     # =========================================================================
 
+    def _recovery_succeeded(self):
+        """True only for a genuinely recovered forward cruise.
+
+        Requires ALL of:
+          * the RECOVER state exited with the NORMAL_HANDOFF event -- a
+            TIMEOUT_HANDOFF or RECOVER_ABORT is explicitly NOT a success and must
+            never be counted as one;
+          * a consecutive qualifying run of at least RECOVERY_HOLD_STEPS steps
+            (`recovery_best_hold_steps`, which survives later disturbances);
+          * forward velocity never ran backwards for a sustained stretch;
+          * both wheels were loaded at some point during the recovery window
+            (`recovery_grounded_steps > 0`), i.e. the gait actually re-established
+            ground contact rather than the robot balancing on one wheel.
+        """
+        event_ok = [v == "NORMAL_HANDOFF" for v in getattr(self, 'recovery_outcome',
+                                                          ["NONE"] * self.num_envs)]
+        hold = getattr(self, 'recovery_best_hold_steps',
+                       torch.zeros(self.num_envs, device=self.device, dtype=torch.long))
+        regress = getattr(self, 'recovery_regression_steps',
+                          torch.zeros(self.num_envs, device=self.device, dtype=torch.long))
+        grounded_steps = getattr(self, 'recovery_grounded_steps',
+                                 torch.zeros(self.num_envs, device=self.device, dtype=torch.long))
+        hold_ok = hold >= getattr(self, 'RECOVERY_HOLD_STEPS', 10)
+        regress_ok = regress <= 1
+        grounded_ok = grounded_steps > 0
+        event_mask = torch.tensor(event_ok, device=self.device, dtype=torch.bool)
+        return event_mask & hold_ok & regress_ok & grounded_ok
+
+    def _mission_success_mask(self, recovered_sustained=None):
+        """TIER 2: the full mission actually succeeded.
+
+        Extracted from `compute_obstacle_metrics` so the counter-example tests can
+        drive the gate directly instead of having to fake a whole physics episode.
+
+        Each clause is one physical fact and each is load-bearing:
+
+          success_armed        -- a clean geometric passage happened first, and no
+                                  collision has occurred at any point (the arming
+                                  latch is revoked on collision, see
+                                  `_update_task_metrics`)
+          obstacle_cleared     -- the rear envelope is past the far face
+          no collision         -- a jump that clips the box is a failed jump, so
+                                  the `~has_obstacle_collision` clause is checked
+                                  again here rather than trusted from the latch
+          not task_failed      -- geometric plough-through also disqualifies
+          takeoff/touchdown    -- real liftoff AND real landing were latched; a
+                                  pass with `touchdown_step < 0` means the episode
+                                  ended before the robot came down
+          recovered_sustained  -- a genuine sustained forward cruise followed the
+                                  landing (see `_recovery_succeeded`)
+          not already paid     -- at most one payment per episode
+        """
+        if recovered_sustained is None:
+            recovered_sustained = self._recovery_succeeded()
+        return (self.success_armed
+                & self.obstacle_cleared
+                & (~self.has_obstacle_collision)
+                & (~self.task_failed)
+                & (self.takeoff_step >= 0)
+                & (self.touchdown_step >= 0)
+                & recovered_sustained
+                & (~self.final_success_paid))
+
     def _update_task_metrics(self, post_reset=False):
         """Refresh obstacle metrics inside the parent step pipeline.
 
         post_reset=False -> called AFTER physics/FSM and BEFORE termination/reward.
-        post_reset=True  -> called AFTER reset_idx, so the next step starts clean.
+        post_reset=True  -> called AFTER reset_idx. Deliberately evaluates NOTHING;
+                            see the early return below.
+
+        Why the post-reset pass cannot evaluate geometry
+        -----------------------------------------------
+        `reset_idx` already zeroes every task buffer (``min_obstacle_clearance``
+        -> 1.0, ``robot_rear_margin`` -> -1.0, ``pass_step`` -> -1, all event
+        flags -> False), so there is nothing left for this hook to clean up. What
+        it *would* do is re-derive those buffers from ``rb_states`` -- and on the
+        GPU pipeline ``rb_states`` does NOT yet describe the freshly reset
+        episode. `set_actor_root_state_tensor` followed by both
+        `refresh_actor_root_state_tensor` and `refresh_rigid_body_state_tensor`
+        leaves ``rb_states`` at the PREVIOUS episode's pose until the next
+        `simulate()`; the CPU pipeline publishes it immediately. Measured with
+        2 envs on the terminal pose ``base_y = 0.62`` (robot fully past the box):
+
+            after reset_idx:  root y = 0.0000   rb_states base y = 0.6201   (GPU)
+            after reset_idx:  root y = -0.0000  rb_states base y = -0.0000  (CPU)
+
+        Evaluating that stale pose marks the brand-new episode as
+        ``CROSSED_WITHOUT_LIFTOFF`` (``robot_rear_margin > 0.005`` while
+        ``has_taken_off`` is False), which then terminates the fresh episode on
+        its very first step -- silently destroying one episode per success on
+        GPU. Measured before this guard: ``post_reset: task_failed=[True, True]
+        reason=['CROSSED_WITHOUT_LIFTOFF', 'CROSSED_WITHOUT_LIFTOFF']``.
+
+        Nothing is lost by skipping: the first real `step()` recomputes every one
+        of these values from live physics before termination and reward run.
         """
         if post_reset:
+            # Consume the latch so a later non-post_reset pass is not mislabelled.
             self.just_reset |= self._last_reset_mask
             self._last_reset_mask[:] = False
-        else:
-            # one-shot events live for exactly one reward evaluation
-            self.collision_event[:] = False
-            self.clear_success_event[:] = False
-        self.compute_obstacle_metrics(post_reset=post_reset)
+            return
+
+        # one-shot events live for exactly one reward evaluation
+        self.collision_event[:] = False
+        self.geometric_pass_event[:] = False
+        self.clear_success_event[:] = False
+        self.compute_obstacle_metrics(post_reset=False)
+
+        # A collision at ANY time permanently disarms tier-2 success for this
+        # episode. Without this, a pass-then-collide attempt would keep
+        # `success_armed` set and could still collect the full reward later in the
+        # same episode -- precisely the seed 15 defect (cleared at 118, collided at
+        # 120). The geometric passage itself stays recorded as tier 1; only the
+        # mission-success eligibility is revoked.
+        # Record why tier-2 success was lost, exactly once per episode, on the
+        # first collision. "AFTER_PASSAGE" is the seed-15 signature (geometric
+        # passage first, impact later); "BEFORE_PASSAGE" is the head-on case.
+        first_collision = self.has_obstacle_collision & ~self._collision_seen
+        if first_collision.any():
+            self._collision_seen |= first_collision
+            for idx in first_collision.nonzero(as_tuple=False).flatten().tolist():
+                self.success_disarmed_reason[idx] = (
+                    "COLLISION_AFTER_PASSAGE" if bool(self.obstacle_cleared[idx].item())
+                    else "COLLISION_BEFORE_PASSAGE")
+        self.success_armed &= ~self.has_obstacle_collision
         self._update_task_outcome()
 
     def _task_failure_mask(self):
@@ -1048,6 +1384,7 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'first_contact_step': self.first_contact_step.float(),
             'first_contact_body': self.first_contact_body.float(),
             'first_contact_force': self.first_contact_force,
+            'first_contact_net_force': self.first_contact_net_force,
             'takeoff_front_y': self.takeoff_front_y,
             'takeoff_rear_y': self.takeoff_rear_y,
             'takeoff_clearance_above_obs': self.takeoff_clearance_above_obs,
@@ -1066,10 +1403,28 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         for name, tensor in tensors.items():
             snap[name][reset_mask] = tensor.detach()[reset_mask]
         snap['first_contact_pos'][reset_mask] = self.first_contact_pos.detach()[reset_mask]
+        # Recovery evidence (task 2). The ring buffer is copied as a whole row,
+        # NaN padding included, so the evaluator can reconstruct the raw curve
+        # in time order instead of trusting a mean.
+        curve = getattr(self, 'recovery_curve', None)
+        if curve is not None:
+            snap['recovery_curve'] = curve.detach().clone()
+            head = getattr(self, 'recovery_curve_head', None)
+            if head is not None:
+                snap['recovery_curve_head'] = head.detach().clone()
+        snap['recovery_best_hold_steps'][reset_mask] = \
+            self.recovery_best_hold_steps[reset_mask]
+        snap['recovery_regression_steps'][reset_mask] = \
+            self.recovery_regression_steps[reset_mask]
+        snap['recovery_grounded_steps'][reset_mask] = \
+            self.recovery_grounded_steps[reset_mask]
+        snap['recovered_sustained'][reset_mask] = self._recovery_succeeded()[reset_mask]
         for idx in reset_mask.nonzero(as_tuple=False).flatten().tolist():
             snap['failure_reason'][idx] = self.failure_reason[idx]
             snap['first_contact_source'][idx] = self.first_contact_source[idx]
+            snap['first_contact_frame'][idx] = self.first_contact_frame[idx]
             snap['last_transition_event'][idx] = self.last_transition_event[idx]
+            snap['recovery_outcome'][idx] = self.recovery_outcome[idx]
         snap['valid'][reset_mask] = True
         snap['reset_step'][reset_mask] = self.common_step_counter
 
@@ -1079,12 +1434,12 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         Two distinct failures are recognised:
 
         * ``OBSTACLE_COLLISION`` -- positive collision evidence (a contact pair
-          carrying real impulse, or an exact analytic wheel/box overlap).
+          carrying a real contact force, or an exact analytic wheel/box overlap).
         * ``CROSSED_WITHOUT_LIFTOFF`` -- the robot's whole envelope ended up past
           the box rear face without ever leaving the ground. That means the robot
           went through the obstacle line instead of over it (ploughing straight
           into the fence, or physics letting it pass), which is a task failure
-          even when no single contact impulse was recorded.
+          even when no single contact force was recorded.
 
         Note on what is deliberately NOT used here: an earlier version tripped
         this flag on ``overlap_below_top`` (Y-interval overlap while a wheel sat
@@ -1195,11 +1550,18 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.trigger_step[env_mask] = -1
         self.pass_step[env_mask] = -1
         self.collision_event[env_mask] = False
+        self.geometric_pass_event[env_mask] = False
         self.clear_success_event[env_mask] = False
+        # A new attempt re-arms tier-2 success: the previous attempt's collision
+        # must not poison the next one. Only an in-episode collision disarms.
+        self.success_armed[env_mask] = False
+        self.final_success_paid[env_mask] = False
+        self._collision_seen[env_mask] = False
         self.task_failed[env_mask] = False
         self.just_reset[env_mask] = False
         for idx in env_mask.nonzero(as_tuple=False).flatten().tolist():
             self.failure_reason[idx] = "NONE"
+            self.success_disarmed_reason[idx] = "NONE"
 
     def _reposition_obstacles(self, env_mask):
         """Move the obstacle ahead of each selected environment independently.
@@ -1257,7 +1619,14 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.extras["mean_post_touchdown_vel"] = mean_post_vel
         self.extras["obstacle_task_failed"] = self.task_failed.float()
         self.extras["obstacle_collision_event"] = self.collision_event.float()
-        self.extras["obstacle_success_event"] = self.clear_success_event.float()
+        # Tier-1 (geometric progress) and tier-2 (full mission success) are
+        # published under DIFFERENT keys so no consumer can mistake one for the
+        # other.
+        self.extras["obstacle_geometric_pass_event"] = self.geometric_pass_event.float()
+        self.extras["obstacle_final_success_event"] = self.clear_success_event.float()
+        self.extras["obstacle_success_armed"] = self.success_armed.float()
+        self.extras["obstacle_final_success_paid"] = self.final_success_paid.float()
+        self.extras["recovery_outcome"] = list(self.recovery_outcome)
         self.extras["first_contact_body"] = self.first_contact_body.to(torch.float)
         self.extras["first_contact_step"] = self.first_contact_step.to(torch.float)
         self.extras["obstacle_py"] = self.obstacle_py_t.clone()
@@ -1301,13 +1670,36 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                            torch.zeros_like(reward))
 
     def _reward_obstacle_cleared_success(self):
-        """ONE-SHOT bonus for cleanly clearing the obstacle.
+        """ONE-SHOT bonus for FULL mission success (tier 2 only).
 
-        `obstacle_cleared` is a latch that stays true once set, so returning it
-        directly (the previous behaviour) paid +5.0 on EVERY remaining step of the
-        episode. Only the edge-triggered `clear_success_event` is paid here.
+        Two levels of "success" exist in this environment and they are paid
+        differently on purpose:
+
+        * `geometric_pass_event` -- the rear envelope got past the box rear face.
+          That is physical progress, and it is paid separately and modestly by
+          `_reward_obstacle_geometric_pass`. It is NOT success.
+        * `clear_success_event` (this function) -- full mission success: real
+          liftoff, complete passage, no obstacle contact at any point, a landing,
+          and a sustained forward cruise in the recovery window that ended in
+          NORMAL_HANDOFF. Paid at most once per episode.
+
+        The Phase A version paid this on the `cleared` latch alone. On seed 15 that
+        banked the bonus at step 118 and the robot hit the box at step 120 -- the
+        reward was collected for an attempt that immediately failed. Any collision
+        now permanently disarms this event (`success_armed`), and the latch itself
+        is edge-triggered so it can never be paid on consecutive steps.
         """
         return self.clear_success_event.to(self.rew_buf.dtype)
+
+    def _reward_obstacle_geometric_pass(self):
+        """Staged bonus for getting the whole body past the box (tier 1).
+
+        Deliberately small relative to `obstacle_cleared_success`: passing the box
+        without recovering a forward cruise, or colliding later, must not be as
+        valuable as a genuine cleared jump. This is the only reward the geometric
+        passage pays.
+        """
+        return self.geometric_pass_event.to(self.rew_buf.dtype)
 
     def _reward_forward_progress_across_obstacle(self):
         """Forward horizontal velocity reward while airborne over the obstacle zone."""
