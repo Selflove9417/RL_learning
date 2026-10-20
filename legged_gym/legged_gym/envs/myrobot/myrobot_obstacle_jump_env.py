@@ -23,6 +23,13 @@ from legged_gym.envs.myrobot.myrobot_running_jump_env import MyRobotRunningJump
 # Contact-pair helpers (module level so they are unit-testable without PhysX)
 # ---------------------------------------------------------------------------
 
+# Root-relative Y of the WHOLE-BODY rear edge, measured on the standing robot with
+# NO height ceiling: `rear_y - base_y = -0.2089 m`. Only used as a KINEMATIC
+# cross-check against the geometric whole-body envelope (`whole_body_interval`),
+# never as a substitute for it: on a pitching/airborne robot the true rear edge
+# moves, which is exactly why the envelope is the authority.
+_WHOLEBODY_REAR_OFFSET = -0.2089
+
 def _read_local_pos(contact, slot):
     """Read `localPos{slot}` (a gymapi Vec3 struct) as a (3,) float tensor.
 
@@ -406,6 +413,46 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.post_touchdown_vels = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
         self.post_touchdown_samples = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
 
+        # --- TASK-OWNED liftoff / touchdown latches (defect B) ----------------
+        # `has_taken_off`, `has_touched_down`, `takeoff_step` and `touchdown_step`
+        # are all owned by myrobot_dual_env: its FSM clears them on every state
+        # transition (`request_teleop_jump` at :331-336, STATE_JUMP re-entry at
+        # :403, and three more sites), because for the DUAL task they mean "this
+        # jump cycle". The obstacle task asks a different question -- "has this
+        # OBSTACLE attempt seen a real liftoff/touchdown?" -- so it must not read
+        # those flags. Measured failure before this latch existed: a robot that
+        # had jumped (liftoff step 39, touchdown step 60) was marked
+        # CROSSED_WITHOUT_LIFTOFF at step 83 because the FSM had cleared
+        # `has_taken_off` while `robot_rear_margin` was legitimately +0.0535:
+        #
+        #   ctx ep_len=83 fsm=0 root_y=+0.3276 rb_base_y=+0.3276 taken_off=False
+        #
+        # These three are set once and are only cleared by `reset_idx` or by
+        # `_begin_new_obstacle_cycle` -- never by an FSM transition.
+        self.task_took_off = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.task_takeoff_step = torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float)
+        self.task_touchdown_step = torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float)
+
+        # --- SEPARATED passage latches (defect A, tier split) ----------------
+        # The three questions the old single envelope tried to answer at once are
+        # now three independent latches:
+        #   wheel_pass_clean     -- per wheel: it got completely past the far face
+        #                           without ever being below the box top while over
+        #                           the footprint.  This is the "wheels cleared the
+        #                           obstacle" tier (TIER-1).
+        #   landing_safe         -- at the moment of touchdown, no wheel was inside
+        #                           the box footprint.  Landing BEHIND the box is
+        #                           safe; landing ON it is not.
+        #   whole_body_passed    -- the whole machine's rear envelope is past the
+        #                           far face.  Deliberately NOT required at
+        #                           touchdown: a robot that lands just behind the
+        #                           box still has its tail hanging over it.
+        self.wheel_danger_seen = torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.bool)
+        self.wheel_pass_clean = torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.bool)
+        self.landing_safe = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.whole_body_passed = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.whole_body_rear_margin = torch.full((self.num_envs,), -1.0, device=self.device, dtype=torch.float)
+
         # --- One-shot event flags -------------------------------------------
         # These are consumed by the reward function and cleared on the next step,
         # which turns the associated rewards into genuine event rewards instead of
@@ -515,6 +562,12 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'touchdown_pos_y': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
             'takeoff_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
             'touchdown_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
+            'task_took_off': torch.zeros(self.num_envs, device=self.device, dtype=torch.bool),
+            'wheel_pass_clean': torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.bool),
+            'wheel_danger_seen': torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.bool),
+            'landing_safe': torch.zeros(self.num_envs, device=self.device, dtype=torch.bool),
+            'whole_body_passed': torch.zeros(self.num_envs, device=self.device, dtype=torch.bool),
+            'whole_body_rear_margin': torch.full((self.num_envs,), -1.0, device=self.device, dtype=torch.float),
             'first_contact_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
             'first_contact_body': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.float),
             'first_contact_force': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
@@ -539,6 +592,16 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'obstacle_front_y': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
             'wheel_gap_min': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
             'wheel_clearance_min': torch.full((self.num_envs,), 1.0, device=self.device, dtype=torch.float),
+            # Attitude of the terminating frame (see `_last_geometry`). Kept so an
+            # impact row can report the real attitude instead of a calm pose.
+            'roll_rad': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
+            'pitch_rad': torch.zeros(self.num_envs, device=self.device, dtype=torch.float),
+            # Handoff clock placeholders. The real buffers live in
+            # `init_dual_policies` (after `_init_buffers`), so they cannot be
+            # referenced here; `_capture_episode_snapshot` copies them at capture
+            # time. -1 means "never happened", matching the source buffers.
+            'handoff_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.long),
+            'abort_step': torch.full((self.num_envs,), -1, device=self.device, dtype=torch.long),
             'failure_reason': ["NONE"] * self.num_envs,
             'first_contact_source': ["none"] * self.num_envs,
             'first_contact_frame': ["none"] * self.num_envs,
@@ -562,9 +625,14 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         }
 
         # --- URDF-derived geometric envelopes -------------------------------
-        from legged_gym.envs.myrobot.obstacle_geometry import register_link_points
+        from legged_gym.envs.myrobot.obstacle_geometry import (
+            register_link_points, register_link_edges)
         urdf_path = self.cfg.asset.file.format(LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
         register_link_points(self, urdf_path)
+        # Hull EDGES are needed for the exact half-space clip: the forwardmost
+        # point of a link sliced at the box-top plane is where an edge crosses the
+        # plane, which is not a vertex (defect A, see link_y_extents_clipped).
+        register_link_edges(self, urdf_path)
 
         # Configure viewer side-view camera if interactive
         if self.viewer is not None:
@@ -742,6 +810,19 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.landing_margin_m[env_ids] = 0.0
         self.post_touchdown_vels[env_ids] = 0.0
         self.post_touchdown_samples[env_ids] = 0.0
+        # Task-owned latches: an Episode Reset is one of the only two legal
+        # places these are cleared (the other is _begin_new_obstacle_cycle).
+        self.task_took_off[env_ids] = False
+        self.task_takeoff_step[env_ids] = -1
+        self.task_touchdown_step[env_ids] = -1
+        # Defect A layer latches. Also reset-free except here and at
+        # _begin_new_obstacle_cycle: a pass that happened is a fact about the
+        # attempt and must not be re-derived from a later FSM state.
+        self.wheel_danger_seen[env_ids] = False
+        self.wheel_pass_clean[env_ids] = False
+        self.landing_safe[env_ids] = False
+        self.whole_body_passed[env_ids] = False
+        self.whole_body_rear_margin[env_ids] = -1.0
 
         # 6. Reset one-shot event / task-state buffers.
         #    This must happen for EVERY reset, unconditionally: a stale event flag
@@ -1007,15 +1088,27 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         # --- exact obstacle interval, per environment (no shared scalar) -----
         obs_front_y, obs_rear_y, obs_top_z = geo.obstacle_y_interval(self)
 
-        # --- exact robot envelope --------------------------------------------
+        # --- LAYER 1: approach envelope (height-limited, no root fallback) ----
         # Only geometry that can physically reach the box counts: anything above
         # the obstacle top plane passes over it.  Without this ceiling the
         # base_link mesh (which sits ~0.4 m up) reports a front edge 0.22 m ahead
         # of the wheels and the spatial trigger fires immediately at reset.
-        envelope = geo.robot_forward_interval(self, z_ceiling=obs_top_z)
-        robot_front_y = envelope['front_y']
-        robot_rear_y = envelope['rear_y']
-        wheel_iv = envelope['exact_wheels']
+        #
+        # Defect A: this envelope may NOT be reused for a "cleared the box"
+        # decision. Its rear edge is the rear of the LOW parts (measured +0.0466 m
+        # relative to the root, i.e. AHEAD of the root), not the rear of the
+        # robot (measured -0.2089 m). And it no longer falls back to the root Y
+        # when the robot is airborne; `could_reach` says so explicitly.
+        approach = geo.approach_envelope(self)
+        approach_front_y = approach['front_y']
+        robot_front_y = approach_front_y
+        could_reach = approach['could_reach']
+        approach_rear_y = approach['rear_y']
+
+        # --- exact per-wheel passage facts (LAYER 2) --------------------------
+        wheel_state = geo.wheel_crossing_state(self)
+        wheel_iv = approach['exact_wheels']
+        wheel_in_zone_each = wheel_state['overlaps_footprint']
 
         # --- vertical clearance of the wheels above the obstacle top ---------
         # EXACT: the lowest point of the part of each wheel that is horizontally
@@ -1032,10 +1125,6 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         # (box front 0.28) while the analytic wheel/box gap was still +0.43 mm.
         # Its only job is to tell "some part of the robot is above the box
         # footprint", which gates the clearance reward.
-        wheel_lo = wheel_iv[:, [0, 2]]      # (N, 2) left, right
-        wheel_hi = wheel_iv[:, [1, 3]]
-        wheel_in_zone_each = ((wheel_hi >= obs_front_y[:, None])
-                              & (wheel_lo <= obs_rear_y[:, None]))
         wheel_in_zone = wheel_in_zone_each.any(dim=1)
         self.is_crossing_obstacle = wheel_in_zone
 
@@ -1051,15 +1140,35 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             self.min_obstacle_clearance[idx] = torch.minimum(
                 self.min_obstacle_clearance[idx], clr_in_zone[idx])
 
-        # --- how far the robot's rear envelope sits past the box rear face ---
-        # This is the only honest "the robot crossed the obstacle line" measure:
-        # it needs the whole body to be beyond the far face, so mere proximity
-        # cannot trip it. Used to detect crossing without ever leaving the ground.
-        self.robot_rear_margin = robot_rear_y - obs_rear_y
-        # Box passage: the rear envelope cleared the far face. Recorded once per
-        # cycle, and independent of whether the pass was clean, so a trace can be
-        # segmented at "the robot is past the box" without implying success.
-        just_passed = (self.robot_rear_margin > 0.005) & (self.pass_step < 0)
+        # --- LAYER 2 latches: per-wheel safe passage + safe landing -----------
+        # `danger` is the only predicate that means "this wheel could hit the box
+        # while over it": the wheel's Y interval overlaps the footprint AND its
+        # lowest point is below the box top. Overlap alone is proximity.
+        self.wheel_danger_seen |= wheel_state['danger']
+        clean_now = wheel_state['passed_rear'] & (~self.wheel_danger_seen)
+        self.wheel_pass_clean |= clean_now
+        landing_now = (self.has_touched_down & (~self.landing_safe)
+                       & (~wheel_state['overlaps_footprint'].any(dim=1)))
+        if landing_now.any():
+            self.landing_safe |= landing_now
+
+        # --- LAYER 3: whole-body envelope (full hull, no height clip) --------
+        # `robot_rear_margin` is documented as "the whole body is past the far
+        # face" and is now actually whole-body. It is the only honest "the robot
+        # crossed the obstacle line" measure and it is what the plough-through
+        # detector needs: a robot that walks into the box never gets its tail past
+        # the far face without leaving the ground.
+        whole = geo.whole_body_interval(self)
+        robot_whole_rear_y = whole['rear_y']
+        robot_rear_y = robot_whole_rear_y
+        self.whole_body_rear_margin = robot_whole_rear_y - obs_rear_y
+        self.robot_rear_margin = self.whole_body_rear_margin
+        whole_now = self.robot_rear_margin > 0.005
+        self.whole_body_passed |= whole_now
+        # Box passage: recorded once per cycle, and independent of whether the
+        # pass was clean, so a trace can be segmented at "the robot is past the
+        # box" without implying success.
+        just_passed = whole_now & (self.pass_step < 0)
         if just_passed.any():
             self.pass_step[just_passed] = self.common_step_counter
 
@@ -1122,8 +1231,25 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             self.has_obstacle_collision |= new_collision
             self.collision_event |= new_collision
 
+        # --- task-owned liftoff / touchdown latches (defect B) ----------------
+        # The FSM clears `has_taken_off`/`has_touched_down` on its own transitions,
+        # so the obstacle task observes them as EDGES and latches its own copy.
+        # `task_took_off` can therefore only ever be cleared by reset_idx or by
+        # _begin_new_obstacle_cycle -- never by a JUMP/RECOVER/BALANCE transition.
+        took_off_now = self.has_taken_off & (~self.task_took_off)
+        if took_off_now.any():
+            self.task_took_off |= took_off_now
+            self.task_takeoff_step[took_off_now] = float(self.common_step_counter)
+        touched_down_now = (self.has_touched_down & self.task_took_off
+                            & (self.task_touchdown_step < 0))
+        if touched_down_now.any():
+            self.task_touchdown_step[touched_down_now] = float(self.common_step_counter)
+
         # --- liftoff snapshot of the true envelope ---------------------------
-        fresh_liftoff = self.has_taken_off & (self.takeoff_step == self.common_step_counter)
+        # Keyed on the TASK-OWNED rising edge, not on the FSM flag. The old form
+        # (`has_taken_off & takeoff_step == common_step_counter`) silently missed
+        # the snapshot whenever the FSM had already reset `takeoff_step` to -1.
+        fresh_liftoff = took_off_now
         if fresh_liftoff.any():
             idx = fresh_liftoff.nonzero(as_tuple=False).flatten()
             self.takeoff_front_y[idx] = robot_front_y[idx]
@@ -1146,9 +1272,12 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             self.landing_margin_m[idx] = rear_margin[idx]
 
         # Passage requires: real liftoff (otherwise the robot walked/ploughed
-        # through the box line), no contact so far, and the rear envelope past the
-        # far face.
-        pass_clean = (self.has_taken_off & self.has_touched_down
+        # through the box line), a real touchdown, no contact so far, and the rear
+        # envelope past the far face. All three state predicates come from the
+        # TASK-OWNED latches: the FSM's `has_taken_off`/`has_touched_down` are
+        # cleared on state transitions and would drop a legitimate pass on the
+        # floor whenever the handoff happened to land on the same step.
+        pass_clean = (self.task_took_off & (self.task_touchdown_step >= 0)
                       & (rear_margin > 0.005)
                       & (~self.has_obstacle_collision) & (~self.obstacle_cleared))
         if pass_clean.any():
@@ -1193,12 +1322,62 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             gap_min = torch.zeros_like(obs_front_y)
         else:
             gap_min = torch.min(gaps, dim=1).values.detach()
+        # Attitude/velocity of the same frame ride along so that a terminating
+        # trace row can report the REAL impact attitude. Without them the row is
+        # rebuilt from `root_y`/`root_z` alone and a 40-degree impact pitch would
+        # read as a calm upright pose.
+        r_t, p_t, _ = get_euler_xyz(self.base_quat)
+        roll_t = torch.atan2(torch.sin(p_t), torch.cos(p_t))
+        pitch_t = torch.atan2(torch.sin(r_t), torch.cos(r_t))
         self._last_geometry = {
             'front_y': robot_front_y.detach(),
             'rear_y': robot_rear_y.detach(),
             'obstacle_front_y': obs_front_y.detach(),
             'wheel_gap_min': gap_min,
             'wheel_clearance_min': clr_min_finite,
+            'roll_rad': roll_t.detach(),
+            'pitch_rad': pitch_t.detach(),
+            'forward_vel': self.root_states[:, 8].detach(),
+        }
+
+        # --- THREE-LAYER per-step record (defect A) ---------------------------
+        # The task book requires that every step publish, separately:
+        #   * the wheel front/rear envelopes (layer 2, exact analytic),
+        #   * the root displacement relative to the box rear face (a KINEMATIC
+        #     fact, never a substitute for the geometric envelope),
+        #   * the real PhysX contact state (layer independent of any envelope),
+        #   * the final whole-body passage state (layer 3).
+        # Keeping them in one dict makes the separation auditable: a caller can no
+        # longer read "cleared" and be unable to tell which of the three it meant.
+        root_rear_offset = self.root_states[:, 1] + _WHOLEBODY_REAR_OFFSET
+        self.obstacle_layers = {
+            # (a) approach: height-limited, no root fallback
+            'approach_front_y': approach_front_y.detach(),
+            'approach_rear_y': approach_rear_y.detach(),
+            'approach_could_reach': could_reach.detach(),
+            # (b) wheels: exact per-wheel front/rear + safety
+            'wheel_front_y': wheel_state['interval_front'].detach(),
+            'wheel_rear_y': wheel_state['interval_rear'].detach(),
+            'wheel_bottom_z': wheel_state['bottom_z'].detach(),
+            'wheel_over_footprint': wheel_state['overlaps_footprint'].detach(),
+            'wheel_above_top': wheel_state['above_top'].detach(),
+            'wheel_danger': wheel_state['danger'].detach(),
+            'wheel_pass_clean': self.wheel_pass_clean.detach(),
+            'landing_safe': self.landing_safe.detach(),
+            # (c) whole body: full hull, no clip
+            'whole_body_front_y': whole['front_y'].detach(),
+            'whole_body_rear_y': robot_whole_rear_y.detach(),
+            'whole_body_rear_margin': self.whole_body_rear_margin.detach(),
+            'whole_body_passed': self.whole_body_passed.detach(),
+            # kinematic cross-check: root rear face estimate, NOT an envelope
+            'root_estimated_rear_y': root_rear_offset.detach(),
+            'root_estimated_margin': (root_rear_offset - obs_rear_y).detach(),
+            # real contact evidence, independent of every envelope above
+            'has_obstacle_collision': self.has_obstacle_collision.detach(),
+            'peak_obstacle_contact_force_N': self.peak_obstacle_contact_force.detach(),
+            'box_front_y': obs_front_y.detach(),
+            'box_rear_y': obs_rear_y.detach(),
+            'box_top_z': obs_top_z.detach(),
         }
 
     # =========================================================================
@@ -1250,9 +1429,13 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                                   the `~has_obstacle_collision` clause is checked
                                   again here rather than trusted from the latch
           not task_failed      -- geometric plough-through also disqualifies
-          takeoff/touchdown    -- real liftoff AND real landing were latched; a
-                                  pass with `touchdown_step < 0` means the episode
-                                  ended before the robot came down
+          takeoff/touchdown    -- real liftoff AND real landing were latched by the
+                                  TASK, not by the FSM; a pass with
+                                  `task_touchdown_step < 0` means the episode
+                                  ended before the robot came down. Reading the
+                                  FSM's `takeoff_step` here was wrong twice over:
+                                  `request_teleop_jump` resets it to -1 on every
+                                  new jump request, and the dual task owns it.
           recovered_sustained  -- a genuine sustained forward cruise followed the
                                   landing (see `_recovery_succeeded`)
           not already paid     -- at most one payment per episode
@@ -1263,8 +1446,8 @@ class MyRobotObstacleJump(MyRobotRunningJump):
                 & self.obstacle_cleared
                 & (~self.has_obstacle_collision)
                 & (~self.task_failed)
-                & (self.takeoff_step >= 0)
-                & (self.touchdown_step >= 0)
+                & (self.task_takeoff_step >= 0)
+                & (self.task_touchdown_step >= 0)
                 & recovered_sustained
                 & (~self.final_success_paid))
 
@@ -1379,8 +1562,22 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'landing_margin_m': self.landing_margin_m,
             'takeoff_pos_y': self.takeoff_pos_y,
             'touchdown_pos_y': self.touchdown_pos_y,
-            'takeoff_step': self.takeoff_step.float(),
-            'touchdown_step': self.touchdown_step.float(),
+            # These two are the TASK-OWNED latches, not the FSM's. The FSM's
+            # `takeoff_step`/`touchdown_step` are reset to -1 by
+            # `request_teleop_jump` on every new jump request, so a multi-jump
+            # episode would report -1 for a jump that plainly happened.
+            'takeoff_step': self.task_takeoff_step.clone(),
+            'touchdown_step': self.task_touchdown_step.clone(),
+            'task_took_off': self.task_took_off.clone(),
+            # Defect A: the three layer latches are recorded separately in the
+            # episode snapshot. A single "cleared" flag cannot tell a reader
+            # whether the wheels got past, whether the landing was clear, or
+            # whether the whole body finally left the box region.
+            'wheel_pass_clean': self.wheel_pass_clean.clone(),
+            'wheel_danger_seen': self.wheel_danger_seen.clone(),
+            'landing_safe': self.landing_safe.clone(),
+            'whole_body_passed': self.whole_body_passed.clone(),
+            'whole_body_rear_margin': self.whole_body_rear_margin.clone(),
             'first_contact_step': self.first_contact_step.float(),
             'first_contact_body': self.first_contact_body.float(),
             'first_contact_force': self.first_contact_force,
@@ -1394,6 +1591,14 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             'root_y': self.root_states[:, 1],
             'root_z': self.root_states[:, 2],
             'forward_vel': self.root_states[:, 8],
+            # Handoff clock (task 4). `handoff_step` is stamped when the FSM
+            # leaves RECOVER for BALANCE, `abort_step` when it leaves by the
+            # abort branch. Both are needed to answer "how long after landing did
+            # the balance policy take over" -- and, crucially, to show that a
+            # TIMEOUT_HANDOFF is a takeover by ABANDONING the recovery objective,
+            # not a recovered cruise.
+            'handoff_step': self.handoff_step,
+            'abort_step': self.abort_step,
         }
         # Geometry of the terminating frame, captured by compute_obstacle_metrics
         # on the pre-reset pass. Without these, an evaluator's "at first contact"
@@ -1402,6 +1607,21 @@ class MyRobotObstacleJump(MyRobotRunningJump):
             tensors[name] = value
         for name, tensor in tensors.items():
             snap[name][reset_mask] = tensor.detach()[reset_mask]
+        # The three-layer geometry of the terminating frame, kept as its own
+        # tensor dict rather than merged into `snap`: these are per-row quantities
+        # an evaluator must be able to read for the impact frame specifically. A
+        # reader that only had the post-reset `env.obstacle_layers` would see the
+        # fresh episode's stand-still geometry in the row that is supposed to
+        # document the crash.
+        layers = getattr(self, 'obstacle_layers', None)
+        if layers:
+            snap.setdefault('obstacle_layers', {})
+            for name, tensor in layers.items():
+                if torch.is_tensor(tensor):
+                    snap['obstacle_layers'].setdefault(
+                        name, torch.zeros_like(tensor))
+                    snap['obstacle_layers'][name][reset_mask] = \
+                        tensor.detach().clone()[reset_mask]
         snap['first_contact_pos'][reset_mask] = self.first_contact_pos.detach()[reset_mask]
         # Recovery evidence (task 2). The ring buffer is copied as a whole row,
         # NaN padding included, so the evaluator can reconstruct the raw curve
@@ -1447,10 +1667,22 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         simply *near* the box with its wheels down, which is the normal state
         right before a jump -- on seed 15 it fired while the analytic wheel/box
         gap was still +0.43 mm. Proximity is not penetration.
+
+        Note on the liftoff predicate (defect B): this reads ``task_took_off``,
+        the obstacle task's own per-cycle latch, NOT the FSM's ``has_taken_off``.
+        The two disagree exactly where it matters. Measured false positive before
+        the change -- a robot that had lifted off at step 39 and touched down at
+        step 60 was failed at step 83:
+
+            ctx ep_len=83 fsm=0 root_y=+0.3276 rb_base_y=+0.3276 obs_rear=+0.3200
+            >> LATCH step=83 rear_margin=+0.0535 taken_off=False collision=False
+
+        The pose and the margin were both genuine; only ``has_taken_off`` was
+        stale, because the FSM had returned to another state and cleared it.
         """
         if not hasattr(self, 'task_failed'):
             return
-        ploughed = (self.robot_rear_margin > 0.005) & (~self.has_taken_off)
+        ploughed = (self.robot_rear_margin > 0.005) & (~self.task_took_off)
         new_fail = (self.has_obstacle_collision | ploughed) & (~self.task_failed)
         if new_fail.any():
             for idx in new_fail.nonzero(as_tuple=False).flatten().tolist():
@@ -1478,18 +1710,23 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         # ~0.114 m longitudinal offset of the wheel centres and the forward extent
         # of the legs/chassis. That underestimated the true front by 9-11 cm and
         # made the robot strike the obstacle before the jump was ever commanded.
-        # The z ceiling keeps only geometry that can actually reach the box top;
-        # parts passing above it are not "front" for collision purposes.
+        #
+        # This is LAYER 1, the approach envelope, and nothing else: it is limited
+        # to geometry that can actually reach the box top, and it never falls back
+        # to the root Y. If `could_reach` is False nothing is low enough to hit the
+        # box, so the distance is undefined and the trigger simply holds.
         obs_front_y, obs_rear_y, obs_top_z = geo.obstacle_y_interval(self)
-        envelope = geo.robot_forward_interval(self, z_ceiling=obs_top_z)
-        robot_front_y = envelope['front_y']
+        approach = geo.approach_envelope(self)
+        robot_front_y = approach['front_y']
         dist_to_obs_front = obs_front_y - robot_front_y
+        could_reach = approach['could_reach']
 
         if self.trigger_mode == "spatial":
             # Spatial distance trigger: initiate takeoff when reaching optimal takeoff window
             in_balance = (self.fsm_state == self.STATE_BALANCE)
             is_cruising = self.root_states[:, 8] > 0.10
-            reached_window = (dist_to_obs_front <= self.spatial_trigger_dist) & (dist_to_obs_front >= -0.02)
+            reached_window = ((dist_to_obs_front <= self.spatial_trigger_dist)
+                              & (dist_to_obs_front >= -0.02) & could_reach)
             has_warmed_up = self.episode_length_buf >= 20  # Minimum 0.4s to stabilize balance
             can_jump = in_balance & is_cruising & reached_window & has_warmed_up
             if can_jump.any():
@@ -1544,6 +1781,15 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.landing_margin_m[env_mask] = 0.0
         self.post_touchdown_vels[env_mask] = 0.0
         self.post_touchdown_samples[env_mask] = 0.0
+        # A new obstacle attempt starts with "has not left the ground yet".
+        self.task_took_off[env_mask] = False
+        self.task_takeoff_step[env_mask] = -1
+        self.task_touchdown_step[env_mask] = -1
+        self.wheel_danger_seen[env_mask] = False
+        self.wheel_pass_clean[env_mask] = False
+        self.landing_safe[env_mask] = False
+        self.whole_body_passed[env_mask] = False
+        self.whole_body_rear_margin[env_mask] = -1.0
         self.takeoff_front_y[env_mask] = 0.0
         self.takeoff_rear_y[env_mask] = 0.0
         self.takeoff_clearance_above_obs[env_mask] = 0.0
@@ -1634,6 +1880,21 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         self.extras["robot_rear_margin"] = self.robot_rear_margin
         self.extras["obstacle_trigger_step"] = self.trigger_step.to(torch.float)
         self.extras["obstacle_pass_step"] = self.pass_step.to(torch.float)
+        # Defect A: publish the three layers under distinct keys. A consumer that
+        # wants "did the wheels get over it" reads wheel_pass_clean; "was the
+        # landing clear" reads landing_safe; "has the whole machine left the box
+        # region" reads whole_body_passed. No single flag is overloaded.
+        self.extras["wheel_pass_clean"] = self.wheel_pass_clean.float()
+        self.extras["wheel_danger_seen"] = self.wheel_danger_seen.float()
+        self.extras["landing_safe"] = self.landing_safe.float()
+        self.extras["whole_body_passed"] = self.whole_body_passed.float()
+        self.extras["whole_body_rear_margin"] = self.whole_body_rear_margin
+        self.extras["obstacle_layers"] = getattr(self, 'obstacle_layers', {})
+        # Defect B: the task-owned liftoff latch, distinct from the FSM's
+        # `has_taken_off`, which the dual policy clears on state transitions.
+        self.extras["task_took_off"] = self.task_took_off.float()
+        self.extras["task_takeoff_step"] = self.task_takeoff_step
+        self.extras["task_touchdown_step"] = self.task_touchdown_step
 
     # =========================================================================
     # Reward Functions: Explicitly Tailored for Physical Obstacle Clearance

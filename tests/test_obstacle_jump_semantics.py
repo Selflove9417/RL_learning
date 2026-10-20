@@ -251,8 +251,15 @@ def _arm_success(env):
     env.obstacle_cleared[:] = True
     env.has_obstacle_collision[:] = False
     env.task_failed[:] = False
+    # The gate reads the TASK-OWNED liftoff/touchdown latches, not the FSM's
+    # `takeoff_step`/`touchdown_step` (defect B: the FSM clears those on every
+    # state transition). Arm both, so the helper is correct for either reading,
+    # and let the specific tests below flip only the task-owned pair.
     env.takeoff_step[:] = 40
     env.touchdown_step[:] = 60
+    env.task_took_off[:] = True
+    env.task_takeoff_step[:] = 40
+    env.task_touchdown_step[:] = 60
     env.final_success_paid[:] = False
     env.has_taken_off[:] = True
     env.has_touched_down[:] = True
@@ -325,13 +332,28 @@ def test_mission_success_gate(env):
               not bool(env._recovery_succeeded()[0].item()))
 
     # A pass whose landing never latched (episode ended in the air) is not a
-    # success either: `touchdown_step < 0` means "we never saw it come down".
+    # success either: the TASK's touchdown latch staying at -1 means "we never
+    # saw it come down".
+    env.reset_idx(ids)
+    _arm_success(env)
+    _recovered(env, True)
+    env.task_touchdown_step[:] = -1
+    check("pass without a recorded touchdown is NOT a success",
+          not bool(env._mission_success_mask()[0].item()))
+
+    # Defect B regression, the mirror image: clearing the FSM's own
+    # `touchdown_step` (which `request_teleop_jump` does on every new jump
+    # request) must NOT destroy a mission that the task-level latch proves
+    # happened. Before the fix this test failed -- the gate read the FSM counter
+    # and a second jump request silently voided the first landing.
     env.reset_idx(ids)
     _arm_success(env)
     _recovered(env, True)
     env.touchdown_step[:] = -1
-    check("pass without a recorded touchdown is NOT a success",
-          not bool(env._mission_success_mask()[0].item()))
+    env.takeoff_step[:] = -1
+    check("FSM clearing takeoff/touchdown does not void a task-level success",
+          bool(env._mission_success_mask()[0].item()),
+          "task latches are the authority, not the dual-policy FSM counters")
 
     # And a geometric plough-through disqualifies it even if all else lines up.
     env.reset_idx(ids)
@@ -981,6 +1003,501 @@ def test_geometry(env):
     env.gym.refresh_rigid_body_state_tensor(env.sim)
 
 
+# ---------------------------------------------------------------------------
+# I. Task-owned liftoff latch (defect B)
+# ---------------------------------------------------------------------------
+
+def test_task_liftoff_latch(env):
+    """Defect B: the obstacle task must own its liftoff/touchdown facts.
+
+    MEASURED FAILURE THIS REPLACES
+    ------------------------------
+    On the AFTER arm of the Phase C comparison, 5 of 8 seeds ended with
+    ``CROSSED_WITHOUT_LIFTOFF`` *after a complete, clean jump*. Instrumented
+    probe output for seed 13:
+
+        ctx ep_len=83 fsm=0 root_y=+0.3276 rb_base_y=+0.3276 obs_rear=+0.3200
+        >> LATCH step=83 rear_margin=+0.0535 taken_off=False collision=False
+
+    The pose and the margin were both real; only ``has_taken_off`` was stale.
+    ``myrobot_dual_env`` clears it on FSM transitions (``request_teleop_jump``
+    at :331-336 and the STATE_JUMP re-entry at ~:403), because for the DUAL task
+    it means "this jump cycle". The obstacle task asks a different question, so
+    it now latches ``task_took_off`` / ``task_takeoff_step`` /
+    ``task_touchdown_step`` which ONLY ``reset_idx`` and
+    ``_begin_new_obstacle_cycle`` may clear.
+    """
+    print("\nI. task-owned liftoff latch survives FSM transitions (defect B)")
+    ids = torch.arange(env.num_envs, device=env.device)
+    env.reset()
+    env.reset_idx(ids)
+
+    # ---- COUNTER-EXAMPLE 1: crossed the box line without ever lifting off ----
+    # Must STILL be a failure. This is the case the latch must not weaken.
+    env.reset_idx(ids)
+    env.task_took_off[:] = False
+    env.has_taken_off[:] = False
+    env.has_obstacle_collision[:] = False
+    env.task_failed[:] = False
+    env.robot_rear_margin[:] = 0.05
+    env.failure_reason[0] = "NONE"
+    env._update_task_outcome()
+    check("crossing without any liftoff is still a failure",
+          bool(env.task_failed[0].item())
+          and env.failure_reason[0] == "CROSSED_WITHOUT_LIFTOFF",
+          "reason=%s" % env.failure_reason[0])
+
+    # ---- COUNTER-EXAMPLE 2: a real jump, then the FSM returns to BALANCE ----
+    # The FSM clears `has_taken_off` / `takeoff_step` on the transition. The
+    # task-level latch must keep the jump on record, so the robot is NOT
+    # accused of ploughing through the box it actually jumped over.
+    env.reset_idx(ids)
+    env.task_took_off[:] = True
+    env.task_takeoff_step[:] = 39
+    env.task_touchdown_step[:] = 60
+    env.has_taken_off[:] = False          # exactly what the FSM leaves behind
+    env.takeoff_step[:] = -1
+    env.touchdown_step[:] = -1
+    env.has_obstacle_collision[:] = False
+    env.task_failed[:] = False
+    env.robot_rear_margin[:] = 0.0535     # the measured seed-13 value
+    env.failure_reason[0] = "NONE"
+    env._update_task_outcome()
+    check("a landed jump is not a plough-through after the FSM moves on",
+          not bool(env.task_failed[0].item()),
+          "reason=%s rear_margin=+%.4f task_took_off=%s fsm_taken_off=%s"
+          % (env.failure_reason[0], float(env.robot_rear_margin[0]),
+             bool(env.task_took_off[0]), bool(env.has_taken_off[0])))
+    check("the failure reason stays clean, not a stale label",
+          env.failure_reason[0] == "NONE",
+          "reason=%s" % env.failure_reason[0])
+
+    # ---- COUNTER-EXAMPLE 3: a jump that then hits the box must still stop ----
+    # The latch must not rescue a genuine collision: mission failure is driven by
+    # contact evidence, which is independent of the liftoff latch.
+    env.reset_idx(ids)
+    env.task_took_off[:] = True
+    env.task_takeoff_step[:] = 39
+    env.task_touchdown_step[:] = 60
+    env.has_obstacle_collision[:] = True
+    env.task_failed[:] = False
+    env.failure_reason[0] = "NONE"
+    env._update_task_outcome()
+    check("a jump followed by obstacle contact still fails",
+          bool(env.task_failed[0].item())
+          and env.failure_reason[0] == "OBSTACLE_COLLISION",
+          "reason=%s" % env.failure_reason[0])
+    check("the collision also enters the termination mask",
+          bool(env._task_failure_mask()[0].item()))
+
+    # ---- COUNTER-EXAMPLE 4: interleaved resets must not cross-contaminate ----
+    if env.num_envs >= 3:
+        env.reset_idx(ids)
+        # env0 jumps and lands, env1 jumps but never lands, env2 never jumps.
+        env.task_took_off[:] = False
+        env.task_takeoff_step[:] = -1
+        env.task_touchdown_step[:] = -1
+        env.robot_rear_margin[:] = -1.0
+        env.task_took_off[0] = True
+        env.task_takeoff_step[0] = 39
+        env.task_touchdown_step[0] = 60
+        env.task_took_off[1] = True
+        env.task_takeoff_step[1] = 44
+        env.robot_rear_margin[0] = 0.06
+        env.robot_rear_margin[1] = 0.06
+        env.robot_rear_margin[2] = 0.06
+        env.task_failed[:] = False
+        env.has_obstacle_collision[:] = False
+        for i in range(env.num_envs):
+            env.failure_reason[i] = "NONE"
+        env._update_task_outcome()
+        check("env0 (jumped AND landed) is not failed",
+              not bool(env.task_failed[0].item()),
+              "reason=%s" % env.failure_reason[0])
+        check("env1 (jumped, never landed) is not failed either",
+              not bool(env.task_failed[1].item()),
+              "reason=%s" % env.failure_reason[1])
+        check("env2 (never jumped) is the only one failed",
+              bool(env.task_failed[2].item()),
+              "reason=%s" % env.failure_reason[2])
+
+        # Now reset ONLY env2 and confirm env0/env1's latches are untouched.
+        env.reset_idx(torch.tensor([2], device=env.device, dtype=torch.long))
+        check("resetting one env preserves the others' task latch",
+              bool(env.task_took_off[0].item()) and bool(env.task_took_off[1].item())
+              and float(env.task_takeoff_step[0].item()) == 39.0
+              and float(env.task_touchdown_step[0].item()) == 60.0,
+              "env0 took_off=%s takeoff=%.0f touchdown=%.0f"
+              % (bool(env.task_took_off[0]), float(env.task_takeoff_step[0]),
+                 float(env.task_touchdown_step[0])))
+        check("the reset env's own latch is cleared",
+              not bool(env.task_took_off[2].item())
+              and float(env.task_takeoff_step[2].item()) == -1.0,
+              "env2 took_off=%s takeoff=%.0f"
+              % (bool(env.task_took_off[2]), float(env.task_takeoff_step[2])))
+
+    # ---- COUNTER-EXAMPLE 5: consecutive obstacle cycles re-arm correctly ----
+    # A collision in cycle 1 must not poison cycle 2 (the latch and the arming
+    # flag are per-cycle), and the cycle reset must clear the liftoff latch so the
+    # next attempt has to earn it again.
+    env.reset_idx(ids)
+    env.task_took_off[:] = True
+    env.task_takeoff_step[:] = 10
+    env.task_touchdown_step[:] = 30
+    env.has_obstacle_collision[:] = True
+    env.success_armed[:] = False
+    env.failure_reason[0] = "OBSTACLE_COLLISION"
+    cycle_mask = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+    cycle_mask[0] = True
+    env._begin_new_obstacle_cycle(cycle_mask)
+    check("a new cycle re-arms the liftoff latch",
+          not bool(env.task_took_off[0].item())
+          and float(env.task_takeoff_step[0].item()) == -1.0
+          and float(env.task_touchdown_step[0].item()) == -1.0,
+          "took_off=%s takeoff=%.0f touchdown=%.0f"
+          % (bool(env.task_took_off[0]), float(env.task_takeoff_step[0]),
+             float(env.task_touchdown_step[0])))
+    check("a new cycle clears the previous cycle's collision verdict",
+          not bool(env.has_obstacle_collision[0].item())
+          and env.failure_reason[0] == "NONE",
+          "collision=%s reason=%s"
+          % (bool(env.has_obstacle_collision[0]), env.failure_reason[0]))
+    # And the second cycle can genuinely earn a clean pass again.
+    env.task_took_off[0] = True
+    env.task_takeoff_step[0] = 70
+    env.task_touchdown_step[0] = 95
+    env.has_obstacle_collision[0] = False
+    env.task_failed[0] = False
+    env.robot_rear_margin[0] = 0.07
+    env._update_task_outcome()
+    check("cycle 2 can pass cleanly after cycle 1 collided",
+          not bool(env.task_failed[0].item()),
+          "reason=%s" % env.failure_reason[0])
+
+    # ---- FSM-owned counters must not be the authority anywhere ----
+    # `request_teleop_jump` resets `takeoff_step`/`touchdown_step`/`handoff_step`
+    # to -1 on every new jump request. Assert the task latches survive that call,
+    # which is the whole point of having them.
+    env.reset_idx(ids)
+    env.task_took_off[:] = True
+    env.task_takeoff_step[:] = 39
+    env.task_touchdown_step[:] = 60
+    env.obstacle_cleared[:] = True
+    env.success_armed[:] = True
+    env.fsm_state[:] = env.STATE_BALANCE
+    env.request_teleop_jump()
+    check("request_teleop_jump does not clear the task liftoff latch",
+          bool(env.task_took_off.all().item())
+          and float(env.task_takeoff_step[0].item()) == 39.0
+          and float(env.task_touchdown_step[0].item()) == 60.0,
+          "takeoff=%.0f touchdown=%.0f"
+          % (float(env.task_takeoff_step[0]), float(env.task_touchdown_step[0])))
+    check("request_teleop_jump does not clear obstacle_cleared/success_armed",
+          bool(env.obstacle_cleared.all().item())
+          and bool(env.success_armed.all().item()),
+          "cleared=%s armed=%s" % (bool(env.obstacle_cleared[0]),
+                                   bool(env.success_armed[0])))
+    # ... while it DOES clear the FSM's own counters, which is exactly why they
+    # cannot be the authority.
+    check("the FSM's own counters are cleared by that same call",
+          float(env.takeoff_step[0].item()) == -1.0,
+          "fsm takeoff_step=%.0f (task latch still %.0f)"
+          % (float(env.takeoff_step[0]), float(env.task_takeoff_step[0])))
+
+    env.reset_idx(ids)
+
+
+# ---------------------------------------------------------------------------
+# J. Separated geometry layers (defect A)
+# ---------------------------------------------------------------------------
+
+def test_separated_envelopes(env):
+    """Defect A: one envelope was answering three different questions.
+
+    MEASURED FAILURE THIS REPLACES
+    ------------------------------
+    1. ROOT FALLBACK WHILE AIRBORNE. With the single clipped envelope, every body
+       point sat above the 5 cm plane once the robot left the ground, nothing
+       survived the clip, and the code fell back to `rb_states[:, 0, 1]`. Measured
+       on a robot at root z = 0.45 m:
+
+           old(single) front=-0.0000 rear=-0.0000  == base_y  (nothing_below=True)
+
+       That made `front_y == rear_y == root_y` for the whole flight and corrupted
+       the takeoff snapshot (`takeoff_front_y`/`takeoff_rear_y`/`required_dist_m`).
+
+    2. WRONG REAR EDGE. The clipped rear edge is the rear of the LOW parts, not of
+       the robot. Measured at nominal stance (base_y = 0):
+
+           approach rear offset = +0.0436 m   (AHEAD of the root)
+           whole-body rear offset = -0.2076 m (behind the root)
+
+       a 0.25 m discrepancy -- which is the size of the looseness that made
+       "cleared the box" fire ~0.25 m early.
+
+    3. VERTEX-ONLY CLIPPING IS NOT THE CLIPPED HULL. Filtering hull VERTICES by
+       z <= ceiling under-reports the front edge wherever the true extremum is an
+       EDGE crossing the plane. Measured over pitch 0..20 deg x ceiling
+       0.05/0.10/0.20 m, the vertex-only form under-reported the front edge by up
+       to +11.53 mm (and under-reported the robot's REAR extent by up to
+       +26.39 mm at ceiling 0.10). Included edge/plane crossings make the result
+       the exact Y extent of `hull ∩ {z <= ceiling}`.
+    """
+    print("\nJ. separated geometry layers: approach / wheels / whole body")
+    ids = torch.arange(env.num_envs, device=env.device)
+    env.reset()
+    env.reset_idx(ids)
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+
+    obs_front, obs_rear, obs_top = geo.obstacle_y_interval(env)
+    base_y = float(env.rb_states[0, 0, 1])
+
+    approach = geo.approach_envelope(env)
+    whole = geo.whole_body_interval(env)
+    legacy = geo.robot_forward_interval(env, z_ceiling=obs_top)
+
+    # ---- (1) the three layers genuinely differ, and in the documented way ----
+    app_rear_off = float(approach['rear_y'][0]) - base_y
+    whole_rear_off = float(whole['rear_y'][0]) - base_y
+    check("approach rear edge and whole-body rear edge are different quantities",
+          app_rear_off - whole_rear_off > 0.20,
+          "approach=%+.4f whole=%+.4f (gap=%.4f m)"
+          % (app_rear_off, whole_rear_off, app_rear_off - whole_rear_off))
+    check("the approach rear edge is AHEAD of the root, not behind it",
+          app_rear_off > 0.0,
+          "approach rear offset=%+.4f m" % app_rear_off)
+    check("the whole-body rear edge is behind the root",
+          whole_rear_off < -0.15,
+          "whole-body rear offset=%+.4f m" % whole_rear_off)
+    check("the whole body is longer than the approach envelope",
+          (float(whole['front_y'][0]) - float(whole['rear_y'][0]))
+          > (float(approach['front_y'][0]) - float(approach['rear_y'][0])),
+          "whole span=%.4f approach span=%.4f"
+          % (float(whole['front_y'][0]) - float(whole['rear_y'][0]),
+             float(approach['front_y'][0]) - float(approach['rear_y'][0])))
+
+    # ---- (2) airborne: no root fallback anywhere ----
+    env._reset_dofs(ids)
+    env._reset_root_states(ids)
+    env.root_states[:, 2] = 0.45
+    env.gym.set_actor_root_state_tensor(
+        env.sim, gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    air_base = float(env.rb_states[0, 0, 1])
+
+    air_app = geo.approach_envelope(env)
+    air_whole = geo.whole_body_interval(env)
+    air_legacy = geo.robot_forward_interval(env, z_ceiling=obs_top)
+    check("airborne: the approach envelope reports could_reach=False",
+          not bool(air_app['could_reach'][0].item()),
+          "front=%s could_reach=%s"
+          % (float(air_app['front_y'][0]), bool(air_app['could_reach'][0])))
+    check("airborne: the approach envelope does NOT fall back to the root Y",
+          (not math.isfinite(float(air_app['front_y'][0])))
+          or abs(float(air_app['front_y'][0]) - air_base) > 1e-6,
+          "approach front=%s base_y=%.4f" % (float(air_app['front_y'][0]), air_base))
+    check("airborne: the whole-body envelope stays finite and physical",
+          math.isfinite(float(air_whole['front_y'][0]))
+          and math.isfinite(float(air_whole['rear_y'][0]))
+          and float(air_whole['front_y'][0]) - float(air_whole['rear_y'][0]) > 0.3,
+          "front=%.4f rear=%.4f span=%.4f"
+          % (float(air_whole['front_y'][0]), float(air_whole['rear_y'][0]),
+             float(air_whole['front_y'][0]) - float(air_whole['rear_y'][0])))
+    # The bug being fixed, reproduced explicitly so it can never come back.
+    check("the superseded single envelope DID collapse onto root_y (regression anchor)",
+          bool(air_legacy['nothing_below_ceiling'][0])
+          and abs(float(air_legacy['front_y'][0]) - air_base) < 1e-6,
+          "old front=%.4f rear=%.4f base=%.4f nothing_below=%s"
+          % (float(air_legacy['front_y'][0]), float(air_legacy['rear_y'][0]),
+             air_base, bool(air_legacy['nothing_below_ceiling'][0])))
+
+    # ---- (3) the z-ceiling clip is the exact clipped hull, not vertices ----
+    urdf_path = env.cfg.asset.file.format(
+        LEGGED_GYM_ROOT_DIR=__import__('legged_gym').LEGGED_GYM_ROOT_DIR)
+    edges = geo.urdf_link_hull_edges(urdf_path)
+    check("hull edge indices are registered and non-empty",
+          hasattr(env, 'link_edge_index') and bool(env.link_edge_mask.any()),
+          "bodies_with_edges=%d edges_per_body=%s"
+          % (int(env.link_edge_mask.any(dim=1).sum()),
+             [int(n) for n in env.link_edge_mask.sum(dim=1).tolist()]))
+
+    worst_under = 0.0
+    worst_rear = 0.0
+    worst_at = ""
+    worst_rear_at = ""
+    n_compared = 0
+    for pitch_deg in (0.0, 5.0, 10.0, 15.0, 20.0):
+        for ceil_m in (0.05, 0.10, 0.20):
+            env._reset_dofs(ids)
+            env._reset_root_states(ids)
+            theta = math.radians(pitch_deg)
+            env.root_states[:] = 0.0
+            env.root_states[:, 2] = 0.40
+            env.root_states[:, 3] = math.sin(theta / 2.0)
+            env.root_states[:, 6] = math.cos(theta / 2.0)
+            env.gym.set_actor_root_state_tensor(
+                env.sim,
+                gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+            env.gym.refresh_actor_root_state_tensor(env.sim)
+            env.gym.refresh_rigid_body_state_tensor(env.sim)
+            ceil = torch.full((1,), ceil_m, device=env.device)
+            e_min, e_max = geo.link_y_extents_clipped(env, ceil)
+            v_min, v_max = geo.link_y_extents(env, z_ceiling=ceil)
+            # Compare only where BOTH forms are finite: a link with no point below
+            # the ceiling yields +/-inf in both, and inf - inf is not a measurement.
+            both_f = torch.isfinite(e_max) & torch.isfinite(v_max)
+            both_r = torch.isfinite(e_min) & torch.isfinite(v_min)
+            if bool(both_f.any()):
+                n_compared += 1
+                under = float((e_max - v_max)[both_f].max())
+                if under > worst_under:
+                    worst_under = under
+                    worst_at = "pitch=%.0f ceil=%.2f" % (pitch_deg, ceil_m)
+            if bool(both_r.any()):
+                rear = float((v_min - e_min)[both_r].max())
+                if rear > worst_rear:
+                    worst_rear = rear
+                    worst_rear_at = "pitch=%.0f ceil=%.2f" % (pitch_deg, ceil_m)
+    # The exact clip can only ADD points (edge crossings) to the vertex-only set,
+    # so it must always be >= the vertex-only front edge and <= its rear edge.
+    check("edge-crossing clip never under-reports the front vs vertex-only",
+          worst_under >= -1e-9 and n_compared > 0,
+          "worst slack=%+.6f mm over %d comparable frames"
+          % (worst_under * 1000.0, n_compared))
+    check("vertex-only clipping measurably under-reports the front edge",
+          worst_under > 1e-3,
+          "the superseded form lost up to %+.3f mm at %s"
+          % (worst_under * 1000.0, worst_at))
+    check("vertex-only clipping measurably under-reports the REAR extent too",
+          worst_rear > 1e-3,
+          "up to %+.3f mm at %s -- the robot looked SHORTER than it is"
+          % (worst_rear * 1000.0, worst_rear_at))
+
+    # ---- (4) per-wheel passage facts are exact and never over-claim ----
+    env._reset_dofs(ids)
+    env._reset_root_states(ids)
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    ws = geo.wheel_crossing_state(env)
+    check("wheel passage state has one column per wheel",
+          ws['interval_front'].shape == (env.num_envs, 2),
+          "shape=%s" % (tuple(ws['interval_front'].shape),))
+    check("wheel intervals are ordered (front <= rear)",
+          bool((ws['interval_front'] <= ws['interval_rear']).all()),
+          "front=%s rear=%s" % (ws['interval_front'][0].tolist(),
+                                ws['interval_rear'][0].tolist()))
+    # Standing next to the box: no wheel overlaps the footprint, so no danger.
+    check("a wheel standing beside the box is not in danger",
+          not bool(ws['danger'][0].any().item()),
+          "overlaps=%s above=%s danger=%s"
+          % (ws['overlaps_footprint'][0].tolist(),
+             ws['above_top'][0].tolist(), ws['danger'][0].tolist()))
+    # Proximity is NOT penetration: overlap alone must never be `danger`.
+    env.root_states[0, 1] = 0.130
+    env.root_states[0, 2] = 0.400
+    env.root_states[0, 7:13] = 0.0
+    env.gym.set_actor_root_state_tensor(
+        env.sim, gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    ws2 = geo.wheel_crossing_state(env)
+    gaps2 = geo.wheel_box_signed_gap(env)
+    check("wheel danger agrees with the analytic wheel/box gap",
+          bool(ws2['danger'][0].any().item()) == bool((gaps2[0] < 0.0).any().item()),
+          "danger=%s gap_min=%+.5f"
+          % (ws2['danger'][0].tolist(), float(gaps2[0].min())))
+    # A body part that flies ABOVE the box must not be called a collision risk,
+    # even though its horizontal projection overlaps the footprint.
+    env._reset_dofs(ids)
+    env._reset_root_states(ids)
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    # The wheel centres sit ~0.114 m AHEAD of the root, so "root over the box" is
+    # not "wheel over the box". Measure the offset instead of hard-coding it: it
+    # changes with the leg configuration.
+    wheel_y_off = float(env.rb_states[0, env.left_wheel_body, 1]
+                        - env.rb_states[0, 0, 1])
+    wheel_z_off = float(env.rb_states[0, env.left_wheel_body, 2]
+                        - env.rb_states[0, 0, 2])
+    box_mid_y = 0.5 * (float(obs_front[0]) + float(obs_rear[0]))
+    # Lift the robot until the wheel's LOWEST point is clear of the box top.
+    root_z_over = float(obs_top[0]) + 0.05 - wheel_z_off + geo.WHEEL_RADIUS
+    env.root_states[0, 1] = box_mid_y - wheel_y_off
+    env.root_states[0, 2] = root_z_over
+    env.root_states[0, 7:13] = 0.0
+    env.gym.set_actor_root_state_tensor(
+        env.sim, gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    ws3 = geo.wheel_crossing_state(env)
+    over = bool(ws3['overlaps_footprint'][0].any().item())
+    above = bool(ws3['above_top'][0].any().item())
+    danger = bool(ws3['danger'][0].any().item())
+    check("a wheel above the box top is NOT flagged dangerous",
+          over and above and not danger,
+          "overlaps_footprint=%s above_top=%s danger=%s bottom_z=%s top=%.4f"
+          % (ws3['overlaps_footprint'][0].tolist(),
+             ws3['above_top'][0].tolist(), ws3['danger'][0].tolist(),
+             [round(v, 4) for v in ws3['bottom_z'][0].tolist()],
+             float(obs_top[0])))
+    check("horizontal projection overlap is reported as proximity, not penetration",
+          over and not bool(env.has_obstacle_collision[0].item()),
+          "collision flag stays %s while merely above the box"
+          % bool(env.has_obstacle_collision[0]))
+    # And the mirror case: same horizontal position, wheel DOWN -> danger True.
+    env._reset_root_states(ids)
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    env.root_states[0, 1] = box_mid_y - wheel_y_off
+    env.root_states[0, 2] = 0.400
+    env.root_states[0, 7:13] = 0.0
+    env.gym.set_actor_root_state_tensor(
+        env.sim, gymtorch.unwrap_tensor(env.all_root_states.view(-1, 13).contiguous()))
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    ws4 = geo.wheel_crossing_state(env)
+    check("the same wheel over the box but BELOW the top is dangerous",
+          bool(ws4['overlaps_footprint'][0].any().item())
+          and not bool(ws4['above_top'][0].any().item())
+          and bool(ws4['danger'][0].any().item()),
+          "overlaps=%s above=%s danger=%s"
+          % (ws4['overlaps_footprint'][0].tolist(),
+             ws4['above_top'][0].tolist(), ws4['danger'][0].tolist()))
+
+    # ---- (5) every step publishes all four required records ----
+    env._reset_dofs(ids)
+    env._reset_root_states(ids)
+    env.gym.refresh_actor_root_state_tensor(env.sim)
+    env.gym.refresh_rigid_body_state_tensor(env.sim)
+    env.compute_obstacle_metrics()
+    layers = getattr(env, 'obstacle_layers', {})
+    required = ('wheel_front_y', 'wheel_rear_y', 'root_estimated_margin',
+                'has_obstacle_collision', 'whole_body_passed',
+                'approach_front_y', 'whole_body_rear_margin')
+    missing = [k for k in required if k not in layers]
+    check("each step publishes wheels / root / contact / whole-body records",
+          not missing,
+          "missing=%s (published %d keys)" % (missing, len(layers)))
+    for key in required:
+        if key not in layers:
+            continue
+    check("the published root estimate is labelled as an estimate, not an envelope",
+          'root_estimated_rear_y' in layers and 'whole_body_rear_y' in layers,
+          "both keys present so a reader cannot confuse them")
+    # The root-based estimate and the geometric envelope must be close on the
+    # ground (sanity) but come from different sources.
+    check("root-based margin is a kinematic cross-check, not the geometric rear",
+          abs(float(layers['root_estimated_margin'][0])
+              - float(layers['whole_body_rear_margin'][0])) < 0.05,
+          "root=%.4f geometric=%.4f"
+          % (float(layers['root_estimated_margin'][0]),
+             float(layers['whole_body_rear_margin'][0])))
+
+    env.reset_idx(ids)
+
+
 def main():
     print("=" * 78)
     print("obstacle-jump task semantics: counter-example tests")
@@ -998,6 +1515,8 @@ def main():
     test_geometry(env)
     test_geometry_counter_examples(env)
     test_per_env_obstacle_state(env)
+    test_task_liftoff_latch(env)
+    test_separated_envelopes(env)
 
     print("\n" + "=" * 78)
     print("PASSED %d / %d" % (len(PASS), len(PASS) + len(FAIL)))

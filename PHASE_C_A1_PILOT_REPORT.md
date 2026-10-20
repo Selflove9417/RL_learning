@@ -7,7 +7,7 @@
 
 1. Phase B 代码已推送到远程独立分支，提交可查（见 §1）。
 2. 8 项训练准入 **36/36 PASS**，其中 GPU pipeline 下 PPO 数据链路完整可用，且训练路径不依赖只在 CPU pipeline 可用的接触对接口。
-3. Pilot 跑完 10 iterations，无 NaN/Inf，**但 2 次触发内建 KL 早停**（iteration 4 与 8，各在 8/20 次更新后停止）。
+3. Pilot 跑完 10 iterations，无 NaN/Inf，**但 2 次触发内建 KL 早停**（iteration **5 与 9**，各在 8/20 次更新后停止。Phase D §5 更正了此处原写的「4 与 8」：`diagnostics.json` 用的是 1-based iteration，训练日志表头是 0-based，两者相差 1）。
 4. 冻结前后对照：**碰撞率 8/8 → 3/8，离地前向速度 0.258 → 0.390 m/s（0.74 → 1.11 × 指令速度），腾空位移反而略降 0.176 → 0.169 m**。完整通过成功率**两臂都是 0/8**。
 5. 查出**两个真实缺陷**，它们使本轮的两个「改善」指标不可直接采信、也使其中的一个「失败」指标完全是假阳性：
    - **缺陷 B**：`CROSSED_WITHOUT_LIFTOFF` 在机器人**已经完整完成一次跳跃之后**误触发（AFTER 的 5/8「失败」全是这个假阳性）。
@@ -145,6 +145,8 @@ cd X && source ./activate_jump.sh && LOG=/tmp/... && python train.py ... &
 
 `&` 把整条 `&&` 链放进子 shell，父 shell 的 `$LOG` 是空串，于是后续 `grep "$LOG"` 静默失败（`grep: : 没有那个文件或目录`），看门狗从未真正检查日志。
 **后果**：iteration 5 与 9 的早停没有被看门狗捕捉并中断训练。**但这两次早停是 PPO 内建 KL 保护触发的，按设计只会截断该 iteration 的参数更新次数，不会让训练崩坏**；训练本身 10 iterations 干净收尾（`TRAIN_EXIT=0`），所以我**没有重跑**，以免浪费一个已经合规完成的 run。正确写法是把 `LOG=` 放在 `&` 之前单独赋值，或用字面路径。
+
+> **Phase D 跟进**：该类 shell 引用失败已被 `scripts/train_watchdog.py` 结构性消除（训练命令作为 argv 尾部传入，不经过 `source`/`&&`；日志路径启动前解析为绝对路径并验证存在且在增长）。回归测试 `tests/test_train_watchdog.py` **41/41 PASS**，并用 Phase C 的真实训练日志复核：正确解析全部 10 次 iteration 并识别出这 2 次早停。
 
 ---
 

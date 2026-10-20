@@ -671,3 +671,277 @@ def wheel_clearance_above_box_top(env, samples=65):
                            torch.full_like(z_min, float('inf')))
         clearances.append(cand.min(dim=1).values)
     return torch.stack(clearances, dim=1)
+
+
+# ---------------------------------------------------------------------------
+# SEPARATED envelopes (Phase D, defect A)
+# ---------------------------------------------------------------------------
+# Defect A was that ONE envelope -- the hull support cloud clipped at the box top
+# -- was simultaneously used for (a) the approach trigger, (b) the "cleared the
+# box" test and (c) the mission-success test. Those three questions have
+# different answers, and forcing one number to answer all of them produced two
+# measurable errors:
+#
+#   1. The clipped rear edge is ~0.25 m AHEAD of the whole-body rear edge
+#      (measured +0.0466 vs -0.2089 relative to the root), so "cleared the box"
+#      was ~0.25 m looser than it claimed to be.
+#   2. While airborne, every body point sat above the 5 cm plane, nothing
+#      survived the clip, and the code fell back to `rb_states[:, 0, 1]`
+#      (the root Y). That made front_y == rear_y == root_y for the whole flight,
+#      which silently corrupted the takeoff snapshot.
+#
+# The three functions below replace that. They are deliberately separate and
+# none of them falls back to the root position.
+
+def _hull_edges_from_points(full):
+    """Unique undirected convex-hull edges, as indices into the hull vertex array."""
+    try:
+        from scipy.spatial import ConvexHull
+    except ImportError:                       # pragma: no cover - scipy is present
+        return np.zeros((0, 2), dtype=np.int32)
+    if full.shape[0] <= 4:
+        return np.zeros((0, 2), dtype=np.int32)
+    hull = ConvexHull(full)
+    keep = np.unique(hull.vertices)
+    remap = {int(v): i for i, v in enumerate(keep)}
+    edges = set()
+    for tri in hull.simplices:
+        for a, b in ((0, 1), (1, 2), (2, 0)):
+            va, vb = remap[int(tri[a])], remap[int(tri[b])]
+            edges.add((va, vb) if va < vb else (vb, va))
+    return np.array(sorted(edges), dtype=np.int32).reshape(-1, 2)
+
+
+@lru_cache(maxsize=4)
+def urdf_link_hull_edges(urdf_path):
+    """{link: (E, 2) int32} hull edges, indexed identically to
+    `urdf_link_vertex_cloud`.
+
+    The two functions repeat the same deterministic parse and the same
+    `np.unique(ConvexHull(...).vertices)` ordering, so index `i` means the same
+    physical vertex in both.
+    """
+    mesh_root = os.path.dirname(os.path.abspath(urdf_path))
+    root = ET.parse(urdf_path).getroot()
+    out = {}
+    for link in root.findall('link'):
+        name = link.get('name')
+        clouds = []
+        for coll in link.findall('collision'):
+            origin = coll.find('origin')
+            xyz = np.zeros(3)
+            rot = np.eye(3)
+            if origin is not None:
+                if origin.get('xyz'):
+                    xyz = np.array([float(v) for v in origin.get('xyz').split()])
+                if origin.get('rpy'):
+                    rot = rpy_to_matrix([float(v) for v in origin.get('rpy').split()])
+            geom_node = coll.find('geometry')
+            if geom_node is None or len(geom_node) == 0:
+                continue
+            geom = geom_node[0]
+            if geom.tag == 'mesh':
+                scale = np.ones(3)
+                if geom.get('scale'):
+                    scale = np.array([float(v) for v in geom.get('scale').split()])
+                verts = _stl_vertices(os.path.join(mesh_root, geom.get('filename'))) * scale
+            else:
+                verts = _primitive_vertices(geom)
+            clouds.append(verts @ rot.T + xyz)
+        if not clouds:
+            continue
+        full = np.concatenate(clouds, axis=0)
+        out[name] = _hull_edges_from_points(full)
+    return out
+
+
+def register_link_edges(env, urdf_path):
+    """Attach padded hull-edge indices to `env` (companion to register_link_points).
+
+    Sets:
+        env.link_edge_index : (B, Emax, 2) long -- indices into link_point_cloud
+        env.link_edge_mask  : (B, Emax) bool
+    """
+    if not hasattr(env, 'link_names'):
+        return None
+    edges = urdf_link_hull_edges(urdf_path)
+    names = env.link_names
+    max_e = max([len(edges.get(n, ())) for n in names] + [1])
+    idx = torch.zeros(len(names), max_e, 2, device=env.device, dtype=torch.long)
+    msk = torch.zeros(len(names), max_e, device=env.device, dtype=torch.bool)
+    for b, name in enumerate(names):
+        e = edges.get(name)
+        if e is None or len(e) == 0:
+            continue
+        idx[b, :len(e), :] = torch.from_numpy(e).to(env.device)
+        msk[b, :len(e)] = True
+    env.link_edge_index = idx
+    env.link_edge_mask = msk
+    return idx
+
+
+def link_y_extents_clipped(env, z_ceiling):
+    """World Y extent of each link's CONVEX HULL intersected with `z <= ceiling`.
+
+    Why this is not `mask the vertices by z`
+    ----------------------------------------
+    Filtering hull VERTICES by `z <= ceiling` and taking their Y extremes can
+    UNDER-estimate the true front edge: the forwardmost point of the cut solid is
+    generally where a hull EDGE crosses the plane, and that point is not a
+    vertex.  Since a shorter front edge makes the robot look farther from the box
+    than it is, that error delays the trigger -- it is the unsafe direction.
+
+    The intersection of a convex polytope with a half-space is again a convex
+    polytope whose vertices are exactly
+        {vertices with z <= ceiling}  U  {edge/plane crossing points}.
+    So including the crossing points makes this the EXACT Y extent of
+    `hull ∩ {z <= ceiling}` -- no sampling, no direction set, no clipping
+    approximation.
+
+    Scope of the word "exact"
+    -------------------------
+    This is exact for the CONVEX HULL of the collision vertices. The hull is a
+    superset of the true (non-convex) meshes, so as an envelope of the physical
+    geometry it is conservative (it can only make the robot look bigger), never
+    optimistic. It is NOT a penetration depth and NOT a measure of the actual
+    mesh surface.
+
+    Returns (min_y, max_y) shaped (N, num_bodies); emptied bodies get +inf/-inf.
+    """
+    rb = env.rb_states
+    R = quat_to_matrix(rb[:, :, 3:7].reshape(-1, 4)).view(
+        rb.shape[0], rb.shape[1], 3, 3)
+    pts = env.link_point_cloud                       # (B, K, 3)
+    world = torch.einsum('nbij,bkj->nbki', R, pts) + rb[:, :, None, 0:3]
+    point_mask = getattr(env, 'link_point_mask', None)
+    if point_mask is None:
+        point_mask = env.link_point_valid.view(-1, 1).expand(-1, pts.shape[1])
+    ceil = z_ceiling.view(-1, 1, 1)
+    ys = world[..., 1]
+
+    below = point_mask.unsqueeze(0).expand(world.shape[0], -1, -1) & (world[..., 2] <= ceil)
+    min_y = ys.masked_fill(~below, float('inf')).min(dim=2).values
+    max_y = ys.masked_fill(~below, float('-inf')).max(dim=2).values
+
+    edge_index = getattr(env, 'link_edge_index', None)
+    if edge_index is not None:
+        edge_mask = env.link_edge_mask                     # (B, E)
+        # `world` is (N, B, K, 3) and the gather runs along the K axis, so the
+        # index must be (N, B, E, 3) with the same vertex index in every
+        # component -- gather selects a whole vertex, not one coordinate.
+        shp = (world.shape[0], edge_index.shape[0], edge_index.shape[1], 3)
+        ia = edge_index[..., 0].view(1, *shp[1:3], 1).expand(shp)
+        ib = edge_index[..., 1].view(1, *shp[1:3], 1).expand(shp)
+        a = torch.gather(world, 2, ia)
+        b = torch.gather(world, 2, ib)
+        za, zb = a[..., 2], b[..., 2]
+        planar_ceil = z_ceiling.view(-1, 1, 1)
+        straddles = ((za - planar_ceil) * (zb - planar_ceil)) <= 0.0
+        denom = zb - za
+        safe = torch.where(denom.abs() > 1e-12, denom,
+                           torch.full_like(denom, 1e-12))
+        t = torch.clamp((planar_ceil - za) / safe, 0.0, 1.0)
+        cross_y = a[..., 1] + t * (b[..., 1] - a[..., 1])
+        em = edge_mask.unsqueeze(0).expand(world.shape[0], -1, -1) & straddles
+        min_y = torch.minimum(min_y, cross_y.masked_fill(~em, float('inf')).min(dim=2).values)
+        max_y = torch.maximum(max_y, cross_y.masked_fill(~em, float('-inf')).max(dim=2).values)
+    return min_y, max_y
+
+
+def approach_envelope(env):
+    """APPROACH TRIGGER envelope: only geometry that could actually hit the box.
+
+    This answers exactly one question -- "how far is the frontmost solid that can
+    reach the obstacle at its current height?" -- and nothing else. It must never
+    be reused for a "cleared the box" decision: the rear edge of a height-limited
+    envelope is the rear of the LOW parts, not of the robot.
+
+    There is no root-position fallback. If nothing is low enough to touch the box
+    (`could_reach` False), there is no meaningful distance and the caller must
+    not treat the robot as the root point.
+
+    Returns dict with front_y, rear_y, front_body, could_reach, exact_wheels.
+    """
+    _, _, top_z = obstacle_y_interval(env)
+    min_y, max_y = link_y_extents_clipped(env, top_z)
+    iv = wheel_forward_intervals(env)
+    bottom = wheel_bottom_zs(env)
+    for col, body in ((0, env.left_wheel_body), (1, env.right_wheel_body)):
+        ok = bottom[:, col] <= top_z
+        min_y[:, body] = torch.where(ok, iv[:, 2 * col],
+                                     torch.full_like(iv[:, 2 * col], float('inf')))
+        max_y[:, body] = torch.where(ok, iv[:, 2 * col + 1],
+                                     torch.full_like(iv[:, 2 * col + 1], float('-inf')))
+    front_y, front_body = max_y.max(dim=1)
+    rear_y = min_y.min(dim=1).values
+    return {
+        'front_y': front_y,
+        'rear_y': rear_y,
+        'front_body': front_body,
+        'could_reach': torch.isfinite(front_y),
+        'exact_wheels': iv,
+        'source': 'clipped_hull+analytic_wheels',
+    }
+
+
+def whole_body_interval(env):
+    """WHOLE-BODY envelope: the full hull, no height clip, no fallback.
+
+    Used only for "has the robot completely left the obstacle region", which is a
+    fact about the whole machine and must not be confused with "can the frontmost
+    low part reach the box".
+
+    Because the object is the convex hull of the collision vertices, its Y extent
+    is EXACT for that hull under any rotation (a linear functional attains its
+    extremes at hull vertices). As a bound on the non-convex meshes it is a
+    conservative outer bound -- it can make the robot look longer, never shorter.
+    """
+    min_y, max_y = link_y_extents(env, z_ceiling=None)
+    iv = wheel_forward_intervals(env)
+    for col, body in ((0, env.left_wheel_body), (1, env.right_wheel_body)):
+        min_y[:, body] = iv[:, 2 * col]
+        max_y[:, body] = iv[:, 2 * col + 1]
+    front_y, front_body = max_y.max(dim=1)
+    rear_y = min_y.min(dim=1).values
+    return {
+        'front_y': front_y,
+        'rear_y': rear_y,
+        'front_body': front_body,
+        'source': 'full_hull+analytic_wheels',
+    }
+
+
+def wheel_crossing_state(env):
+    """Per-wheel passage facts, from exact analytic wheel envelopes.
+
+    Returns dict of (N, 2) tensors (column 0 = left wheel, 1 = right wheel):
+        interval_front, interval_rear : world Y interval of the wheel solid
+        bottom_z                      : lowest world Z of the wheel solid
+        overlaps_footprint            : wheel Y interval overlaps [box_front, box_rear]
+        above_top                     : lowest point at or above the box top plane
+        passed_rear                   : the whole wheel is beyond the box rear face
+        danger                        : overlaps the footprint AND is below the top
+
+    `danger` is the only predicate that means "this wheel could hit the box while
+    over it". `overlaps_footprint` alone is proximity, not penetration, and must
+    never be reported as a collision.
+    """
+    box_front, box_rear, box_top = obstacle_y_interval(env)
+    iv = wheel_forward_intervals(env)
+    lo = iv[:, [0, 2]]
+    hi = iv[:, [1, 3]]
+    bottom = wheel_bottom_zs(env)
+    overlaps = (hi >= box_front[:, None]) & (lo <= box_rear[:, None])
+    above = bottom >= box_top[:, None]
+    return {
+        'interval_front': lo,
+        'interval_rear': hi,
+        'bottom_z': bottom,
+        'overlaps_footprint': overlaps,
+        'above_top': above,
+        'passed_rear': lo > box_rear[:, None],
+        'danger': overlaps & (~above),
+        'box_front': box_front,
+        'box_rear': box_rear,
+        'box_top': box_top,
+    }
