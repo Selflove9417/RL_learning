@@ -394,7 +394,11 @@ seed 27: trigger=33 liftoff=40 touchdown=61 first_contact=66   ← 落地后才�
 ## 7. 提交信息
 
 - 基线：`d245fef980e2cf7fd0b40ada1b924e24fb6940c4`
-- 交付 SHA：见本报告提交后由 `git rev-parse HEAD` 给出（同一提交内含本报告与全部源码/测试/JSON）
+- 分支：`feat/dynamic-obstacle-clearing-jump`
+- **交付提交 SHA：`2eccf1c303b477068c8562421c1ac9bf88ec5805`**
+  已推送至 `origin/feat/dynamic-obstacle-clearing-jump`（`git ls-remote` 校验一致）。
+  该提交内含全部源码改动、4 个新测试脚本、3 个原始 JSON，以及本报告。
+- 远端校验命令：`git ls-remote --heads origin feat/dynamic-obstacle-clearing-jump`
 
 ---
 
