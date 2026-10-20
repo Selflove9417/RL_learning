@@ -1,0 +1,95 @@
+{
+  "baseline_commit": "a5a05ed234d15f7eca52d9eb73906d5e2a603e2e",
+  "status": "NOT_ADMITTED",
+  "probe_sha256": "063c12ed120e84d4141b1e6b84d6d5c38a905f46cb39552d3f927288747d9c58",
+  "gate_sha256": "a9d33ef73beae4e5bae03acd57c3f1edf5b4f017841854b10b54755e7f10aad7",
+  "runs": [
+    {
+      "run": 1,
+      "seed": 11,
+      "status": "FAIL",
+      "observed_process_exit_code": 1,
+      "evidence": "evaluation_assets/phaseD2/run1_gpu.json",
+      "sha256": "ab3f565b4ec1fddcc7869960d21078acd8bc134d6c94ee19d1166b11bfde72d4",
+      "root_z_env0_after_reset": 0.4155171811580658,
+      "env0_peer_delta_mm": 16.870737075805664,
+      "first_termination_step": 13,
+      "termination_env_id": 0,
+      "physical_fall": true,
+      "terminal_pitch_deg": -45.48533741918727,
+      "task_failure_reason": "NONE",
+      "terminated_env_ids": [
+        0
+      ],
+      "leg_only_env_ids": [
+        0
+      ],
+      "all_transitions": 1600,
+      "env0_actor_mask_sum": 0.0,
+      "all_actor_mask_sum": 0.0,
+      "reset_calls": 1,
+      "policy_weights_unchanged": true,
+      "optimizer_steps_before": 0,
+      "optimizer_steps_after": 0,
+      "validation_errors": []
+    },
+    {
+      "run": 2,
+      "seed": 11,
+      "status": "FAIL",
+      "observed_process_exit_code": 1,
+      "evidence": "evaluation_assets/phaseD2/run2_gpu.json",
+      "sha256": "8cbe81994d9478dbeedc3f26b0e128777e22ca4c7e6aa3a644aaca229494146e",
+      "root_z_env0_after_reset": 0.4155171811580658,
+      "env0_peer_delta_mm": 16.870737075805664,
+      "first_termination_step": 13,
+      "termination_env_id": 0,
+      "physical_fall": true,
+      "terminal_pitch_deg": -45.48533741918727,
+      "task_failure_reason": "NONE",
+      "terminated_env_ids": [
+        0
+      ],
+      "leg_only_env_ids": [
+        0
+      ],
+      "all_transitions": 1600,
+      "env0_actor_mask_sum": 0.0,
+      "all_actor_mask_sum": 0.0,
+      "reset_calls": 1,
+      "policy_weights_unchanged": true,
+      "optimizer_steps_before": 0,
+      "optimizer_steps_after": 0,
+      "validation_errors": []
+    },
+    {
+      "run": 3,
+      "seed": 11,
+      "status": "FAIL",
+      "observed_process_exit_code": 1,
+      "evidence": "evaluation_assets/phaseD2/run3_gpu.json",
+      "sha256": "3ea86d35c28951be479ac40589110ff2c210239e92ea1f6d6a0bbd6b7cd0ee51",
+      "root_z_env0_after_reset": 0.4155171811580658,
+      "env0_peer_delta_mm": 16.870737075805664,
+      "first_termination_step": 13,
+      "termination_env_id": 0,
+      "physical_fall": true,
+      "terminal_pitch_deg": -45.48533741918727,
+      "task_failure_reason": "NONE",
+      "terminated_env_ids": [
+        0
+      ],
+      "leg_only_env_ids": [
+        0
+      ],
+      "all_transitions": 1600,
+      "env0_actor_mask_sum": 0.0,
+      "all_actor_mask_sum": 0.0,
+      "reset_calls": 1,
+      "policy_weights_unchanged": true,
+      "optimizer_steps_before": 0,
+      "optimizer_steps_after": 0,
+      "validation_errors": []
+    }
+  ]
+}

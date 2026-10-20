@@ -39,7 +39,12 @@ Run from the repository root, after `source ./activate_jump.sh`:
     python tests/verify_training_init_chain.py --pipeline gpu --num_envs 64
 """
 
+import argparse
+import hashlib
 import json
+import math
+import traceback
+from datetime import datetime, timezone
 import os
 import sys
 
@@ -51,6 +56,7 @@ import torch
 
 from legged_gym.envs import MyRobotObstacleJump  # noqa: F401
 from legged_gym.utils import get_args, task_registry
+from training_init_gate import evaluate, EXIT_CODES
 
 WORKSPACE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -97,20 +103,75 @@ def body_contacts(env, threshold=1.0):
 
 
 def main():
-    pipeline = 'gpu'
-    num_envs = 64
-    for i, tok in enumerate(sys.argv):
-        if tok == '--pipeline' and i + 1 < len(sys.argv):
-            pipeline = sys.argv[i + 1]
-        if tok == '--num_envs' and i + 1 < len(sys.argv):
-            num_envs = int(sys.argv[i + 1])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--pipeline', choices=('gpu', 'cpu'), default='gpu')
+    parser.add_argument('--num_envs', type=int, default=64)
+    parser.add_argument('--seed', type=int, default=11)
+    parser.add_argument('--out', help='new evidence file; existing files are never overwritten')
+    options = parser.parse_args()
+    pipeline, num_envs = options.pipeline, options.num_envs
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    path = options.out or os.path.join(
+        WORKSPACE, 'evaluation_assets', 'phaseD2', 'init_%s_%s.json' % (pipeline, stamp))
+    if os.path.exists(path):
+        parser.error('refusing to overwrite existing evidence: %s' % path)
+    evidence = {'pipeline': pipeline, 'num_envs': num_envs, 'seed': options.seed,
+                'started_utc': stamp, 'frames': [], 'validation_errors': []}
+    try:
+        collect(evidence, options)
+    except Exception as exc:
+        traceback.print_exc()
+        evidence['runtime_error'] = '%s: %s' % (type(exc).__name__, exc)
+    evidence['verdict'] = evaluate(evidence)
+    # Preserve non-finite failures as JSON nulls; validation_errors retains their location.
+    def finite_json(value):
+        if isinstance(value, float) and not math.isfinite(value):
+            return None
+        if isinstance(value, list):
+            return [finite_json(v) for v in value]
+        if isinstance(value, dict):
+            return {k: finite_json(v) for k, v in value.items()}
+        return value
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, 'x') as fh:
+        json.dump(finite_json(evidence), fh, allow_nan=False)
+    print('raw JSON: %s' % path)
+    print('ADMISSION %s: %s' % (evidence['verdict']['status'], evidence['verdict']['reasons']))
+    return EXIT_CODES[evidence['verdict']['status']]
 
+
+def collect(evidence, options):
+    pipeline, num_envs = options.pipeline, options.num_envs
     print('=' * 78)
     print('TRAINING INITIALISATION CHAIN -- pipeline=%s num_envs=%d' % (pipeline, num_envs))
     print('reproduces train.py: make_env -> make_alg_runner (__init__ calls env.reset())')
     print('=' * 78)
 
-    env, runner, train_cfg, args = build(num_envs, pipeline)
+    # Count actual calls without changing reset behavior or adding a reset.
+    from legged_gym.envs.base.base_task import BaseTask
+    original_reset = BaseTask.reset
+    reset_calls = []
+    def counted_reset(self):
+        reset_calls.append(True)
+        return original_reset(self)
+    BaseTask.reset = counted_reset
+    try:
+        env, runner, train_cfg, args = build(num_envs, pipeline, options.seed)
+    finally:
+        BaseTask.reset = original_reset
+    evidence['reset_calls'] = len(reset_calls)
+    evidence['probe_sha256'] = hashlib.sha256(open(__file__, 'rb').read()).hexdigest()
+    evidence['gate_sha256'] = hashlib.sha256(open(
+        os.path.join(os.path.dirname(__file__), 'training_init_gate.py'), 'rb').read()).hexdigest()
+    evidence['initial_state'] = {
+        'root_states': env.root_states.tolist(),
+        'wheel_normal_forces': env.contact_forces[:, env.feet_indices, 2].tolist(),
+        'root_z_relative_to_peers': (env.root_states[:, 2] - env.root_states[1:, 2].median()).tolist(),
+    }
+    policy_before = {k: v.clone() for k, v in runner.alg.actor_critic.state_dict().items()}
+    def optimizer_steps():
+        return sum(float(v.get('step', 0)) for v in runner.alg.optimizer.state.values())
+    evidence['optimizer_steps_before'] = optimizer_steps()
     print('env.device            = %s' % env.device)
     print('runner.device         = %s' % runner.device)
     print('num_envs / obs / act  = %d / %d / %d'
@@ -148,13 +209,87 @@ def main():
                                     dtype=torch.long)
 
     early_reset_step = None
+    def tensor_check(name, tensor, shape, step):
+        if tensor is None:
+            evidence['validation_errors'].append('%s absent at %s' % (name, step))
+            return
+        if tuple(tensor.shape) != shape or not bool(torch.isfinite(tensor).all()):
+            evidence['validation_errors'].append('%s invalid shape/nonfinite at %s: %s'
+                                                 % (name, step, tuple(tensor.shape)))
+
     with torch.inference_mode():
         for step_i in range(25):
+            tensor_check('input observations', obs, (num_envs, 35), step_i)
+            tensor_check('input critic observations', critic_obs, (num_envs, 35), step_i)
+            input_obs, input_critic = obs.clone(), critic_obs.clone()
             actions = alg.act(obs, critic_obs)
+            tensor_check('actions', actions, (num_envs, 6), step_i)
+            input_actions = actions.clone()
             obs, priv, rewards, dones, infos = env.step(actions)
-            obs, critic_obs = obs.to(runner.device), priv.to(runner.device)
+            critic_obs = priv if priv is not None else obs
+            obs, critic_obs = obs.to(runner.device), critic_obs.to(runner.device)
             rewards, dones = rewards.to(runner.device), dones.to(runner.device)
+            for name, value, shape in (
+                    ('observations', obs, (num_envs, 35)),
+                    ('critic observations', critic_obs, (num_envs, 35)),
+                    ('rewards', rewards, (num_envs,)),
+                    ('dones', dones, (num_envs,)),
+                    ('actor_loss_mask', infos.get('actor_loss_mask'), (num_envs,)),
+                    ('time_outs', infos.get('time_outs'), (num_envs,)),
+                    ('terminal_observation', infos.get('terminal_observation'), (num_envs, 35))):
+                tensor_check(name, value, shape, step_i)
             alg.process_env_step(rewards, dones, infos)
+            st = alg.storage
+            for name in ('observations', 'privileged_observations', 'actions',
+                         'rewards', 'values', 'actions_log_prob', 'actor_masks'):
+                value = getattr(st, name)[step_i]
+                if not bool(torch.isfinite(value).all()):
+                    evidence['validation_errors'].append('stored %s nonfinite at %d' % (name, step_i))
+            mask = infos.get('actor_loss_mask')
+            if mask is not None:
+                if not bool(((mask == 0) | (mask == 1)).all()):
+                    evidence['validation_errors'].append('actor mask not binary at %d' % step_i)
+                if not torch.equal(st.actor_masks[step_i].flatten(), mask.to(st.device).flatten()):
+                    evidence['validation_errors'].append('actor mask storage mismatch at %d' % step_i)
+            if not torch.equal(st.observations[step_i], input_obs):
+                evidence['validation_errors'].append('input observation storage mismatch at %d' % step_i)
+            if not torch.equal(st.actions[step_i], input_actions):
+                evidence['validation_errors'].append('action storage mismatch at %d' % step_i)
+            if not torch.equal(st.privileged_observations[step_i], input_critic):
+                evidence['validation_errors'].append('critic observation storage mismatch at %d' % step_i)
+            wheel_forces = env.contact_forces[:, foot_indices, 2]
+            leg_loaded = (torch.norm(env.contact_forces[:, leg_indices, :], dim=-1) > 1.0).any(dim=1)
+            wheels_loaded = (wheel_forces > 20.0)
+            leg_only = leg_loaded & (~wheels_loaded.any(dim=1))
+            supported = wheels_loaded.all(dim=1) & (~leg_loaded) & (~dones.bool())
+            ids = lambda value: value.nonzero(as_tuple=False).flatten().tolist()
+            terminal_ids = ids(dones.bool())
+            snap = env.episode_snapshot
+            terminal = [{
+                'env_id': i, 'snapshot_valid': bool(snap['valid'][i]),
+                'fell': bool(snap['fell'][i]), 'reason': snap['failure_reason'][i],
+                'root_z_before_reset': float(snap['root_z'][i]),
+                'roll_rad_before_reset': float(snap['roll_rad'][i]),
+                'pitch_rad_before_reset': float(snap['pitch_rad'][i]),
+                'terminal_observation': infos['terminal_observation'][i].tolist(),
+            } for i in terminal_ids]
+            evidence['frames'].append({
+                'step': step_i, 'storage_step': st.step,
+                'root_states': env.root_states.tolist(),
+                'state_timing': 'post-step; root states are post-reset for done envs; see terminal',
+                'observations': input_obs.tolist(),
+                'critic_observations_equal_actor': bool(torch.equal(input_obs, input_critic)),
+                'critic_observations': None if torch.equal(input_obs, input_critic) else input_critic.tolist(),
+                'actions': input_actions.tolist(), 'rewards': rewards.tolist(),
+                'stored_rewards': st.rewards[step_i].flatten().tolist(),
+                'actor_loss_mask': None if mask is None else mask.tolist(),
+                'stored_actor_masks': st.actor_masks[step_i].flatten().tolist(),
+                'time_outs': infos['time_outs'].tolist(),
+                'wheel_normal_forces': wheel_forces.tolist(),
+                'leg_loaded': leg_loaded.tolist(),
+                'done_env_ids': terminal_ids, 'leg_only_env_ids': ids(leg_only),
+                'supported_env_ids': ids(supported), 'terminal': terminal,
+            })
 
             if per_env_first_z is None:
                 per_env_first_z = env.root_states[:, 2].clone()
@@ -185,6 +320,11 @@ def main():
             print('  step %2d  z=%.5f  qy=%+.5f  v=%+.4f  legC=%d  footC=%d%s'
                   % (step_i, z, pitch, vfwd, n_leg, n_foot,
                      '   <-- DONE' if done0 else ''))
+
+    evidence['policy_weights_unchanged'] = all(
+        torch.equal(value, policy_before[name])
+        for name, value in runner.alg.actor_critic.state_dict().items())
+    evidence['optimizer_steps_after'] = optimizer_steps()
 
     # ---- verdict ---------------------------------------------------------
     first = rows[0]
@@ -240,13 +380,7 @@ def main():
         'standing_on_wheels_first_step': (first['foot_contacts'] > 0
                                           and first['leg_contacts'] == 0),
     }
-    path = os.path.join(WORKSPACE, 'evaluation_assets',
-                        'training_init_chain_%s.json' % pipeline)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w') as fh:
-        json.dump(out, fh, indent=2)
-    print('raw JSON: %s' % path)
-    return 0
+    evidence['legacy_diagnostics'] = out
 
 
 if __name__ == '__main__':
