@@ -1,0 +1,132 @@
+Importing module 'gym_38' (/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 1.10.0+cu113
+Device count 1
+/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions as PyTorch extensions root...
+Emitting ninja build file /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions/gymtorch/build.ninja...
+Building extension module gymtorch...
+Using envvar MAX_JOBS (2) as the number of workers...
+ninja: no work to do.
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: enabled
+/home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/env/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Loading extension module gymtorch...
+==============================================================================
+TRAINING INITIALISATION CHAIN -- pipeline=gpu num_envs=64
+reproduces train.py: make_env -> make_alg_runner (__init__ calls env.reset())
+==============================================================================
+Setting seed: 11
+Actor MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Actor MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Actor MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Warm starting model weights from: legged_gym/logs/myrobot_running_jump/Oct19_21-52-03_running_jump_020ms_iter3_controlled/model_3.pt (load_optimizer=False)
+env.device            = cuda:0
+runner.device         = cuda:0
+num_envs / obs / act  = 64 / 35 / 6
+max_episode_length    = 200
+
+[after OnPolicyRunner.__init__ -> env.reset()]
+  env0 root_z = 0.397936 (nominal base 0.400000)
+  env0 rb base z = 0.397936
+  step  0  z=0.39498  qy=+0.00020  v=-0.0116  legC=0  footC=2
+  step  1  z=0.39287  qy=-0.00026  v=-0.0151  legC=0  footC=2
+  step  2  z=0.39172  qy=-0.00036  v=-0.0160  legC=0  footC=2
+  step  3  z=0.39155  qy=-0.00004  v=-0.0143  legC=0  footC=2
+  step  4  z=0.39189  qy=-0.00010  v=-0.0113  legC=0  footC=2
+  step  5  z=0.39254  qy=-0.00029  v=-0.0075  legC=0  footC=2
+  step  6  z=0.39345  qy=-0.00015  v=-0.0031  legC=0  footC=2
+  step  7  z=0.39444  qy=-0.00004  v=+0.0023  legC=0  footC=2
+  step  8  z=0.39533  qy=-0.00017  v=+0.0084  legC=0  footC=2
+  step  9  z=0.39623  qy=-0.00018  v=+0.0155  legC=0  footC=2
+  step 10  z=0.39712  qy=-0.00008  v=+0.0234  legC=0  footC=2
+  step 11  z=0.39794  qy=-0.00010  v=+0.0323  legC=0  footC=2
+  step 12  z=0.39870  qy=-0.00016  v=+0.0420  legC=0  footC=2
+  step 13  z=0.39946  qy=-0.00012  v=+0.0526  legC=0  footC=2
+  step 14  z=0.40019  qy=-0.00009  v=+0.0642  legC=0  footC=2
+  step 15  z=0.40086  qy=-0.00013  v=+0.0764  legC=0  footC=2
+  step 16  z=0.40153  qy=-0.00014  v=+0.0895  legC=0  footC=2
+  step 17  z=0.40218  qy=-0.00010  v=+0.1032  legC=0  footC=2
+  step 18  z=0.40280  qy=-0.00011  v=+0.1177  legC=0  footC=2
+  step 19  z=0.40340  qy=-0.00013  v=+0.1328  legC=0  footC=2
+  step 20  z=0.40399  qy=-0.00011  v=+0.1484  legC=0  footC=2
+  step 21  z=0.40461  qy=-0.00010  v=+0.1641  legC=0  footC=2
+  step 22  z=0.40526  qy=-0.00011  v=+0.1798  legC=0  footC=2
+  step 23  z=0.40591  qy=-0.00012  v=+0.1955  legC=0  footC=2
+  step 24  z=0.40653  qy=-0.00011  v=+0.2108  legC=0  footC=2
+
+==============================================================================
+ENV0 FIRST-STEP CONTACT / ATTITUDE
+  root_z after 1 PPO step = 0.394980
+  leg contacts = 0   foot(wheel) contacts = 2
+  standing on wheels = True
+
+TERMINATION
+  first done step = none in 25 steps
+  total done steps in 25 = 0
+  env0 episode lengths observed: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+
+SCOPE ACROSS ALL 64 ENVS
+  envs with |root_z - 0.400| > 1e-4 right after runner.__init__ reset: 64
+    affected env ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    their z values  : [0.39794, 0.39795, 0.39791, 0.39789, 0.39792, 0.39791, 0.39795, 0.39791, 0.39788, 0.39789, 0.39789, 0.39794, 0.39788, 0.39789, 0.39794, 0.3979]
+  envs whose FIRST trainer frame is off-nominal: 64
+  envs that terminated within 25 steps: 0 (ids=[])
+==============================================================================
+raw JSON: evaluation_assets/phaseD3/final1_gpu.json
+ADMISSION PASS: []

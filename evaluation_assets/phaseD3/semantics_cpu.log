@@ -1,0 +1,237 @@
+Importing module 'gym_38' (/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 1.10.0+cu113
+Device count 1
+/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions as PyTorch extensions root...
+Emitting ninja build file /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions/gymtorch/build.ninja...
+Building extension module gymtorch...
+Using envvar MAX_JOBS (2) as the number of workers...
+ninja: no work to do.
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: disabled
+Loading extension module gymtorch...
+==============================================================================
+obstacle-jump task semantics: counter-example tests
+==============================================================================
+Setting seed: 1
+Actor MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Actor MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+
+K. actor creation is clear of the ground before the first reset
+  [PASS] all wheels are clear of the plane at creation              minimum gap=0.10202 m
+  [PASS] one reset writes configured height, not creation clearance
+
+A. collision penalty sign
+  [PASS] no collision contributes exactly 0                         clean=-0.000
+  [PASS] collision contributes a penalty                            soft=-10.000
+  [PASS] harder collision scores strictly worse                     soft=-10.000 hard=-15.000
+  [PASS] penalty is monotone non-increasing in severity             -5.00 -7.50 -10.00 -12.50 -15.00 -15.00 -15.00
+
+B. success reward is a one-shot edge event
+  [PASS] no success -> 0                                            0.000
+  [PASS] latched flag alone -> 0 (no重复发放)                           0.000
+  [PASS] edge event -> positive reward                              1.000
+  [PASS] reward not repeated on the next step                       0.000
+
+C. obstacle metrics are refreshed before reward and termination
+  [PASS] hook precedes termination                                  hook@3738 term@4704
+  [PASS] hook precedes reward                                       hook@3738 reward@5170
+  [PASS] termination consults the task failure mask
+
+D. termination semantics
+  [PASS] collision enters the termination mask
+  [PASS] ploughing without liftoff is a failure                     reason=CROSSED_WITHOUT_LIFTOFF
+  [PASS] failure mask follows task_failed
+  [PASS] proximity with wheels down is not a failure                reason=NONE
+  [PASS] clean clearance is not a failure                           reason=NONE
+  [PASS] episode_sums zeroed on reset                               max=0
+
+E. TIER-2 mission success requires the whole story
+  [PASS] fully satisfied mission is a success
+  [PASS] pass-then-collide is NOT a success                         collision revokes the arm even with clearance latched
+  [PASS] re-arming cannot resurrect a collided episode              the ~has_obstacle_collision clause is checked again here
+  [PASS] pass without sustained recovery is NOT a success           outcome=TIMEOUT_HANDOFF
+  [PASS] TIMEOUT_HANDOFF is not success
+  [PASS] RECOVER_ABORT is not success
+  [PASS] pass without a recorded touchdown is NOT a success
+  [PASS] FSM clearing takeoff/touchdown does not void a task-level success task latches are the authority, not the dual-policy FSM counters
+  [PASS] plough-through is NOT a success
+  [PASS] mission success pays at most once
+  [PASS] tier-1 passage pays on its own event, not the success event tier1=1.000 tier2=0.000
+  [PASS] tier-1 reward is smaller than the full success reward      tier1=1.000 vs full=5.0 nominal
+
+E.1 Safe end-to-end recovery, independent of the FSM handoff
+  [PASS] TIMEOUT event alone never earns task success
+  [PASS] nine safe samples do not satisfy recovery
+  [PASS] TIMEOUT then BALANCE safe cruise earns recovery
+  [PASS] complete clean crossing plus safe recovery earns full success
+  [PASS] TIMEOUT recovery is not fast NORMAL_HANDOFF
+  [PASS] paid reward leaves shared physical verdict true
+  [PASS] new success contract still pays once
+  [PASS] later collision revokes even a previously paid physical verdict
+  [PASS] collision after recovery vetoes full success
+  [PASS] full success requires wheel_pass_clean
+  [PASS] full success requires landing_safe
+  [PASS] full success requires whole_body_passed
+  [PASS] rolling back into box region vetoes full success
+  [PASS] TIMEOUT with no actual cruise fails recovery
+  [PASS] speed on one loaded wheel fails recovery
+  [PASS] speed with unsafe attitude fails recovery
+  [PASS] speed with angular instability axis 0 fails
+  [PASS] speed with angular instability axis 1 fails
+  [PASS] speed with angular instability axis 2 fails
+  [PASS] speed below 0.245 m/s fails
+  [PASS] speed at 0.245 m/s qualifies
+  [PASS] ten safe samples ending exactly at 2 s qualify
+  [PASS] ten safe samples ending after 2 s fail
+  [PASS] one unsafe frame breaks the continuous hold
+  [PASS] ten new safe frames after interruption qualify
+  [PASS] later fall revokes recovery and mission success
+  [PASS] a fallen attempt cannot recover its success latch
+  [PASS] NORMAL_HANDOFF within 0.40 s is fast recovery
+  [PASS] NORMAL_HANDOFF after 0.40 s is not fast recovery
+  [PASS] new obstacle cycle clears recovery evidence
+  [PASS] episode reset clears recovery evidence
+
+F. contact point is taken from the obstacle's own slot
+  [PASS] reversed pair order yields the same world point            body0-obstacle=[0.0, 0.2800000011920929, 0.02500000037252903] body1-obstacle=[0.0, 0.2800000011920929, 0.02500000037252903]
+  [PASS] point lands on the obstacle front face, not the robot      y=0.28000 (front face 0.280, robot-frame would be 0.30)
+  [PASS] the slot actually used is reported                         obstacle_local0 / obstacle_local1
+  [PASS] a wrong obstacle_is_body0 flag is rejected                 why=flag_mismatch
+  [PASS] a pair without the obstacle is rejected                    why=obstacle_not_in_pair
+  [PASS] obstacle rotation is applied to the local point            world=[-0.019999999552965164, 0.30000001192092896, 0.02500000037252903] expected x=-0.02
+
+F. real geometric envelope for triggering
+  [PASS] real front is ahead of base_y + wheel_radius               min under-estimate=0.1148 m
+  [PASS] z ceiling suppresses geometry that flies over the box      no-ceiling=0.2853 with-ceiling=0.1850
+  [PASS] wheel interval is contained in the robot envelope
+  [PASS] nominal stance is not already in the trigger window        dist=0.0950 window=0.090
+  [PASS] clearance is footprint-limited, not wheel-bottom minus box-top gap=0.0964 clr=+inf (old formula would say -0.0485)
+  [PASS] analytic gap and footprint clearance agree on intersection gap=-0.02736 clr=-0.03755
+/home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/env/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+
+H. geometry counter-examples: attitude, box edges, mesh links
+  [PASS] hull vertices reproduce the full cloud's Y extent under rotation worst under-report=0.000e+00 m over 400 random attitudes x 7 links
+  [PASS] the superseded 96-direction reduction under-reports (regression anchor) measured=0.0024 m vs recorded 0.008896 m
+  [PASS] envelope is finite under a pitched attitude                front=0.2594 upright=0.2873
+  [PASS] pitching the base changes the measured front envelope      pitched=0.2594 upright=0.2873
+  [PASS] z-ceiling envelope never exceeds the unclipped envelope    clipped=0.2388 unclipped=0.2594
+  [PASS] placement helper delivers the requested capsule centre     got=[-0.0, 0.204, 0.025] want=[0.0, 0.204, 0.025]
+  [PASS] wheels are laid out in a bicycle arrangement (same y and z) lead=[0.3532, 0.1136, -0.3277] trail=[-0.0107, 0.1136, -0.3277]
+  [PASS] axis end clears the box's left corner by 6 mm              gap=+0.00600 m
+  [PASS] left-corner clearance matches a 4001-point axis sweep      analytic=+0.00600 sweep=+0.00600
+  [PASS] left-corner clearance matches a surface-cloud reference    analytic=+0.00600 cloud=+0.00601
+  [PASS] axis end overlaps the box's left corner by 4 mm            gap=-0.00400 m
+  [PASS] left-corner overlap matches a 4001-point axis sweep        analytic=-0.00400 sweep=-0.00400
+  [PASS] left-corner overlap is confirmed negative by the surface cloud cloud=-0.00250
+  [PASS] axis end clears the box's right corner by 6 mm             gap=+0.00600 m
+  [PASS] right-corner clearance matches a 4001-point axis sweep     analytic=+0.00600 sweep=+0.00600
+  [PASS] right-corner clearance matches a surface-cloud reference   analytic=+0.00600 cloud=+0.00601
+  [PASS] axis end overlaps the box's right corner by 4 mm           gap=-0.00400 m
+  [PASS] right-corner overlap matches a 4001-point axis sweep       analytic=-0.00400 sweep=-0.00400
+  [PASS] right-corner overlap is confirmed negative by the surface cloud cloud=-0.00250
+  [PASS] wheel above the box top by 5 mm is reported separated      gap=+0.00500 m
+  [PASS] top-face above the box top by 5 mm matches a 4001-point axis sweep analytic=+0.00500 sweep=+0.00500
+  [PASS] top-face above the box top by 5 mm matches the surface-cloud reference analytic=+0.00500 cloud=+0.00500
+  [PASS] wheel dipping 5 mm into the box top is reported overlapping gap=-0.00500 m
+  [PASS] top-face dipping 5 mm into the box top matches a 4001-point axis sweep analytic=-0.00500 sweep=-0.00500
+  [PASS] top-face dipping 5 mm into the box top matches the surface-cloud reference analytic=-0.00500 cloud=-0.00500
+  [PASS] declared sampling error bound matches the documented formula h/2=0.6914 mm
+  [PASS] mesh-link envelope is not advertised as exact              header keeps the two families separate
+  [PASS] mesh links are documented as an outer bound, not a penetration depth
+  [PASS] per-link envelope is an outer bound of the raw mesh cloud  violations=0 worst=0.000e+00 m across 7 links
+
+G. per-environment obstacle coordinates
+  [PASS] repositioning moves the target env                         delta=0.3000
+  [PASS] repositioning leaves other envs untouched                  others=[0.30000001192092896, 0.30000001192092896]
+  [PASS] other envs' obstacle actors unmoved
+  [PASS] reset restores configured obstacle offset                  got=0.3000 want=0.3000
+  [PASS] obstacle interval follows each env's own coordinates
+  [PASS] static obstacle participates in physics                    peak=7499 N
+
+I. task-owned liftoff latch survives FSM transitions (defect B)
+  [PASS] crossing without any liftoff is still a failure            reason=CROSSED_WITHOUT_LIFTOFF
+  [PASS] a landed jump is not a plough-through after the FSM moves on reason=NONE rear_margin=+0.0535 task_took_off=True fsm_taken_off=False
+  [PASS] the failure reason stays clean, not a stale label          reason=NONE
+  [PASS] a jump followed by obstacle contact still fails            reason=OBSTACLE_COLLISION
+  [PASS] the collision also enters the termination mask
+  [PASS] env0 (jumped AND landed) is not failed                     reason=NONE
+  [PASS] env1 (jumped, never landed) is not failed either           reason=NONE
+  [PASS] env2 (never jumped) is the only one failed                 reason=CROSSED_WITHOUT_LIFTOFF
+  [PASS] resetting one env preserves the others' task latch         env0 took_off=True takeoff=39 touchdown=60
+  [PASS] the reset env's own latch is cleared                       env2 took_off=False takeoff=-1
+  [PASS] a new cycle re-arms the liftoff latch                      took_off=False takeoff=-1 touchdown=-1
+  [PASS] a new cycle clears the previous cycle's collision verdict  collision=False reason=NONE
+  [PASS] cycle 2 can pass cleanly after cycle 1 collided            reason=NONE
+  [PASS] request_teleop_jump does not clear the task liftoff latch  takeoff=39 touchdown=60
+  [PASS] request_teleop_jump does not clear obstacle_cleared/success_armed cleared=True armed=True
+  [PASS] the FSM's own counters are cleared by that same call       fsm takeoff_step=-1 (task latch still 39)
+
+J. separated geometry layers: approach / wheels / whole body
+  [PASS] approach rear edge and whole-body rear edge are different quantities approach=+0.0436 whole=-0.2076 (gap=0.2512 m)
+  [PASS] the approach rear edge is AHEAD of the root, not behind it approach rear offset=+0.0436 m
+  [PASS] the whole-body rear edge is behind the root                whole-body rear offset=-0.2076 m
+  [PASS] the whole body is longer than the approach envelope        whole span=0.4949 approach span=0.1400
+  [PASS] airborne: the approach envelope reports could_reach=False  front=-inf could_reach=False
+  [PASS] airborne: the approach envelope does NOT fall back to the root Y approach front=-inf base_y=-0.0000
+  [PASS] airborne: the whole-body envelope stays finite and physical front=0.2873 rear=-0.2076 span=0.4949
+  [PASS] the superseded single envelope DID collapse onto root_y (regression anchor) old front=-0.0000 rear=-0.0000 base=-0.0000 nothing_below=True
+  [PASS] hull edge indices are registered and non-empty             bodies_with_edges=7 edges_per_body=[309, 90, 261, 138, 90, 261, 138]
+  [PASS] edge-crossing clip never under-reports the front vs vertex-only worst slack=+32.009412 mm over 14 comparable frames
+  [PASS] vertex-only clipping measurably under-reports the front edge the superseded form lost up to +32.009 mm at pitch=20 ceil=0.20
+  [PASS] vertex-only clipping measurably under-reports the REAR extent too up to +300.844 mm at pitch=10 ceil=0.20 -- the robot looked SHORTER than it is
+  [PASS] wheel passage state has one column per wheel               shape=(3, 2)
+  [PASS] wheel intervals are ordered (front <= rear)                front=[0.0436277911067009, 0.043627798557281494] rear=[0.18362778425216675, 0.18362779915332794]
+  [PASS] a wheel standing beside the box is not in danger           overlaps=[False, False] above=[False, False] danger=[False, False]
+  [PASS] wheel danger agrees with the analytic wheel/box gap        danger=[True, True] gap_min=-0.02736
+  [PASS] a wheel above the box top is NOT flagged dangerous         overlaps_footprint=[True, True] above_top=[True, True] danger=[False, False] bottom_z=[0.1, 0.1] top=0.0500
+  [PASS] horizontal projection overlap is reported as proximity, not penetration collision flag stays False while merely above the box
+  [PASS] the same wheel over the box but BELOW the top is dangerous overlaps=[True, True] above=[False, False] danger=[True, True]
+  [PASS] touchdown over the box is not a clear landing
+  [PASS] later departure cannot relabel an obstructed landing
+  [PASS] each step publishes wheels / root / contact / whole-body records missing=[] (published 22 keys)
+  [PASS] the published root estimate is labelled as an estimate, not an envelope both keys present so a reader cannot confuse them
+  [PASS] root-based margin is a kinematic cross-check, not the geometric rear root=-0.5289 geometric=-0.5276
+
+==============================================================================
+PASSED 149 / 149
+RESULT: PASS

@@ -1649,13 +1649,40 @@ def test_separated_envelopes(env):
     env.reset_idx(ids)
 
 
+def test_creation_clearance(env):
+    """Creation must not prepare a deeply penetrating robot before first reset."""
+    print("\nK. actor creation is clear of the ground before the first reset")
+    wheel_state = geo.wheel_crossing_state(env)
+    ground_z = env.env_origins[:, 2:3]
+    min_gap = (wheel_state['bottom_z'] - ground_z).min()
+    check("all wheels are clear of the plane at creation",
+          float(min_gap) > 0.02, "minimum gap=%.5f m" % float(min_gap))
+
+    # Inspect the reset write itself, before the controlled step can settle it.
+    original = env._reset_root_states
+    written_heights = []
+    def capture_reset(env_ids):
+        original(env_ids)
+        written_heights.append((env.root_states[env_ids, 2]
+                                - env.env_origins[env_ids, 2]).clone())
+    env._reset_root_states = capture_reset
+    try:
+        env.reset()
+    finally:
+        env._reset_root_states = original
+    check("one reset writes configured height, not creation clearance",
+          len(written_heights) == 1
+          and bool(torch.allclose(written_heights[0],
+                                  env.base_init_state[2].expand(env.num_envs))))
+
+
 def main():
     print("=" * 78)
     print("obstacle-jump task semantics: counter-example tests")
     print("=" * 78)
     # One Foundation per process: build a single multi-env scene and reuse it.
     env = build(num_envs=3)
-    env.reset()
+    test_creation_clearance(env)
     env.reset_idx(torch.arange(env.num_envs, device=env.device))
     test_collision_penalty_sign(env)
     test_success_is_edge_event(env)

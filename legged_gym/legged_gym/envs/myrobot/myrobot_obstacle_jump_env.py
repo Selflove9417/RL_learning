@@ -207,7 +207,11 @@ class MyRobotObstacleJump(MyRobotRunningJump):
         for i in range(self.num_envs):
             env_handle = self.gym.create_env(self.sim, env_lower, env_upper, int(np.sqrt(self.num_envs)))
             pos = self.env_origins[i].clone()
-            start_pose.p = gymapi.Vec3(*pos)
+            # Keep shapes clear of the plane while PhysX prepares contact state.
+            # The existing single reset sets the configured episode pose before
+            # control; this creation clearance adds no simulation/reset step.
+            start_pose.p = gymapi.Vec3(*(pos + self.base_init_state[:3]))
+            start_pose.p.z += 0.10
 
             rigid_shape_props = self._process_rigid_shape_props(rigid_shape_props_asset, i)
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)

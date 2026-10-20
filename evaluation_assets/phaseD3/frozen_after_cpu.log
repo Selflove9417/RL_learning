@@ -1,0 +1,40 @@
+==============================================================================
+obstacle-jump physical evaluation (no training, no weight update)
+  model  : legged_gym/logs/myrobot_obstacle_jump/Oct20_18-27-49_trial_a1_pilot10/model_10.pt
+  label  : FROZEN_A1_model10_phaseD3
+  seeds  : [11, 13]
+  pipe   : cpu
+  action : deterministic
+==============================================================================
+  seed 11  obstacle  ... reason=OBSTACLE_COLLISION     cleared=False clr=+0.0001 flight=0.156
+  seed 11  free-run  ... reason=NONE                   cleared=False clr=n/a flight=0.156
+  seed 13  obstacle  ... reason=OBSTACLE_COLLISION     cleared=False clr=+0.0000 flight=0.164
+  seed 13  free-run  ... reason=NONE                   cleared=False clr=n/a flight=0.164
+
+==============================================================================
+obstacle   n=2  collision=2  tier1_latch=0  took_off=2  landed=2
+           strict clearance   0/2
+           collision-free     0/2
+           re-cruise (e2e)    0/2
+           tiers: wheels_clean=2  landing_safe=2  whole_body_passed=0  no_contact=0
+           flight=0.160 m (n=2)  required=0.412 m (n=2)  shortfall=0.252 m (n=2)
+           air_speed=0.400 m/s (n=2)  air_time=0.400 s  post_land_speed=0.083 m/s (n=2)  backslide=0.0088 m
+           handoff={'NORMAL_HANDOFF': 0, 'TIMEOUT_HANDOFF': 2, 'RECOVER_ABORT': 0, 'NONE': 0}  takeover=0.380 s (n=2)  best_hold=1.0 steps
+           min_clearance=+0.0001 m (n=2)  peak_force=103 N  recovery_mean=24% (0/2 strictly sustained)
+           RECRUISE after handoff: any=0/2  only-after=0  td->cruise=n/a s (n=0)  handoff->cruise=n/a s
+           RECRUISE m10: within_1s=0/2  whole_episode=0/2
+           reasons={'OBSTACLE_COLLISION': 2}
+free_run   n=2  collision=0  tier1_latch=0  took_off=2  landed=2
+           strict clearance   0/2
+           collision-free     0/2
+           re-cruise (e2e)    2/2
+           tiers: wheels_clean=0  landing_safe=2  whole_body_passed=0  no_contact=2
+           flight=0.160 m (n=2)  required=n/a m (n=0)  shortfall=n/a m (n=0)
+           air_speed=0.400 m/s (n=2)  air_time=0.400 s  post_land_speed=0.100 m/s (n=2)  backslide=0.0173 m
+           handoff={'NORMAL_HANDOFF': 0, 'TIMEOUT_HANDOFF': 2, 'RECOVER_ABORT': 0, 'NONE': 0}  takeover=0.380 s (n=2)  best_hold=1.0 steps
+           min_clearance=n/a m (n=0)  peak_force=0 N  recovery_mean=17% (2/2 strictly sustained)
+           RECRUISE after handoff: any=2/2  only-after=2  td->cruise=1.040 s (n=2)  handoff->cruise=0.660 s
+           RECRUISE m10: within_1s=0/2  whole_episode=2/2
+           reasons={'NONE': 2}
+
+wrote /home/xy/IsaacTu_jump/evaluation_assets/phaseD3/frozen_after_cpu.json

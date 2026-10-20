@@ -1,0 +1,118 @@
+Importing module 'gym_38' (/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 1.10.0+cu113
+Device count 1
+/home/xy/IsaacTu/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions as PyTorch extensions root...
+Emitting ninja build file /home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/torch-extensions/gymtorch/build.ninja...
+Building extension module gymtorch...
+Using envvar MAX_JOBS (2) as the number of workers...
+ninja: no work to do.
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: enabled
+/buildAgent/work/99bede84aa0a52c2/source/physx/src/NpScene.cpp (3509) : internal error : PhysX Internal CUDA error. Simulation can not continue!
+
+PxgCudaDeviceMemoryAllocator fail to allocate memory 339738624 bytes!! Result = 700
+/buildAgent/work/99bede84aa0a52c2/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp (11310) : internal error : GPU compressContactStage1 fail to launch kernel stage 1!!
+
+
+/buildAgent/work/99bede84aa0a52c2/source/gpunarrowphase/src/PxgNarrowphaseCore.cpp (11347) : internal error : GPU compressContactStage2 fail to launch kernel stage 1!!
+
+
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysX.cpp: 4202
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysX.cpp: 4210
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysX.cpp: 3480
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysX.cpp: 3535
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysX.cpp: 6137
+[Error] [carb.gym.plugin] Gym cuda error: an illegal memory access was encountered: ../../../source/plugins/carb/gym/impl/Gym/GymPhysXCuda.cu: 991
+/home/xy/Documents/Codex/2026-10-05/chatgpt-conversation-6ac307b2-cac0-83ee-98c3/outputs/rl-runtime/env/lib/python3.8/site-packages/torch/functional.py:445: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2157.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Traceback (most recent call last):
+  File "tests/verify_training_init_chain.py", line 121, in main
+    collect(evidence, options)
+  File "tests/verify_training_init_chain.py", line 159, in collect
+    env, runner, train_cfg, args = build(num_envs, pipeline, options.seed)
+  File "tests/verify_training_init_chain.py", line 90, in build
+    runner, train_cfg = task_registry.make_alg_runner(
+  File "/home/xy/IsaacTu_jump/legged_gym/legged_gym/utils/task_registry.py", line 159, in make_alg_runner
+    runner = OnPolicyRunner(env, train_cfg_dict, log_dir, device=args.rl_device)
+  File "/home/xy/IsaacTu_jump/rsl_rl/rsl_rl/runners/on_policy_runner.py", line 94, in __init__
+    _, _ = self.env.reset()
+  File "tests/verify_training_init_chain.py", line 156, in counted_reset
+    return original_reset(self)
+  File "/home/xy/IsaacTu_jump/legged_gym/legged_gym/envs/base/base_task.py", line 114, in reset
+    obs, privileged_obs, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+  File "/home/xy/IsaacTu_jump/legged_gym/legged_gym/envs/myrobot/myrobot_obstacle_jump_env.py", line 1824, in step
+    obs, priv_obs, rews, dones, infos = super().step(actions)
+  File "/home/xy/IsaacTu_jump/legged_gym/legged_gym/envs/myrobot/myrobot_running_jump_env.py", line 174, in step
+    self.step_dual_policy(actions=actions, call_post_physics_step=False)
+  File "/home/xy/IsaacTu_jump/legged_gym/legged_gym/envs/myrobot/myrobot_dual_env.py", line 801, in step_dual_policy
+    leg_pos = torch.stack([
+RuntimeError: CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Loading extension module gymtorch...
+==============================================================================
+TRAINING INITIALISATION CHAIN -- pipeline=gpu num_envs=64
+reproduces train.py: make_env -> make_alg_runner (__init__ calls env.reset())
+==============================================================================
+Setting seed: 11
+Actor MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=31, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Actor MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+Actor MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=6, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=35, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+raw JSON: evaluation_assets/phaseD3/candidate_deferred_refresh_gpu.json
+ADMISSION INCOMPLETE: ['initial_state', 'policy_weights_unchanged', 'optimizer_steps_before', 'optimizer_steps_after', 'reset_calls']
